@@ -1,12 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 啟用靜態導出
-  output: 'export',
-  // 設置基礎路徑為倉庫名稱
-  basePath: process.env.NODE_ENV === 'production' ? '/0610' : '',
-  // 設置資源前綴
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/0610/' : '',
+  // 移除靜態導出（Netlify 使用自己的構建系統）
+  // output: 'export',
+  
+  // 移除基礎路徑設置（Netlify 會自動處理）
+  // basePath: process.env.NODE_ENV === 'production' ? '/0610' : '',
+  // assetPrefix: process.env.NODE_ENV === 'production' ? '/0610/' : '',
   
   // 圖像配置
   images: {

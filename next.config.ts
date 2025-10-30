@@ -1,13 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  reactCompiler: true,
+  // 啟用靜態導出
+  output: 'export',
+  // 設置基礎路徑為倉庫名稱
+  basePath: process.env.NODE_ENV === 'production' ? '/0610' : '',
+  // 設置資源前綴
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/0610/' : '',
+  
+  // 圖像配置
   images: {
-    unoptimized: true,  // 在 Netlify 上建議設置為 true
+    unoptimized: true,  // 靜態導出時需要設置為 true
   },
-  output: 'standalone',  // 生成獨立的輸出目錄
-  compress: true,       // 啟用 gzip 壓縮
-  productionBrowserSourceMaps: true,  // 生產環境生成 source maps
   
   // 優化構建輸出
   experimental: {
@@ -18,9 +22,7 @@ const nextConfig: NextConfig = {
       '@fortawesome/fontawesome-svg-core',
       '@fortawesome/free-solid-svg-icons',
       '@fortawesome/react-fontawesome',
-    ],
-    // 啟用 SWC 的優化
-    swcMinify: true
+    ]
   },
   
   // 編譯器選項

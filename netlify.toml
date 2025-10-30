@@ -1,15 +1,13 @@
 ﻿[build]
   command = "npm run build"
-  publish = ".next/standalone"
-  functions = "netlify/functions"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
-  NPM_VERSION = "10"
 
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/___netlify-handler"
+  to = "/index.html"
   status = 200
 
 [[headers]]

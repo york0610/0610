@@ -3,8 +3,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import Header from '@/app/components/Header';
-import Footer from '@/app/components/Footer';
 import {
   FaArrowLeft,
   FaCube,
@@ -20,7 +18,6 @@ import {
 export default function Chapter1Page() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <Header />
       
       {/* 返回按鈕 */}
       <div className="mx-auto max-w-7xl px-6 pt-8">
@@ -315,8 +312,6 @@ export default function Chapter1Page() {
           </div>
         </motion.div>
       </div>
-
-      <Footer />
     </div>
   );
 }

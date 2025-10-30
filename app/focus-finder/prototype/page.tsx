@@ -868,6 +868,7 @@ export default function FocusFinderPrototype() {
                 )}
               </div>
             )}
+          </div>
         </div>
       </section>
     </div>

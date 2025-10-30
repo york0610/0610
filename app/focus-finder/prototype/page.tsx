@@ -675,7 +675,8 @@ export default function FocusFinderPrototype() {
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-center p-8"
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-center p-8 z-50"
+                    style={{ pointerEvents: 'auto' }}
                   >
                     <motion.div
                       animate={{ scale: [1, 1.1, 1] }}
@@ -697,9 +698,15 @@ export default function FocusFinderPrototype() {
                       )}
                       <div className="flex flex-col gap-3 pt-4">
                         <button
-                          onClick={handleRequestCamera}
+                          onClick={(e) => {
+                            console.log('[DEBUG] Camera button clicked!');
+                            console.log('[DEBUG] Event:', e);
+                            console.log('[DEBUG] Current permissionState:', permissionState);
+                            handleRequestCamera();
+                          }}
                           disabled={permissionState === 'requesting'}
-                          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed relative z-50"
+                          style={{ pointerEvents: 'auto' }}
                         >
                           <FaCamera className="text-2xl" />
                           {permissionState === 'requesting' ? '請求中...' : '啟用鏡頭開始'}
@@ -715,7 +722,8 @@ export default function FocusFinderPrototype() {
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 text-center p-8"
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 text-center p-8 z-50"
+                    style={{ pointerEvents: 'auto' }}
                   >
                     <motion.div
                       animate={{ scale: [1, 1.1, 1] }}

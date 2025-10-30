@@ -73,14 +73,6 @@ const INTERRUPTION_TASKS = [
     emoji: '☕'
   },
   { 
-    type: 'social' as DistractionType, 
-    title: '📱 手機響了！', 
-    description: '手機一直響，必須先去關掉它。社交壓不斷地打斷你的注意力', 
-    objectToFind: 'cell phone',
-    cost: 2.5,
-    emoji: '📱'
-  },
-  { 
     type: 'psychological' as DistractionType, 
     title: '😔 心情不好了', 
     description: '你突然感到心情不好，想看看天空或窗戶外面來較泯。這是 ADHD 患者常見的逃避機制——你需要抵抗這個誘惑', 
@@ -99,7 +91,7 @@ const INTERRUPTION_TASKS = [
   { 
     type: 'psychological' as DistractionType, 
     title: '📺 突然想看電視', 
-    description: '你突然想起了你最喜歡的電視節目。這是 ADHD 的衡動控制不佳——你需要抵抗這個誘惑來完成任務', 
+    description: '你突然想起了你最喜歡的電視節目。這是 ADHD 的衝動控制不佳——你需要抵抗這個誘惑來完成任務', 
     objectToFind: 'tv',
     cost: 2.5,
     emoji: '📺'
@@ -107,10 +99,26 @@ const INTERRUPTION_TASKS = [
   { 
     type: 'environment' as DistractionType, 
     title: '👀 窗戶外面太漂亮', 
-    description: '你不由主你地看了一眼窗戶外面。你需要將鏡頭對準窗戶來抵抗誘惑。環境干擾是 ADHD 最大的敵人', 
+    description: '你不由主地看了一眼窗戶外面。你需要將鏡頭對準窗戶來抵抗誘惑。環境干擾是 ADHD 最大的敵人', 
     objectToFind: 'window',
     cost: 1.5,
     emoji: '👀'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '👥 有人在叫你',
+    description: '你聽到有人在叫你，想要去看看發生了什麼。社交互動總是會打斷你的專注力',
+    objectToFind: 'person',
+    cost: 2,
+    emoji: '👥'
+  },
+  {
+    type: 'biological' as DistractionType,
+    title: '😴 突然很疲勞',
+    description: '你感到疲勞，想要找個地方休息。這是 ADHD 患者常見的低能量狀態',
+    objectToFind: 'chair',
+    cost: 2.5,
+    emoji: '😴'
   },
 ];
 
@@ -119,9 +127,9 @@ type DistractionConfigType = DistractionType | 'timeout';
 const DISTRACTION_CONFIG: Record<DistractionConfigType, { minDelay: number; maxDelay: number; duration: number; cost: number; title: string; objectToFind?: string }> = {
   environment: { minDelay: 8, maxDelay: 12, duration: 0, cost: 2, title: '☀️ 陽光太刺眼', objectToFind: 'window' },
   biological: { minDelay: 10, maxDelay: 15, duration: 0, cost: 2.5, title: '💧 口渴了，需要喝水', objectToFind: 'cup' },
-  social: { minDelay: 9, maxDelay: 13, duration: 0, cost: 1.5, title: '📱 有人在叫你', objectToFind: 'person' },
+  social: { minDelay: 9, maxDelay: 13, duration: 0, cost: 1.5, title: '👥 有人在叫你', objectToFind: 'person' },
   timeout: { minDelay: 0, maxDelay: 0, duration: 0, cost: 5, title: '⏱️ 時間到！' },
-  psychological: { minDelay: 7, maxDelay: 11, duration: 0, cost: 1, title: '🤔 突然想到其他事', objectToFind: 'phone' },
+  psychological: { minDelay: 7, maxDelay: 11, duration: 0, cost: 1, title: '🤔 突然想到其他事', objectToFind: 'tv' },
 };
 
 // 遊戲時間限制（秒）
@@ -141,40 +149,55 @@ const GAME_STORY = `
 這個遊戲模擬你日常的挑戰：
 • 環境干擾：外部事物的中斷
 • 身體需求：口渴、疲勞等
-• 社交壓力：手機、消息等
+• 社交壓力：他人的打擾
 • 心理困擾：心情不好、衝動控制不佳
 
 你能在時間內完成多少任務呢？
 `;
 
-// 遊戲故事章節
+// 遊戲故事章節 - 每個章節有不同的背景故事和任務
 const STORY_CHAPTERS = [
   {
     title: '早上的困擾',
-    description: '你剛起床，腦子還很混亂。你需要找到一些日常用品來開始新的一天。',
-    tasks: ['cell phone', 'cup', 'book'],
+    description: '你剛起床，腦子還很混亂。你需要找到一些日常用品來開始新的一天。你感到疲勞，但必須準備好迎接新的挑戰。',
+    tasks: ['cup', 'book', 'bottle'],
+    narrative: '早上 7:30 AM - 你的鬧鐘響了，但你的大腦還沒完全清醒。你需要找到水杯、書籍和瓶子來準備早餐。'
   },
   {
     title: '工作中的挑戰',
-    description: '現在是工作時間，但干擾不斷。你試著集中精力完成任務。',
-    tasks: ['keyboard', 'laptop', 'mouse'],
+    description: '現在是工作時間，但干擾不斷。你試著集中精力完成任務，但環境充滿了誘惑。',
+    tasks: ['keyboard', 'laptop', 'monitor'],
+    narrative: '上午 9:00 AM - 工作開始了。你需要找到鍵盤、電腦和螢幕。周圍的同事在走動，你很難保持專注。'
   },
   {
     title: '下午的崩潰',
-    description: '下午時段，你的專注力開始下降。周圍的一切都變成了干擾。',
-    tasks: ['monitor', 'bottle', 'chair'],
+    description: '下午時段，你的專注力開始下降。周圍的一切都變成了干擾。你感到疲勞和沮喪。',
+    tasks: ['mouse', 'bottle', 'chair'],
+    narrative: '下午 2:00 PM - 午餐後的低谷時段。你需要找到滑鼠、水瓶和椅子。你的能量在下降，很難集中注意力。'
   },
   {
     title: '傍晚的逃避',
-    description: '你開始逃避，看著窗外或其他東西，試著放鬆。',
+    description: '你開始逃避，看著窗外或其他東西，試著放鬆。工作即將結束，但還有最後的衝刺。',
     tasks: ['desk', 'door', 'window'],
+    narrative: '傍晚 5:00 PM - 工作日即將結束。你需要找到桌子、門和窗戶。你渴望離開辦公室，但還需要完成最後的任務。'
+  },
+  {
+    title: '夜間的反思',
+    description: '夜晚來臨，你回到家中。你需要整理一些東西，準備休息。',
+    tasks: ['cup', 'chair', 'book'],
+    narrative: '晚上 8:00 PM - 你回到家中。你需要找到杯子、椅子和書籍。你感到疲勞，但也有些放鬆。'
+  },
+  {
+    title: '週末的自由',
+    description: '週末終於來了！你有更多的自由時間，但也有更多的誘惑。',
+    tasks: ['monitor', 'keyboard', 'bottle'],
+    narrative: '週末 - 你有更多的時間來做你喜歡的事情。你需要找到螢幕、鍵盤和水瓶。但社交媒體和遊戲在呼喚你。'
   },
 ];
 
 // 常見物品任務 - 容易在身邊找到
 // 這些任務代表了 ADHD 患者需要完成的日常活動
 const TASKS: Task[] = [
-  { id: 'cell phone', title: '找到手機', hint: '通常在桌上或口袋裡', prompt: '將鏡頭對準你的手機。', emoji: '📱', difficulty: 'easy' },
   { id: 'cup', title: '找到杯子', hint: '桌上或廚房', prompt: '將鏡頭對準你的水杯或馬克杯。', emoji: '☕', difficulty: 'easy' },
   { id: 'book', title: '找到書', hint: '桌上或書架', prompt: '將鏡頭對準任何一本書。', emoji: '📖', difficulty: 'easy' },
   { id: 'keyboard', title: '找到鍵盤', hint: '電腦桌上', prompt: '將鏡頭對準你的鍵盤。', emoji: '⌨️', difficulty: 'normal' },
@@ -184,12 +207,44 @@ const TASKS: Task[] = [
   { id: 'monitor', title: '找到螢幕', hint: '電腦前面', prompt: '將鏡頭對準你的電腦螢幕。', emoji: '🖥️', difficulty: 'easy' },
   { id: 'chair', title: '找到椅子', hint: '你坐著的地方', prompt: '將鏡頭對準你的椅子。', emoji: '🪑', difficulty: 'easy' },
   { id: 'desk', title: '找到桌子', hint: '你面前', prompt: '將鏡頭對準你的桌子。', emoji: '🛏️', difficulty: 'easy' },
+  { id: 'door', title: '找到門', hint: '房間的出口', prompt: '將鏡頭對準任何一扇門。', emoji: '🚪', difficulty: 'easy' },
+  { id: 'window', title: '找到窗戶', hint: '房間的牆上', prompt: '將鏡頭對準任何一扇窗戶。', emoji: '🪟', difficulty: 'easy' },
 ];
 
 const formatSeconds = (value: number) => {
   const minutes = Math.floor(value / 60);
   const seconds = value % 60;
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
+// 隨機選擇任務序列
+const getRandomTaskSequence = (): Task[] => {
+  // 隨機選擇一個故事章節
+  const randomChapter = STORY_CHAPTERS[Math.floor(Math.random() * STORY_CHAPTERS.length)];
+  
+  // 根據故事章節的任務 ID 獲取對應的任務物件
+  const selectedTasks = randomChapter.tasks
+    .map(taskId => TASKS.find(t => t.id === taskId))
+    .filter((task): task is Task => task !== undefined);
+  
+  // 如果任務不足，補充隨機任務
+  while (selectedTasks.length < 3) {
+    const randomTask = TASKS[Math.floor(Math.random() * TASKS.length)];
+    if (!selectedTasks.find(t => t.id === randomTask.id)) {
+      selectedTasks.push(randomTask);
+    }
+  }
+  
+  return selectedTasks;
+};
+
+// 獲取當前故事章節
+const getCurrentStoryChapter = (taskSequence: Task[]): typeof STORY_CHAPTERS[0] | null => {
+  if (taskSequence.length === 0) return null;
+  
+  // 根據第一個任務找到對應的故事章節
+  const firstTaskId = taskSequence[0].id;
+  return STORY_CHAPTERS.find(chapter => chapter.tasks.includes(firstTaskId)) || null;
 };
 
 // Custom hook for distraction management
@@ -372,6 +427,8 @@ export default function FocusFinderPrototype() {
   const [activeModal, setActiveModal] = useState(false);
   const [currentDistraction, setCurrentDistraction] = useState<DistractionEvent | null>(null);
   const [isDistractedTaskActive, setIsDistractedTaskActive] = useState(false); // 是否有干擾任務進行中
+  const [randomTaskSequence, setRandomTaskSequence] = useState<Task[]>([]);
+  const [currentStoryChapter, setCurrentStoryChapter] = useState<typeof STORY_CHAPTERS[0] | null>(null);
 
   const difficultyIntensity = {
     easy: 0.5,
@@ -379,7 +436,7 @@ export default function FocusFinderPrototype() {
     hard: 1.5,
   }[distractionSettings.difficulty];
 
-  const currentTask = TASKS[currentTaskIndex] ?? null;
+  const currentTask = randomTaskSequence[currentTaskIndex] ?? null;
 
   const { activeDistractions } = useDistractions(
     sessionState === 'running' && distractionSettings.enabled && !isDistractedTaskActive,
@@ -553,6 +610,12 @@ export default function FocusFinderPrototype() {
     const audioManager = getAudioManager();
     audioManager.playFocus();
     
+    // 生成隨機任務序列
+    const newTaskSequence = getRandomTaskSequence();
+    const storyChapter = getCurrentStoryChapter(newTaskSequence);
+    setRandomTaskSequence(newTaskSequence);
+    setCurrentStoryChapter(storyChapter);
+    
     setSessionState('running');
     setCurrentTaskIndex(0);
     setTimer(0);
@@ -561,7 +624,7 @@ export default function FocusFinderPrototype() {
     setCurrentDistraction(null);
     setIsDistractedTaskActive(false);
     setDetectedObject(null);
-    setLogs([{ taskId: TASKS[0].id, startedAt: Date.now(), completedAt: null }]);
+    setLogs([{ taskId: newTaskSequence[0]?.id || TASKS[0].id, startedAt: Date.now(), completedAt: null }]);
     setShowHints(false);
     setSkippedTasks(0);
     
@@ -645,7 +708,7 @@ export default function FocusFinderPrototype() {
 
     setCurrentTaskIndex((prev) => {
       const nextIndex = prev + 1;
-      if (nextIndex >= TASKS.length) {
+      if (nextIndex >= randomTaskSequence.length) {
         setSessionState('completed');
         setIsFullscreen(false);
         if (document.fullscreenElement) {
@@ -661,7 +724,7 @@ export default function FocusFinderPrototype() {
       setLogs((prevLogs) => [
         ...prevLogs,
         {
-          taskId: TASKS[nextIndex].id,
+          taskId: randomTaskSequence[nextIndex]?.id || TASKS[0].id,
           startedAt: Date.now(),
           completedAt: null,
         },
@@ -713,7 +776,7 @@ export default function FocusFinderPrototype() {
 
     setCurrentTaskIndex((prev) => {
       const nextIndex = prev + 1;
-      if (nextIndex >= TASKS.length) {
+      if (nextIndex >= randomTaskSequence.length) {
         const audioMgr = getAudioManager();
         audioMgr.playVictory(); // 添加勝利音
         setSessionState('completed');
@@ -731,7 +794,7 @@ export default function FocusFinderPrototype() {
       setLogs((prevLogs) => [
         ...prevLogs,
         {
-          taskId: TASKS[nextIndex].id,
+          taskId: randomTaskSequence[nextIndex]?.id || TASKS[0].id,
           startedAt: Date.now(),
           completedAt: null,
         },
@@ -758,7 +821,7 @@ export default function FocusFinderPrototype() {
 
       return nextIndex;
     });
-  }, [taskTimeoutRef, skipCurrentTask]);
+  }, [taskTimeoutRef, skipCurrentTask, randomTaskSequence]);
 
   const resetSession = useCallback(() => {
     console.log('[DEBUG] Resetting session');
@@ -773,6 +836,8 @@ export default function FocusFinderPrototype() {
     setLogs([]);
     setShowHints(false);
     setSkippedTasks(0);
+    setRandomTaskSequence([]);
+    setCurrentStoryChapter(null);
     setIsFullscreen(false);
     if (document.fullscreenElement) {
       document.exitFullscreen();
@@ -835,7 +900,7 @@ export default function FocusFinderPrototype() {
 
           try {
             const result = await detector.detectObjects(videoRef.current);
-            const currentTask = TASKS[currentTaskIndex];
+            const currentTask = randomTaskSequence[currentTaskIndex];
             const currentDist = currentDistraction;
 
             // 優先檢查干擾任務
@@ -876,7 +941,7 @@ export default function FocusFinderPrototype() {
         detectionIntervalRef.current = null;
       }
     };
-  }, [isDetectionEnabled, sessionState, currentTaskIndex, isDistractedTaskActive, currentDistraction, completeTask, completeInterruptionTask]);
+  }, [isDetectionEnabled, sessionState, currentTaskIndex, isDistractedTaskActive, currentDistraction, completeTask, completeInterruptionTask, randomTaskSequence]);
 
   const totalCompleted = logs.filter((log) => log.completedAt !== null).length;
   const totalDistractionCost = distractions
@@ -1010,7 +1075,7 @@ export default function FocusFinderPrototype() {
                         <motion.div 
                           className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500"
                           initial={{ width: 0 }}
-                          animate={{ width: `${(totalCompleted / TASKS.length) * 100}%` }}
+                          animate={{ width: `${randomTaskSequence.length > 0 ? (totalCompleted / randomTaskSequence.length) * 100 : 0}%` }}
                           transition={{ duration: 0.5 }}
                         />
                       </div>
@@ -1216,7 +1281,7 @@ export default function FocusFinderPrototype() {
                     <div className="max-w-md space-y-3">
                       <div className="rounded-2xl bg-slate-800/50 p-4 border border-emerald-500/30">
                         <p className="text-lg font-semibold text-emerald-300">完成時間：{formatSeconds(adjustedTime)}</p>
-                        <p className="text-sm text-slate-400 mt-1">找到 {TASKS.length - skippedTasks}/{TASKS.length} 個物品</p>
+                        <p className="text-sm text-slate-400 mt-1">找到 {randomTaskSequence.length - skippedTasks}/{randomTaskSequence.length} 個物品</p>
                       </div>
                       {skippedTasks > 0 && (
                         <div className="rounded-2xl bg-slate-800/50 p-4 border border-red-500/30">
@@ -1266,7 +1331,7 @@ export default function FocusFinderPrototype() {
                     <h3 className="text-2xl font-bold text-white">⏰ 時間到！</h3>
                     <div className="max-w-md space-y-3">
                       <p className="text-slate-300">
-                        你在 {GAME_TIME_LIMIT} 秒內完成了 {totalCompleted}/{TASKS.length} 個任務。
+                        你在 {GAME_TIME_LIMIT} 秒內完成了 {totalCompleted}/{randomTaskSequence.length} 個任務。
                       </p>
                       {skippedTasks > 0 && (
                         <p className="text-red-300 text-sm">
@@ -1333,7 +1398,7 @@ export default function FocusFinderPrototype() {
                   <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
                     <p className="text-xs uppercase tracking-widest text-slate-400">完成任務</p>
                     <p className="mt-1 text-3xl font-bold text-emerald-400">
-                      {totalCompleted}/{TASKS.length}
+                      {totalCompleted}/{randomTaskSequence.length}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">

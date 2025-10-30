@@ -316,12 +316,23 @@ export default function FocusFinderPrototype() {
   }, []);
 
   const handleRequestCamera = useCallback(async () => {
+    console.log('[DEBUG] handleRequestCamera called, current state:', permissionState);
+    
     if (permissionState === 'requesting') {
+      console.log('[DEBUG] Already requesting, returning');
       return;
     }
 
+    // 檢查瀏覽器支援
+    console.log('[DEBUG] Checking browser support...');
+    console.log('[DEBUG] navigator:', typeof navigator);
+    console.log('[DEBUG] navigator.mediaDevices:', typeof navigator?.mediaDevices);
+    console.log('[DEBUG] getUserMedia:', typeof navigator?.mediaDevices?.getUserMedia);
+    
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      setErrorMessage('此裝置或瀏覽器不支援鏡頭串流。建議使用最新版本 Chrome 或 Safari。');
+      const errorMsg = '此裝置或瀏覽器不支援鏡頭串流。建議使用最新版本 Chrome 或 Safari。';
+      console.error('[DEBUG] Browser not supported:', errorMsg);
+      setErrorMessage(errorMsg);
       setPermissionState('denied');
       return;
     }
@@ -329,7 +340,7 @@ export default function FocusFinderPrototype() {
     try {
       setPermissionState('requesting');
       setErrorMessage(null);
-      console.log('Requesting camera access...');
+      console.log('[DEBUG] Requesting camera access...');
 
       const constraints = {
         video: {
@@ -339,42 +350,64 @@ export default function FocusFinderPrototype() {
         },
         audio: false,
       };
+      console.log('[DEBUG] Constraints:', JSON.stringify(constraints));
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Camera stream obtained:', stream);
+      console.log('[DEBUG] Camera stream obtained:', stream);
+      console.log('[DEBUG] Stream active:', stream.active);
+      console.log('[DEBUG] Video tracks:', stream.getVideoTracks().length);
 
       streamRef.current = stream;
 
       if (videoRef.current) {
+        console.log('[DEBUG] Setting video srcObject');
         videoRef.current.srcObject = stream;
-        console.log('Video element updated with stream');
+        console.log('[DEBUG] Video element updated with stream');
         
         // 確保視頻開始播放
         videoRef.current.onloadedmetadata = () => {
-          console.log('Video metadata loaded');
-          videoRef.current?.play().catch(err => {
-            console.error('Video play error:', err);
+          console.log('[DEBUG] Video metadata loaded');
+          console.log('[DEBUG] Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+          videoRef.current?.play().then(() => {
+            console.log('[DEBUG] Video playing successfully');
+          }).catch(err => {
+            console.error('[DEBUG] Video play error:', err);
+            setErrorMessage('視頻播放失敗：' + err.message);
           });
         };
+        
+        videoRef.current.onerror = (e) => {
+          console.error('[DEBUG] Video element error:', e);
+          setErrorMessage('視頻元素錯誤');
+        };
+      } else {
+        console.error('[DEBUG] videoRef.current is null!');
+        setErrorMessage('視頻元素未初始化');
       }
 
       setPermissionState('granted');
-      console.log('Camera permission granted');
+      console.log('[DEBUG] Camera permission granted, state updated');
     } catch (error) {
       const message = error instanceof Error ? error.message : '授權失敗，請確認裝置已允許使用鏡頭。';
-      console.error('Camera access error:', error);
-      setErrorMessage(message);
+      console.error('[DEBUG] Camera access error:', error);
+      console.error('[DEBUG] Error name:', error instanceof Error ? error.name : 'unknown');
+      console.error('[DEBUG] Error message:', message);
+      setErrorMessage('鏡頭錯誤： ' + message);
       setPermissionState('denied');
       stopStream();
     }
   }, [permissionState, stopStream]);
 
   const startSession = useCallback(() => {
+    console.log('[DEBUG] startSession called, permissionState:', permissionState);
+    
     if (permissionState !== 'granted') {
+      console.log('[DEBUG] Permission not granted, requesting camera');
       void handleRequestCamera();
       return;
     }
 
+    console.log('[DEBUG] Starting game session...');
     setSessionState('running');
     setTimer(0);
     setCurrentTaskIndex(0);
@@ -382,6 +415,7 @@ export default function FocusFinderPrototype() {
     setFocusLevel(100);
     setIsFullscreen(true);
     setLogs([{ taskId: TASKS[0]?.id ?? 'unknown', startedAt: Date.now(), completedAt: null }]);
+    console.log('[DEBUG] Game session started, first task:', TASKS[0]?.title);
 
     if (intervalRef.current) {
       window.clearInterval(intervalRef.current);
@@ -637,7 +671,7 @@ export default function FocusFinderPrototype() {
                     setErrorMessage('視頻播放錯誤，請重新嘗試');
                   }}
                 />
-{permissionState !== 'granted' && sessionState === 'idle' && (
+                {permissionState !== 'granted' && sessionState === 'idle' && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

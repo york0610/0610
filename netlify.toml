@@ -5,6 +5,8 @@
 [build.environment]
   NODE_VERSION = "20"
   NEXT_TELEMETRY_DISABLED = "1"
+  DEBUG = "next:*"
+  NODE_OPTIONS = "--max_old_space_size=4096"
 
 [build.processing]
   skip_processing = true

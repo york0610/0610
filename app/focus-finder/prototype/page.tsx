@@ -23,13 +23,15 @@ import { getPlatformDetector, type Platform } from '@/app/utils/platformDetector
 
 type PermissionState = 'idle' | 'requesting' | 'granted' | 'denied';
 type SessionState = 'idle' | 'running' | 'completed' | 'failed';
-type DistractionType = 'modal' | 'audio' | 'visual' | 'impulse';
+type DistractionType = 'environment' | 'biological' | 'social' | 'psychological';
 
 type Task = {
   id: string;
   title: string;
   hint: string;
   prompt: string;
+  emoji: string;
+  difficulty: 'easy' | 'normal' | 'hard';
 };
 
 type SessionLog = {
@@ -43,39 +45,32 @@ type DistractionEvent = {
   type: DistractionType;
   triggeredAt: number;
   dismissedAt: number | null;
-  cost: number; // time penalty in seconds
+  cost: number;
+  title: string;
 };
 
-// Distraction scheduling parameters - 加快頻率
+// 情景干擾配置
 const DISTRACTION_CONFIG = {
-  modal: { minDelay: 8, maxDelay: 15, duration: 3000, cost: 2 },
-  audio: { minDelay: 5, maxDelay: 12, duration: 2500, cost: 1 },
-  visual: { minDelay: 6, maxDelay: 14, duration: 500, cost: 0.5 },
-  impulse: { minDelay: 10, maxDelay: 18, duration: 5000, cost: 1.5 },
+  environment: { minDelay: 12, maxDelay: 20, duration: 4000, cost: 2, title: '☀️ 陽光太刺眼' },
+  biological: { minDelay: 15, maxDelay: 25, duration: 5000, cost: 2.5, title: '💧 口渴了，需要喝水' },
+  social: { minDelay: 10, maxDelay: 18, duration: 3000, cost: 1.5, title: '📱 有人在叫你' },
+  psychological: { minDelay: 8, maxDelay: 16, duration: 3500, cost: 1, title: '🤔 突然想到其他事' },
 };
 
 // 遊戲時間限制（秒）
-const GAME_TIME_LIMIT = 60;
+const GAME_TIME_LIMIT = 90;
 
 const TASKS: Task[] = [
-  {
-    id: 'keys',
-    title: '找到鑰匙',
-    hint: '掃過桌面與門邊區域',
-    prompt: '讓鑰匙進入鏡頭中央，並在覺得找到時點擊「標記已找到」。',
-  },
-  {
-    id: 'wallet',
-    title: '找到錢包',
-    hint: '注意書堆或沙發縫隙',
-    prompt: '再一次將焦點放在可能被忽略的角落，檢查是否遺漏。',
-  },
-  {
-    id: 'phone',
-    title: '找到手機',
-    hint: '追蹤充電線或常放的位置',
-    prompt: '試著在噪音中維持鎮定，鎖定最後一個目標。',
-  },
+  { id: 'keys', title: '找到鑰匙', hint: '通常在門邊或桌面', prompt: '掃過可能放置鑰匙的區域。', emoji: '🔑', difficulty: 'easy' },
+  { id: 'wallet', title: '找到錢包', hint: '檢查褲子口袋或書堆', prompt: '仔細查看容易遺漏的地方。', emoji: '👛', difficulty: 'easy' },
+  { id: 'phone', title: '找到手機', hint: '通常在充電器附近', prompt: '追蹤電源線的位置。', emoji: '📱', difficulty: 'normal' },
+  { id: 'glasses', title: '找到眼鏡', hint: '可能在床頭或書桌', prompt: '檢查你經常放置的位置。', emoji: '👓', difficulty: 'normal' },
+  { id: 'remote', title: '找到遙控器', hint: '通常在沙發附近', prompt: '掃過沙發周圍和抽屜下。', emoji: '📺', difficulty: 'normal' },
+  { id: 'charger', title: '找到充電器', hint: '檢查插座附近', prompt: '追蹤電線的位置。', emoji: '🔌', difficulty: 'hard' },
+  { id: 'headphones', title: '找到耳機', hint: '可能在抽屜或床上', prompt: '檢查你常放的地方。', emoji: '🎧', difficulty: 'hard' },
+  { id: 'book', title: '找到書', hint: '書架或床頭櫃', prompt: '掃過書籍堆放的區域。', emoji: '📖', difficulty: 'easy' },
+  { id: 'cup', title: '找到水杯', hint: '廚房或書桌', prompt: '檢查飲用區域。', emoji: '☕', difficulty: 'easy' },
+  { id: 'watch', title: '找到手錶', hint: '床頭或洗手台', prompt: '檢查你脫下的地方。', emoji: '⌚', difficulty: 'hard' },
 ];
 
 const formatSeconds = (value: number) => {
@@ -346,20 +341,17 @@ export default function FocusFinderPrototype() {
   const [showHints, setShowHints] = useState(true);
   const [distractionSettings, setDistractionSettings] = useState({
     enabled: true,
-    difficulty: 'normal', // 'easy', 'normal', 'hard'
+    difficulty: 'normal',
   });
+  const [focusLevel, setFocusLevel] = useState(100);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // 根據難度計算干擾強度
   const difficultyIntensity = {
     easy: 0.5,
     normal: 1,
     hard: 1.5,
   }[distractionSettings.difficulty];
 
-  // Distraction states
-  const [activeModal, setActiveModal] = useState(false);
-  const [activeVisual, setActiveVisual] = useState(false);
-  const [activeImpulse, setActiveImpulse] = useState(false);
 
   const currentTask = TASKS[currentTaskIndex] ?? null;
 

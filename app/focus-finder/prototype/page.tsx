@@ -1222,7 +1222,7 @@ export default function FocusFinderPrototype() {
                 </AnimatePresence>
               </div>
             </div>
-        </section>
+          </div>
         {sessionState === 'completed' && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}

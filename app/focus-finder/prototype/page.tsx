@@ -117,10 +117,10 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
     if (!isActive) return;
 
     // Schedule initial distractions
-    scheduleDistraction('modal');
-    scheduleDistraction('audio');
-    scheduleDistraction('visual');
-    scheduleDistraction('impulse');
+    scheduleDistraction('environment');
+    scheduleDistraction('biological');
+    scheduleDistraction('social');
+    scheduleDistraction('psychological');
   }, [isActive, scheduleDistraction]);
 
   const stopDistractionCycle = useCallback(() => {
@@ -248,13 +248,14 @@ export default function FocusFinderPrototype() {
   });
   const [focusLevel, setFocusLevel] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeModal, setActiveModal] = useState(false);
+  const [currentDistraction, setCurrentDistraction] = useState<DistractionEvent | null>(null);
 
   const difficultyIntensity = {
     easy: 0.5,
     normal: 1,
     hard: 1.5,
   }[distractionSettings.difficulty];
-
 
   const currentTask = TASKS[currentTaskIndex] ?? null;
 
@@ -263,13 +264,14 @@ export default function FocusFinderPrototype() {
     useCallback((type: DistractionType) => {
       const audioManager = getAudioManager();
       const config = DISTRACTION_CONFIG[type];
+      const intensity = difficultyIntensity || 1;
       
       const newDistraction: DistractionEvent = {
         id: `${type}-${Date.now()}`,
         type,
         triggeredAt: Date.now(),
         dismissedAt: null,
-        cost: config.cost * difficultyIntensity,
+        cost: config.cost * intensity,
         title: config.title,
       };
       

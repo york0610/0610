@@ -109,20 +109,20 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-white mb-6">發送訊息</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-300 mb-2">姓名</label>
-                  <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full rounded-lg bg-slate-800/50 border border-slate-700 px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" placeholder="您的姓名" />
+                  <label htmlFor="contact-name" className="block text-sm font-semibold text-slate-300 mb-2">姓名</label>
+                  <input id="contact-name" name="name" type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full rounded-lg bg-slate-800/50 border border-slate-700 px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" placeholder="您的姓名" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-300 mb-2">電子郵件</label>
-                  <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full rounded-lg bg-slate-800/50 border border-slate-700 px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" placeholder="您的電子郵件" />
+                  <label htmlFor="contact-email" className="block text-sm font-semibold text-slate-300 mb-2">電子郵件</label>
+                  <input id="contact-email" name="email" type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full rounded-lg bg-slate-800/50 border border-slate-700 px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" placeholder="您的電子郵件" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-300 mb-2">主題</label>
-                  <input type="text" required value={formData.subject} onChange={(e) => setFormData({...formData, subject: e.target.value})} className="w-full rounded-lg bg-slate-800/50 border border-slate-700 px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" placeholder="訊息主題" />
+                  <label htmlFor="contact-subject" className="block text-sm font-semibold text-slate-300 mb-2">主題</label>
+                  <input id="contact-subject" name="subject" type="text" required value={formData.subject} onChange={(e) => setFormData({...formData, subject: e.target.value})} className="w-full rounded-lg bg-slate-800/50 border border-slate-700 px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" placeholder="訊息主題" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-300 mb-2">訊息</label>
-                  <textarea required value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="w-full rounded-lg bg-slate-800/50 border border-slate-700 px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 h-32 resize-none" placeholder="請輸入您的訊息..." />
+                  <label htmlFor="contact-message" className="block text-sm font-semibold text-slate-300 mb-2">訊息</label>
+                  <textarea id="contact-message" name="message" required value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="w-full rounded-lg bg-slate-800/50 border border-slate-700 px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 h-32 resize-none" placeholder="請輸入您的訊息..." />
                 </div>
                 <button type="submit" className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 font-bold text-white transition hover:shadow-lg hover:shadow-cyan-500/50">發送訊息</button>
                 {submitted && (

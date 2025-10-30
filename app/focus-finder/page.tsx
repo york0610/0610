@@ -28,6 +28,7 @@ import {
   FaShoppingCart,
   FaBullseye,
   FaTasks,
+  FaCamera,
   FaHeadphones,
   FaMagic,
   FaStar

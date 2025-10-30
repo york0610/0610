@@ -1,31 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Header from './components/Header';
+import Footer from './components/Footer';
 import {
-  FaClock,
-  FaPlay,
-  FaVideo,
-  FaVolumeUp,
-  FaMobileAlt,
-  FaBolt,
   FaBrain,
   FaEye,
+  FaBolt,
   FaHeart,
-  FaExclamationTriangle,
-  FaCheckCircle,
+  FaChild,
+  FaUserMd,
+  FaStethoscope,
+  FaPills,
+  FaHandsHelping,
+  FaBook,
+  FaGamepad,
   FaArrowRight,
-  FaChartLine,
+  FaCheckCircle,
+  FaExclamationTriangle,
   FaUsers,
-  FaDownload,
-  FaShare,
-  FaCode,
-  FaRocket,
-  FaGamepad
+  FaLightbulb,
+  FaClock
 } from 'react-icons/fa';
 
-export default function FocusFinderPage() {
+export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'story' | 'mechanics' | 'tech' | 'roadmap'>('story');
 
   return (

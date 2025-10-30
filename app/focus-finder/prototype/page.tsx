@@ -491,7 +491,7 @@ export default function FocusFinderPrototype() {
 
       const constraints = {
         video: {
-          facingMode: { exact: 'environment' }, // 強制使用後置鏡頭
+          facingMode: 'environment', // 優先使用後置鏡頭，但允許前置鏡頭
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
@@ -499,7 +499,22 @@ export default function FocusFinderPrototype() {
       };
       console.log('[DEBUG] Constraints:', JSON.stringify(constraints));
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (error) {
+        console.warn('[DEBUG] Failed to get camera with environment facing, trying user facing...');
+        // 如果後置鏡頭失敗，嘗試前置鏡頭
+        const fallbackConstraints = {
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        };
+        stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+      }
       console.log('[DEBUG] Camera stream obtained:', stream);
       console.log('[DEBUG] Stream active:', stream.active);
       console.log('[DEBUG] Video tracks:', stream.getVideoTracks().length);
@@ -553,33 +568,6 @@ export default function FocusFinderPrototype() {
     const audioManager = getAudioManager();
     audioManager.playFocus();
     
-    const resetSession = useCallback(() => {
-      console.log('[DEBUG] Resetting session');
-      setSessionState('idle');
-      setCurrentTaskIndex(0);
-      setTimer(0);
-      setFocusLevel(100);
-      setDistractions([]);
-      setCurrentDistraction(null);
-      setIsDistractedTaskActive(false);
-      setDetectedObject(null);
-      setLogs([]);
-      setShowHints(false);
-      setSkippedTasks(0);
-      setIsFullscreen(false);
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      }
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      if (taskTimeoutRef) {
-        clearTimeout(taskTimeoutRef);
-        setTaskTimeoutRef(null);
-      }
-    }, [taskTimeoutRef]);
-
     setSessionState('running');
     setCurrentTaskIndex(0);
     setTimer(0);

@@ -27,9 +27,6 @@ export default function Header() {
             <Link href="/focus-finder" className="px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50 transition-colors">
               尋焦挑戰
             </Link>
-            <Link href="/assessment" className="px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50 transition-colors">
-              ADHD 量表
-            </Link>
             <Link href="/#symptoms" className="px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50 transition-colors">
               症狀特徵
             </Link>
@@ -37,11 +34,10 @@ export default function Header() {
             {/* 資源分享下拉菜單 */}
             <div className="relative group">
               <button 
-                onClick={() => setResourcesDropdownOpen(!resourcesDropdownOpen)}
                 className="px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1"
               >
                 資源分享
-                <FaChevronDown className={`text-xs transition-transform ${resourcesDropdownOpen ? 'rotate-180' : ''}`} />
+                <FaChevronDown className="text-xs" />
               </button>
               
               {/* 下拉菜單內容 */}

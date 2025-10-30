@@ -969,9 +969,9 @@ export default function FocusFinderPrototype() {
                 )}
               {permissionState === 'granted' && sessionState === 'idle' && (
                 <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 text-center p-8 z-50"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 text-center p-8 z-50"
                     style={{ pointerEvents: 'auto' }}
                   >
                     <motion.div

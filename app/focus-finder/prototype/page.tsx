@@ -967,7 +967,7 @@ export default function FocusFinderPrototype() {
                     </div>
                   </motion.div>
                 )}
-                {permissionState === 'granted' && sessionState === 'idle' && (
+              {permissionState === 'granted' && sessionState === 'idle' && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

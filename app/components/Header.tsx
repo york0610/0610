@@ -29,8 +29,11 @@ export default function Header() {
             <Link href="/assessment" className="px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50 transition-colors">
               ADHD 量表
             </Link>
-            <Link href="/#about" className="px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50 transition-colors">
-              認識 ADHD
+            <Link href="/#symptoms" className="px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50 transition-colors">
+              症狀特徵
+            </Link>
+            <Link href="/#resources" className="px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50 transition-colors">
+              資源分享
             </Link>
             <Link 
               href="/assessment" 
@@ -78,11 +81,18 @@ export default function Header() {
               ADHD 量表
             </Link>
             <Link 
-              href="/#about" 
+              href="/#symptoms" 
               className="block px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50"
               onClick={() => setMobileMenuOpen(false)}
             >
-              認識 ADHD
+              症狀特徵
+            </Link>
+            <Link 
+              href="/#resources" 
+              className="block px-4 py-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-gray-50"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              資源分享
             </Link>
             <Link 
               href="/assessment" 

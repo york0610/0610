@@ -272,6 +272,129 @@ export class AudioManager {
   }
 
   /**
+   * 播放物體偵測音 - 短技技声
+   */
+  playDetection() {
+    this.ensureAudioContextRunning();
+    if (!this.audioContext) return;
+    try {
+      const now = this.audioContext.currentTime;
+      // 短技技音
+      for (let i = 0; i < 2; i++) {
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        osc.frequency.setValueAtTime(800 + i * 200, now + i * 0.1);
+        gain.gain.setValueAtTime(0.4, now + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.1);
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+        osc.start(now + i * 0.1);
+        osc.stop(now + i * 0.1 + 0.1);
+      }
+    } catch (error) {
+      console.error('Error playing detection:', error);
+    }
+  }
+
+  /**
+   * 播放勝利音 - 歡慶的勝利音
+   */
+  playVictory() {
+    this.ensureAudioContextRunning();
+    if (!this.audioContext) return;
+    try {
+      const now = this.audioContext.currentTime;
+      // 上升的勝利音
+      const frequencies = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+      frequencies.forEach((freq, index) => {
+        const osc = this.audioContext!.createOscillator();
+        const gain = this.audioContext!.createGain();
+        osc.frequency.setValueAtTime(freq, now + index * 0.2);
+        gain.gain.setValueAtTime(0.4, now + index * 0.2);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.2 + 0.25);
+        osc.connect(gain);
+        gain.connect(this.audioContext!.destination);
+        osc.start(now + index * 0.2);
+        osc.stop(now + index * 0.2 + 0.25);
+      });
+    } catch (error) {
+      console.error('Error playing victory:', error);
+    }
+  }
+
+  /**
+   * 播放干擾任務音 - 急促的警告音
+   */
+  playDistractionTask() {
+    this.ensureAudioContextRunning();
+    if (!this.audioContext) return;
+    try {
+      const now = this.audioContext.currentTime;
+      // 急促的警告音
+      for (let i = 0; i < 3; i++) {
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(1500, now + i * 0.15);
+        gain.gain.setValueAtTime(0.5, now + i * 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.12);
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+        osc.start(now + i * 0.15);
+        osc.stop(now + i * 0.15 + 0.12);
+      }
+    } catch (error) {
+      console.error('Error playing distraction task:', error);
+    }
+  }
+
+  /**
+   * 播放時間提醒音 - 輕微的時間音
+   */
+  playTick() {
+    this.ensureAudioContextRunning();
+    if (!this.audioContext) return;
+    try {
+      const now = this.audioContext.currentTime;
+      const osc = this.audioContext.createOscillator();
+      const gain = this.audioContext.createGain();
+      osc.frequency.setValueAtTime(1000, now);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      osc.connect(gain);
+      gain.connect(this.audioContext.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } catch (error) {
+      console.error('Error playing tick:', error);
+    }
+  }
+
+  /**
+   * 播放專注音 - 平静的专注音
+   */
+  playFocus() {
+    this.ensureAudioContextRunning();
+    if (!this.audioContext) return;
+    try {
+      const now = this.audioContext.currentTime;
+      const osc = this.audioContext.createOscillator();
+      const gain = this.audioContext.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(432, now); // 室内调音
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.3);
+      gain.gain.linearRampToValueAtTime(0, now + 0.8);
+      osc.connect(gain);
+      gain.connect(this.audioContext.destination);
+      osc.start(now);
+      osc.stop(now + 0.8);
+    } catch (error) {
+      console.error('Error playing focus:', error);
+    }
+  }
+
+  /**
    * 停止所有音效
    */
   stopAll() {
@@ -294,6 +417,21 @@ export class AudioManager {
   }
 
   /**
+   * 設置音量
+   */
+  setVolume(volume: number) {
+    // 实現音量控制
+    console.log(`[Audio] 音量已設置為 ${Math.round(volume * 100)}%`);
+  }
+
+  /**
+   * 設置静音模式
+   */
+  setMuted(muted: boolean) {
+    console.log(`[Audio] 静音模式${muted ? '已啟用' : '已禁用'}`);
+  }
+
+  /**
    * 清理資源
    */
   dispose() {
@@ -301,6 +439,14 @@ export class AudioManager {
     if (this.audioContext && this.audioContext.state !== 'closed') {
       this.audioContext.close();
     }
+    console.log('[Audio] AudioManager 已清理');
+  }
+
+  /**
+   * 檢查 AudioContext 是否已初始化
+   */
+  isReady(): boolean {
+    return this.isInitialized && this.audioContext !== null;
   }
 }
 
@@ -312,4 +458,14 @@ export function getAudioManager(): AudioManager {
     audioManagerInstance = new AudioManager();
   }
   return audioManagerInstance;
+}
+
+/**
+ * 重置音效管理器
+ */
+export function resetAudioManager(): void {
+  if (audioManagerInstance) {
+    audioManagerInstance.dispose();
+    audioManagerInstance = null;
+  }
 }

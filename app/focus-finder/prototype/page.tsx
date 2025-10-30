@@ -58,7 +58,7 @@ const INTERRUPTION_TASKS = [
   { 
     type: 'environment' as DistractionType, 
     title: '💻 電腦沒關！', 
-    description: '你忘記關電腦了，必須先去關掉它', 
+    description: '你忘記關電腦了，必須先去關掉它。這是 ADHD 最常見的情形——你總是忘記關掉設備', 
     objectToFind: 'laptop',
     cost: 3,
     emoji: '💻'
@@ -66,7 +66,7 @@ const INTERRUPTION_TASKS = [
   { 
     type: 'biological' as DistractionType, 
     title: '💧 口好渴！', 
-    description: '你非常口渴，必須先去找水杯喝水', 
+    description: '你非常口渴，必須先去找水杯營水。你的身體在提醒你需要照顧自己', 
     objectToFind: 'cup',
     cost: 2,
     emoji: '☕'
@@ -74,18 +74,42 @@ const INTERRUPTION_TASKS = [
   { 
     type: 'social' as DistractionType, 
     title: '📱 手機響了！', 
-    description: '手機一直響，必須先去關掉它', 
+    description: '手機一直響，必須先去關掉它。社交壓不斷地打斷你的注意力', 
     objectToFind: 'cell phone',
     cost: 2.5,
     emoji: '📱'
   },
   { 
-    type: 'environment' as DistractionType, 
-    title: '💡 燈沒關！', 
-    description: '房間的燈還開著，必須先去關燈', 
-    objectToFind: 'light',
+    type: 'psychological' as DistractionType, 
+    title: '😔 心情不好了', 
+    description: '你突然感到心情不好，想看看天空或窗戶外面來較泯。這是 ADHD 患者常見的逃避機制——你需要抵抗這個誘惑', 
+    objectToFind: 'sky',
     cost: 1.5,
-    emoji: '💡'
+    emoji: '😔'
+  },
+  { 
+    type: 'environment' as DistractionType, 
+    title: '📄 找不到東西了', 
+    description: '你找不到你要的東西，想要開門去外面找找。這是 ADHD 的典型表現：尋找一樣東西時會失去焦點', 
+    objectToFind: 'door',
+    cost: 2,
+    emoji: '📄'
+  },
+  { 
+    type: 'psychological' as DistractionType, 
+    title: '📺 突然想看電視', 
+    description: '你突然想起了你最喜歡的電視節目。這是 ADHD 的衡動控制不佳——你需要抵抗這個誘惑來完成任務', 
+    objectToFind: 'tv',
+    cost: 2.5,
+    emoji: '📺'
+  },
+  { 
+    type: 'environment' as DistractionType, 
+    title: '👀 窗戶外面太漂亮', 
+    description: '你不由主你地看了一眼窗戶外面。你需要將鏡頭對準窗戶來抵抗誘惑。環境干擾是 ADHD 最大的敵人', 
+    objectToFind: 'window',
+    cost: 1.5,
+    emoji: '👀'
   },
 ];
 
@@ -97,15 +121,28 @@ const DISTRACTION_CONFIG: Record<DistractionType, { minDelay: number; maxDelay: 
 };
 
 // 遊戲時間限制（秒）
-const GAME_TIME_LIMIT = 60;
+const GAME_TIME_LIMIT = 120; // 增加到 120 秒以適應更多任務
+
+// 遊戲故事背景
+// 這個遊戲模擬 ADHD 患者的日常挑戰：
+// - 環境干擾：外部事物的中斷
+// - 身體上的需求：口渴、疲劳等
+// - 社交壓不斷：手機、消息等
+// - 心理上的較泯：心情不好、衡動控制不佳等
 
 // 常見物品任務 - 容易在身邊找到
+// 這些任務代表了 ADHD 患者需要完成的日常活動
 const TASKS: Task[] = [
-  { id: 'cell phone', title: '找到手機', hint: '通常在桌上或口袋裡', prompt: '將鏡頭對準你的手機。', emoji: '�', difficulty: 'easy' },
+  { id: 'cell phone', title: '找到手機', hint: '通常在桌上或口袋裡', prompt: '將鏡頭對準你的手機。', emoji: '📱', difficulty: 'easy' },
   { id: 'cup', title: '找到杯子', hint: '桌上或廚房', prompt: '將鏡頭對準你的水杯或馬克杯。', emoji: '☕', difficulty: 'easy' },
-  { id: 'book', title: '找到書', hint: '桌上或書架', prompt: '將鏡頭對準任何一本書。', emoji: '�', difficulty: 'easy' },
+  { id: 'book', title: '找到書', hint: '桌上或書架', prompt: '將鏡頭對準任何一本書。', emoji: '📖', difficulty: 'easy' },
   { id: 'keyboard', title: '找到鍵盤', hint: '電腦桌上', prompt: '將鏡頭對準你的鍵盤。', emoji: '⌨️', difficulty: 'normal' },
   { id: 'bottle', title: '找到瓶子', hint: '桌上或包包裡', prompt: '將鏡頭對準任何瓶子。', emoji: '🧪', difficulty: 'easy' },
+  { id: 'laptop', title: '找到電腦', hint: '桌上或包包裡', prompt: '將鏡頭對準你的筆記本電腦。', emoji: '💻', difficulty: 'normal' },
+  { id: 'mouse', title: '找到滑鼠', hint: '電腦桌上', prompt: '將鏡頭對準你的滑鼠。', emoji: '🖱️', difficulty: 'normal' },
+  { id: 'monitor', title: '找到螢幕', hint: '電腦前面', prompt: '將鏡頭對準你的電腦螢幕。', emoji: '🖥️', difficulty: 'easy' },
+  { id: 'chair', title: '找到椅子', hint: '你坐著的地方', prompt: '將鏡頭對準你的椅子。', emoji: '🪑', difficulty: 'easy' },
+  { id: 'desk', title: '找到桌子', hint: '你面前', prompt: '將鏡頭對準你的桌子。', emoji: '🛏️', difficulty: 'easy' },
 ];
 
 const formatSeconds = (value: number) => {
@@ -266,8 +303,9 @@ export default function FocusFinderPrototype() {
 
   // 平台和物體偵測狀態
   const [platform, setPlatform] = useState<Platform>('desktop');
-  const [isDetectionEnabled, setIsDetectionEnabled] = useState(false);
+  const [isDetectionEnabled, setIsDetectionEnabled] = useState(true); // 預設啟用
   const [detectedObject, setDetectedObject] = useState<string | null>(null);
+  const [detectionDebug, setDetectionDebug] = useState<string[]>([]);
 
   const [permissionState, setPermissionState] = useState<PermissionState>('idle');
   const [sessionState, setSessionState] = useState<SessionState>('idle');
@@ -457,8 +495,10 @@ export default function FocusFinderPrototype() {
     setDistractions([]);
     setFocusLevel(100);
     setIsFullscreen(true);
+    setIsDetectionEnabled(true); // 遊戲開始時自動啟用物體偵測
     setLogs([{ taskId: TASKS[0]?.id ?? 'unknown', startedAt: Date.now(), completedAt: null }]);
     console.log('[DEBUG] Game session started, first task:', TASKS[0]?.title);
+    console.log('[DEBUG] Object detection enabled');
 
     if (intervalRef.current) {
       window.clearInterval(intervalRef.current);
@@ -576,6 +616,8 @@ export default function FocusFinderPrototype() {
       setIsDetectionEnabled(true);
     }
 
+    console.log('[DEBUG] 平台檢測:', info);
+
     // 監聽窗口大小變化
     const handleResize = () => {
       const newInfo = detector.detect();
@@ -596,26 +638,43 @@ export default function FocusFinderPrototype() {
       try {
         const detector = getObjectDetector();
         await detector.initialize();
+        console.log('[DEBUG] 物體偵測器已初始化');
 
         const detectionIntervalId = window.setInterval(async () => {
           if (!videoRef.current) return;
 
-          const result = await detector.detectObjects(videoRef.current);
-          const currentTask = TASKS[currentTaskIndex];
+          try {
+            const result = await detector.detectObjects(videoRef.current);
+            const currentTask = TASKS[currentTaskIndex];
+            const currentDist = currentDistraction;
 
-          if (currentTask) {
-            const taskId = currentTask.id as 'keys' | 'wallet' | 'phone';
-            if (detector.checkForGameObject(result, taskId)) {
-              setDetectedObject(taskId);
-              // 自動完成任務
-              completeTask();
+            // 優先檢查干擾任務
+            if (isDistractedTaskActive && currentDist?.objectToFind) {
+              if (detector.checkForGameObject(result, currentDist.objectToFind)) {
+                setDetectedObject(currentDist.objectToFind);
+                console.log(`[DEBUG] 偵測到干擾任務物體: ${currentDist.objectToFind}`);
+                // 自動完成干擾任務
+                setTimeout(() => completeInterruptionTask(), 500);
+              }
             }
+            // 檢查主任務
+            else if (currentTask && result.objects.length > 0) {
+              if (detector.checkForGameObject(result, currentTask.id)) {
+                setDetectedObject(currentTask.id);
+                console.log(`[DEBUG] 偵測到任務物體: ${currentTask.id}`);
+                // 自動完成任務
+                setTimeout(() => completeTask(), 500);
+              }
+            }
+          } catch (detectionError) {
+            console.error('[DEBUG] 單次偵測失敗:', detectionError);
           }
         }, 500); // 每 500ms 檢測一次
 
         detectionIntervalRef.current = detectionIntervalId;
       } catch (error) {
-        console.error('物體偵測錯誤:', error);
+        console.error('[DEBUG] 物體偵測初始化錯誤:', error);
+        setErrorMessage('物體偵測初始化失敗，請重新開始');
       }
     };
 
@@ -624,9 +683,10 @@ export default function FocusFinderPrototype() {
     return () => {
       if (detectionIntervalRef.current) {
         window.clearInterval(detectionIntervalRef.current);
+        detectionIntervalRef.current = null;
       }
     };
-  }, [isDetectionEnabled, sessionState, currentTaskIndex, completeTask]);
+  }, [isDetectionEnabled, sessionState, currentTaskIndex, isDistractedTaskActive, currentDistraction, completeTask, completeInterruptionTask]);
 
   const totalCompleted = logs.filter((log) => log.completedAt !== null).length;
   const totalDistractionCost = distractions
@@ -691,6 +751,15 @@ export default function FocusFinderPrototype() {
                   />
                   <span>啟用干擾模組</span>
                 </label>
+                <div className="flex items-center gap-3 text-slate-400">
+                  <input
+                    type="checkbox"
+                    checked={true}
+                    disabled
+                    className="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 cursor-not-allowed"
+                  />
+                  <span>✓ 物體偵測已啟用 (MediaPipe)</span>
+                </div>
                 <div>
                   <label className="block text-xs font-medium mb-2">遊戲難度</label>
                   <div className="grid grid-cols-3 gap-2">
@@ -804,7 +873,7 @@ export default function FocusFinderPrototype() {
                       <p className="text-lg text-slate-300 leading-relaxed">
                         您的鏡頭已成功連接。
                         <br />
-                        點擊下方按鈕開始挑戰吧！
+                        物體偵測已準備就緒，點擊下方按鈕開始挑戰吧！
                       </p>
                       <div className="flex flex-col gap-3 pt-4">
                         <button
@@ -815,7 +884,7 @@ export default function FocusFinderPrototype() {
                           開始遊戲
                         </button>
                         <p className="text-xs text-slate-500">
-                          ⏱️ 準備好應對 90 秒的挑戰
+                          📷 物體偵測已啟用 | ⏱️ 準備好應對 {GAME_TIME_LIMIT} 秒的挑戰
                         </p>
                       </div>
                     </div>
@@ -875,42 +944,60 @@ export default function FocusFinderPrototype() {
                     key={currentDistraction.id}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="absolute left-1/2 top-1/2 flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-3xl border-2 border-red-500/80 bg-gradient-to-br from-red-950/95 to-orange-950/95 p-8 text-sm text-slate-100 shadow-[0_0_60px_rgba(239,68,68,0.6)] backdrop-blur-xl max-h-[70vh] overflow-y-auto z-50"
+                    className="absolute left-1/2 top-1/2 flex w-[min(95vw,500px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border-2 border-red-500/80 bg-gradient-to-br from-red-950/95 to-orange-950/95 p-4 sm:p-8 text-xs sm:text-sm text-slate-100 shadow-[0_0_60px_rgba(239,68,68,0.6)] backdrop-blur-xl max-h-[80vh] overflow-y-auto z-50"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <motion.span 
-                        className="text-4xl"
+                        className="text-2xl sm:text-4xl flex-shrink-0"
                         animate={{ rotate: [0, 10, -10, 0] }}
                         transition={{ duration: 0.5, repeat: Infinity }}
                       >
                         ⚠️
                       </motion.span>
-                      <div>
-                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-300">
-                          <FaExclamationTriangle /> 緊急中斷！
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-300 line-clamp-1">
+                          <FaExclamationTriangle className="flex-shrink-0" /> 緊急中斷！
                         </span>
-                        <h3 className="text-2xl font-bold text-white mt-1">{currentDistraction.title}</h3>
+                        <h3 className="text-lg sm:text-2xl font-bold text-white mt-1 line-clamp-2">{currentDistraction.title}</h3>
                       </div>
                     </div>
-                    <div className="border-t border-red-700/50 pt-4">
-                      <p className="text-base text-red-200 mb-4 font-semibold">🚨 {currentDistraction.description}</p>
-                      <div className="rounded-xl bg-slate-900/50 border border-red-500/30 p-4">
-                        <p className="text-sm text-slate-300 leading-relaxed">
-                          請將鏡頭對準 <span className="font-bold text-red-300">{currentDistraction.objectToFind}</span>，然後點擊「已完成」按鈕。
+                    <div className="border-t border-red-700/50 pt-3 sm:pt-4">
+                      <p className="text-xs sm:text-base text-red-200 mb-2 sm:mb-4 font-semibold line-clamp-3">🚨 {currentDistraction.description}</p>
+                      <div className="rounded-lg sm:rounded-xl bg-slate-900/50 border border-red-500/30 p-2 sm:p-4">
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                          請將鏡頭對準 <span className="font-bold text-red-300">{currentDistraction.objectToFind}</span>。
                           <br />
-                          <span className="text-xs text-slate-400 mt-2 block">⚠️ 必須先完成此任務才能繼續主任務！</span>
+                          <span className="text-xs text-slate-400 mt-1 sm:mt-2 block">⚠️ 必須先完成此任務才能繼續主任務！</span>
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-3 pt-4">
-                      <button
-                        type="button"
-                        onClick={completeInterruptionTask}
-                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:shadow-xl hover:scale-105 active:scale-95"
-                      >
-                        <FaCheck /> 已完成中斷任務
-                      </button>
-                    </div>
+                    {currentDistraction?.objectToFind && (
+                      <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4">
+                        {detectedObject === currentDistraction.objectToFind ? (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex-1 flex gap-2 sm:gap-3 bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-2 sm:p-3"
+                          >
+                            <div className="flex items-center gap-2 text-emerald-300 flex-1 min-w-0">
+                              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }} className="flex-shrink-0">
+                                <FaCheck className="text-base sm:text-lg" />
+                              </motion.div>
+                              <span className="font-semibold text-xs sm:text-sm truncate">✓ 中斷任務已完成！</span>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <div className="flex-1 flex gap-2 sm:gap-3 bg-red-900/30 border border-red-500/50 rounded-lg p-2 sm:p-3">
+                            <div className="flex items-center gap-2 text-red-300 flex-1 min-w-0 text-xs sm:text-sm">
+                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }} className="flex-shrink-0">
+                                <FaCamera className="text-base sm:text-lg" />
+                              </motion.div>
+                              <span className="truncate">🔍 掃描中... 請將 <strong>{currentDistraction.objectToFind}</strong> 對準鏡頭</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 )}
                 
@@ -924,33 +1011,47 @@ export default function FocusFinderPrototype() {
                       y: 0,
                       scale: isDistractedTaskActive ? 0.95 : 1
                     }}
-                    className="absolute left-1/2 top-1/2 flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-3xl border-2 border-cyan-400/60 bg-gradient-to-br from-slate-950/95 to-slate-900/95 p-8 text-sm text-slate-100 shadow-[0_0_40px_rgba(34,211,238,0.4)] backdrop-blur-xl max-h-[70vh] overflow-y-auto"
+                    className="absolute left-1/2 top-1/2 flex w-[min(95vw,500px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-2xl sm:rounded-3xl border-2 border-cyan-400/60 bg-gradient-to-br from-slate-950/95 to-slate-900/95 p-4 sm:p-8 text-xs sm:text-sm text-slate-100 shadow-[0_0_40px_rgba(34,211,238,0.4)] backdrop-blur-xl max-h-[80vh] overflow-y-auto z-40"
                     style={{ pointerEvents: isDistractedTaskActive ? 'none' : 'auto' }}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{currentTask.emoji}</span>
-                      <div>
-                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-cyan-300">
-                          <FaLocationArrow /> 任務目標
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="text-2xl sm:text-3xl">{currentTask.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-cyan-300 line-clamp-1">
+                          <FaLocationArrow className="flex-shrink-0" /> 任務目標
                         </span>
-                        <h3 className="text-xl font-bold text-white mt-1">{currentTask.title}</h3>
+                        <h3 className="text-lg sm:text-xl font-bold text-white mt-1 line-clamp-2">{currentTask.title}</h3>
                       </div>
                     </div>
-                    <div className="border-t border-slate-700/50 pt-4">
+                    <div className="border-t border-slate-700/50 pt-3 sm:pt-4">
                       {showHints && (
-                        <p className="text-sm text-cyan-200 mb-3 font-semibold">💡 提示：{currentTask.hint}</p>
+                        <p className="text-xs sm:text-sm text-cyan-200 mb-2 sm:mb-3 font-semibold line-clamp-2">💡 提示：{currentTask.hint}</p>
                       )}
-                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{currentTask.prompt}</p>
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-wrap line-clamp-3">{currentTask.prompt}</p>
                     </div>
-                    <div className="flex gap-3 pt-4">
-                      <button
-                        type="button"
-                        onClick={() => completeTask()}
-                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:shadow-xl hover:scale-105 active:scale-95"
+                    {detectedObject === currentTask.id ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex gap-2 sm:gap-3 pt-3 sm:pt-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-2 sm:p-3"
                       >
-                        <FaCheck /> 標記已找到
-                      </button>
-                    </div>
+                        <div className="flex items-center gap-2 text-emerald-300 flex-1 min-w-0">
+                          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }} className="flex-shrink-0">
+                            <FaCheck className="text-base sm:text-lg" />
+                          </motion.div>
+                          <span className="font-semibold text-xs sm:text-sm truncate">✓ 已偵測到！自動完成中...</span>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4 bg-slate-800/50 border border-slate-700/50 rounded-lg p-2 sm:p-3">
+                        <div className="flex items-center gap-2 text-slate-400 flex-1 min-w-0 text-xs sm:text-sm">
+                          <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }} className="flex-shrink-0">
+                            <FaCamera className="text-base sm:text-lg" />
+                          </motion.div>
+                          <span className="truncate">🔍 掃描中... 請將物體對準鏡頭</span>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
 
@@ -980,24 +1081,24 @@ export default function FocusFinderPrototype() {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
+                    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-3 sm:mt-4">
                       <button
                         type="button"
                         onClick={startSession}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:scale-105"
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold text-white shadow-lg transition hover:scale-105"
                       >
                         <FaRedo /> 再次挑戰
                       </button>
                       <button
                         type="button"
                         onClick={resetSession}
-                        className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-600 px-6 py-3 text-sm font-bold text-slate-200 transition hover:border-slate-400"
+                        className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-600 px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold text-slate-200 transition hover:border-slate-400"
                       >
                         重設體驗
                       </button>
                     </div>
                   </motion.div>
-                )}
+                )
 
                 {sessionState === 'failed' && (
                   <motion.div 

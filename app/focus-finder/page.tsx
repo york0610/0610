@@ -74,99 +74,27 @@ type ChallengeCard = Challenge;
 // 定義 challenges 數組 - 基於「60秒專題恐慌」遊戲企劃
 const challenges: Challenge[] = [
   {
-    id: 'final-project-panic',
-    title: '60秒專題恐慌',
-    subtitle: '模擬 ADHD 者在高壓情境下的內在感受',
-    description: '你是一名大學生，教授剛叫到你的名字。你必須在 60 秒的緩衝時間內，確認所有上台物品。但是——你的思緒不斷被打斷，記憶不斷被清空，感官過載讓你無法專注。',
-    icon: <FaClock className="text-red-400" />,
-    color: 'red',
-    gradient: 'from-red-500 via-orange-500 to-yellow-500',
+    id: 'environment-scan',
+    title: '60秒環境掃描挑戰',
+    subtitle: '體驗 ADHD 者在多任務下的認知負荷',
+    description: '你需要在 60 秒內完成環境掃描任務：找到地板、天花板、牆壁、門和窗戶。但是——你會不斷被突發的干擾任務打斷，必須先完成干擾任務才能繼續。這就是 ADHD 者每天面對的挑戰：不斷被打斷，難以保持專注。',
+    icon: <FaCamera className="text-cyan-400" />,
+    color: 'cyan',
+    gradient: 'from-cyan-500 via-blue-500 to-purple-500',
     difficulty: 'expert',
     duration: '60 秒',
-    participants: '48,293',
-    rating: 4.9,
+    participants: '0',
+    rating: 5.0,
     features: [
-      'CV 視覺偵測：透過鏡頭尋找真實物品',
-      '執行功能干擾：突發任務強制中斷',
-      '工作記憶損耗：被打斷後必須重新載入',
-      '感官恐慌疊加：視覺與聽覺的失控感'
+      '環境掃描：使用手機鏡頭掃描地板、天花板等',
+      '強制中斷：突發任務必須先完成',
+      '視覺雜訊：干擾時增加視覺失真',
+      '分數系統：詳細的成績評估'
     ],
     stats: [
-      { label: '完成率', value: '23%' },
-      { label: '平均中斷次數', value: '4.2 次' },
-      { label: '體驗人數', value: '48,293' }
-    ]
-  },
-  {
-    id: 'conversation-tracking',
-    title: '對話追蹤戰',
-    subtitle: '在多人對話中保持專注',
-    description: '你正在參加一場重要的小組討論。但是當多人同時發言時，你發現自己無法追蹤誰在說什麼。背景的各種聲音不斷吸引你的注意力。',
-    icon: <FaComments className="text-purple-400" />,
-    color: 'purple',
-    gradient: 'from-purple-500 to-pink-500',
-    difficulty: 'advanced',
-    duration: '5 分鐘',
-    participants: '31,847',
-    rating: 4.7,
-    features: [
-      '多音軌混合：同時播放多段對話',
-      '選擇性注意力：必須篩選關鍵訊息',
-      '干擾音策略：背景雜訊動態調整',
-      '即時理解測驗：測試你的記憶保留'
-    ],
-    stats: [
-      { label: '完成率', value: '42%' },
-      { label: '平均注意力', value: '6.5/10' },
-      { label: '體驗人數', value: '31,847' }
-    ]
-  },
-  {
-    id: 'supermarket-memory',
-    title: '超市記憶戰',
-    subtitle: '在複雜環境中完成購物清單',
-    description: '你有一張 8 項物品的購物清單，但是在超市的各種視覺與聽覺干擾下，你不斷忘記自己要買什麼。每次重新查看清單，你都感到沮喪。',
-    icon: <FaShoppingCart className="text-green-400" />,
-    color: 'green',
-    gradient: 'from-green-500 to-emerald-500',
-    difficulty: 'intermediate',
-    duration: '8 分鐘',
-    participants: '27,561',
-    rating: 4.6,
-    features: [
-      '工作記憶負載：同時記住多項任務',
-      '視覺雜訊：超市貨架的視覺過載',
-      '衝動控制：抵抗購買非清單物品',
-      '記憶重載：模擬忘記後的重新思考'
-    ],
-    stats: [
-      { label: '完成率', value: '58%' },
-      { label: '平均重查次數', value: '5.3 次' },
-      { label: '體驗人數', value: '27,561' }
-    ]
-  },
-  {
-    id: 'homework-battle',
-    title: '作業之戰',
-    subtitle: '在家中完成作業的挑戰',
-    description: '你有一份明天就要交的作業。但是家中的每一個聲音、每一個物品都在誤惑你。你不斷告訴自己「再 5 分鐘就開始」，但時間一分一秒流逝。',
-    icon: <FaBrain className="text-blue-400" />,
-    color: 'blue',
-    gradient: 'from-blue-500 to-cyan-500',
-    difficulty: 'beginner',
-    duration: '10 分鐘',
-    participants: '35,829',
-    rating: 4.5,
-    features: [
-      '時間知覚障礙：時間過得比想像中快',
-      '拖延行為模擬：各種誤惑與逾避',
-      '啟動困難：很難真正「開始」作業',
-      '分心追蹤：記錄你被什麼分心'
-    ],
-    stats: [
-      { label: '完成率', value: '71%' },
-      { label: '平均分心', value: '8.7 次' },
-      { label: '體驗人數', value: '35,829' }
+      { label: '遊戲時間', value: '60秒' },
+      { label: '主任務', value: '5個' },
+      { label: '干擾類型', value: '8種' }
     ]
   }
 ];
@@ -279,7 +207,7 @@ export default function FocusFinderPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              60秒專題恐慌
+              60秒環境掃描挑戰
             </motion.h1>
             
             {/* 副標題 */}
@@ -289,7 +217,7 @@ export default function FocusFinderPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              The 60-Second Final Project Panic
+              The 60-Second Environment Scan Challenge
             </motion.p>
             
             {/* 描述 */}
@@ -299,13 +227,14 @@ export default function FocusFinderPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              你是一名大學生，正坐在教室裡。教授叫到你的名字：<br />
-              <span className="font-bold text-orange-300">「下一組，[你的名字]，請準備上台。」</span>
+              你需要在 <span className="font-bold text-cyan-400">60 秒</span> 內完成環境掃描任務：
+              使用手機鏡頭找到地板、天花板、牆壁、門和窗戶。
               <br /><br />
-              你突然意識到自己還沒準備好。你必須在 <span className="font-bold text-red-400">60 秒</span> 的緩衝時間內，
-              確認所有上台物品都已就位。
+              但是——<span className="font-bold text-red-400">你會不斷被突發的干擾任務打斷</span>：
+              電腦沒關、手機響了、口好渴……
               <br /><br />
-              但是——<span className="font-bold text-yellow-300">你的思緒不斷被打斷，記憶不斷被清空，感官過載讓你無法專注。</span>
+              <span className="font-bold text-yellow-300">你必須先完成干擾任務才能繼續主任務。</span>
+              這就是 ADHD 者每天面對的挑戰：<span className="font-bold text-orange-300">不斷被打斷，難以保持專注。</span>
             </motion.p>
 
             {/* 核心數據 */}

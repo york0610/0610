@@ -849,34 +849,25 @@ export default function FocusFinderPrototype() {
                 {logs.length > 0 && (
                   <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
                     <h2 className="text-lg font-semibold text-white">📊 上次結果</h2>
-                <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-200">
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-                    <p className="text-xs uppercase tracking-widest text-slate-400">完成任務</p>
-                    <p className="mt-1 text-3xl font-bold text-emerald-400">
-                      {totalCompleted}/{TASKS.length}
-                    </p>
+                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-200">
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+                        <p className="text-xs uppercase tracking-widest text-slate-400">完成任務</p>
+                        <p className="mt-1 text-3xl font-bold text-emerald-400">
+                          {totalCompleted}/{TASKS.length}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+                        <p className="text-xs uppercase tracking-widest text-slate-400">總時間</p>
+                        <p className="mt-1 text-3xl font-bold text-sky-400">
+                          {formatSeconds(adjustedTime)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-                    <p className="text-xs uppercase tracking-widest text-slate-400">總時間</p>
-                    <p className="mt-1 text-3xl font-bold text-sky-400">
-                      {formatSeconds(adjustedTime)}
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
             )}
-              <p className="mt-2 text-sm">
-                與 MindAR 或 Three.js 整合，將虛擬物件固定於空間座標，讓「尋焦器」不再只是畫面疊層，而是真實世界的導引。
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-              <p className="text-xs uppercase tracking-widest text-amber-300/80">反思與分享</p>
-              <p className="mt-2 text-sm">
-                設計結束後的反思問答與分享介面，讓體驗者把心得轉化為對 ADHD 的理解與支持行動。
-              </p>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

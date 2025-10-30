@@ -34,6 +34,28 @@ function AudioPreloader() {
   return null;
 }
 
+// 客戶端組件
+function ClientComponents() {
+  return (
+    <Script
+      id="performance-monitoring"
+      strategy="afterInteractive"
+      dangerouslySetInnerHTML={{
+        __html: `
+          if (typeof window !== 'undefined' && 'performance' in window) {
+            const observer = new PerformanceObserver((list) => {
+              for (const entry of list.getEntries()) {
+                console.log('[Performance]', entry.name, entry.duration);
+              }
+            });
+            observer.observe({ entryTypes: ['measure', 'paint', 'longtask'] });
+          }
+        `,
+      }}
+    />
+  );
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -50,25 +72,7 @@ export default function RootLayout({
         {children}
         <Footer />
         <AudioPreloader />
-        
-        {/* 添加性能監控 */}
-        <Script
-          id="performance-monitoring"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined' && 'performance' in window) {
-                // 監聽頁面性能指標
-                const observer = new PerformanceObserver((list) => {
-                  for (const entry of list.getEntries()) {
-                    console.log('[Performance]', entry.name, entry.duration);
-                  }
-                });
-                observer.observe({ entryTypes: ['measure', 'paint', 'longtask'] });
-              }
-            `,
-          }}
-        />
+        <ClientComponents />
       </body>
     </html>
   );

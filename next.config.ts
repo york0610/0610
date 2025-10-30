@@ -15,10 +15,13 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       'react-icons/fa',
       'framer-motion',
-    ]
+      '@fortawesome/fontawesome-svg-core',
+      '@fortawesome/free-solid-svg-icons',
+      '@fortawesome/react-fontawesome',
+    ],
+    // 啟用 SWC 的優化
+    swcMinify: true
   },
-  // 啟用 SWC 的優化
-  swcMinify: true,
   
   // 編譯器選項
   compiler: {

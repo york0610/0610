@@ -329,26 +329,40 @@ export default function FocusFinderPrototype() {
     try {
       setPermissionState('requesting');
       setErrorMessage(null);
+      console.log('Requesting camera access...');
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const constraints = {
         video: {
           facingMode: { ideal: 'user' },
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
         audio: false,
-      });
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Camera stream obtained:', stream);
 
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => undefined);
+        console.log('Video element updated with stream');
+        
+        // 確保視頻開始播放
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded');
+          videoRef.current?.play().catch(err => {
+            console.error('Video play error:', err);
+          });
+        };
       }
 
       setPermissionState('granted');
+      console.log('Camera permission granted');
     } catch (error) {
       const message = error instanceof Error ? error.message : '授權失敗，請確認裝置已允許使用鏡頭。';
+      console.error('Camera access error:', error);
       setErrorMessage(message);
       setPermissionState('denied');
       stopStream();
@@ -618,8 +632,12 @@ export default function FocusFinderPrototype() {
                   playsInline
                   muted
                   autoPlay
+                  onError={(e) => {
+                    console.error('Video element error:', e);
+                    setErrorMessage('視頻播放錯誤，請重新嘗試');
+                  }}
                 />
-                {permissionState !== 'granted' && sessionState === 'idle' && (
+{permissionState !== 'granted' && sessionState === 'idle' && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -634,20 +652,60 @@ export default function FocusFinderPrototype() {
                     <div className="max-w-md space-y-4">
                       <h3 className="text-3xl font-bold text-white">準備好了嗎？</h3>
                       <p className="text-lg text-slate-300 leading-relaxed">
-                        你將體驗 ADHD 者在高壓情境下的感受。
+                        你將體驗 ADHD 者在體壓情境下的感受。
                         <br />
                         我們需要使用你的鏡頭來創建 AR 體驗。
                       </p>
+                      {errorMessage && (
+                        <div className="rounded-lg bg-red-900/50 border border-red-700 p-3 text-sm text-red-200">
+                          ⚠️ {errorMessage}
+                        </div>
+                      )}
                       <div className="flex flex-col gap-3 pt-4">
                         <button
                           onClick={handleRequestCamera}
-                          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50"
+                          disabled={permissionState === 'requesting'}
+                          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <FaCamera className="text-2xl" />
-                          啟用鏡頭開始
+                          {permissionState === 'requesting' ? '請求中...' : '啟用鏡頭開始'}
                         </button>
                         <p className="text-xs text-slate-500">
                           🔒 你的影像不會被儲存或上傳
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+                {permissionState === 'granted' && sessionState === 'idle' && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 text-center p-8"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <FaPlay className="text-6xl text-emerald-400" />
+                    </motion.div>
+                    <div className="max-w-md space-y-4">
+                      <h3 className="text-3xl font-bold text-white">鏡頭已就緒</h3>
+                      <p className="text-lg text-slate-300 leading-relaxed">
+                        您的鏡頭已成功連接。
+                        <br />
+                        點擊下方按鈕開始挑戰吧！
+                      </p>
+                      <div className="flex flex-col gap-3 pt-4">
+                        <button
+                          onClick={startSession}
+                          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-emerald-500/50"
+                        >
+                          <FaPlay className="text-2xl" />
+                          開始遊戲
+                        </button>
+                        <p className="text-xs text-slate-500">
+                          ⏱️ 準備好應對 90 秒的挑戰
                         </p>
                       </div>
                     </div>

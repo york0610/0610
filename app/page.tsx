@@ -74,42 +74,85 @@ export default function HomePage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              注意力不足過動症（ADHD）是一種神經發展障礙，主要特徵為持續的注意力不集中、過動及衝動行為。
+              注意力不足過動症（ADHD）是一種神經發展障礙，影響全球數百萬人。成人症狀常被低估，臨床辨識與就醫率顯著低於實際盛行率。
               <br /><br />
               <span className="font-bold text-cyan-300">症狀必須在 12 歲之前出現，持續至少六個月，並在多個生活情境中造成明顯的功能障礙。</span>
             </motion.p>
 
             {/* 核心數據 */}
             <motion.div 
-              className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-3"
+              className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
               <div className="rounded-2xl border border-blue-800/30 bg-blue-900/20 p-6">
                 <div className="flex items-center justify-center gap-2 text-3xl font-bold text-blue-400">
-                  <FaBrain />
-                  <span>3 種</span>
+                  <FaUsers />
+                  <span>2–4%</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-400">ADHD 類型</p>
+                <p className="mt-2 text-sm text-slate-400">成人盛行率</p>
+                <p className="mt-1 text-xs text-slate-500">全球估計值</p>
               </div>
               <div className="rounded-2xl border border-cyan-800/30 bg-cyan-900/20 p-6">
                 <div className="flex items-center justify-center gap-2 text-3xl font-bold text-cyan-400">
-                  <FaHeartbeat />
-                  <span>多層面</span>
+                  <FaChild />
+                  <span>5–10%</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-400">生活影響</p>
+                <p className="mt-2 text-sm text-slate-400">兒童盛行率</p>
+                <p className="mt-1 text-xs text-slate-500">全球估計值</p>
               </div>
               <div className="rounded-2xl border border-teal-800/30 bg-teal-900/20 p-6">
                 <div className="flex items-center justify-center gap-2 text-3xl font-bold text-teal-400">
-                  <FaClipboard />
-                  <span>可評估</span>
+                  <FaExclamationTriangle />
+                  <span>低識別</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-400">量表工具</p>
+                <p className="mt-2 text-sm text-slate-400">成人診斷率</p>
+                <p className="mt-1 text-xs text-slate-500">遠低於實際盛行率</p>
+              </div>
+              <div className="rounded-2xl border border-orange-800/30 bg-orange-900/20 p-6">
+                <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-400">
+                  <FaHeartbeat />
+                  <span>↑ 上升</span>
+                </div>
+                <p className="mt-2 text-sm text-slate-400">台灣診斷率</p>
+                <p className="mt-1 text-xs text-slate-500">2000–2011 年間</p>
               </div>
             </motion.div>
           </div>
         </header>
+      </div>
+
+      {/* 睡眠問題重要提示 */}
+      <div className="mx-auto max-w-7xl px-6 py-16">
+        <motion.div
+          className="rounded-3xl border border-amber-800/50 bg-gradient-to-r from-amber-900/30 to-orange-900/30 p-8"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/20">
+              <FaExclamationTriangle className="text-2xl text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-amber-300 mb-3">😴 睡眠問題是 ADHD 的重要共伴護理項目</h3>
+              <p className="text-slate-300 mb-4">
+                睡眠問題在青少年 ADHD 族群中顯著常見，並顯著影響日常與學業功能。建議在評估與介入中常見納入。
+              </p>
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="flex gap-2">
+                  <FaCheckCircle className="text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-slate-300">改善睡眠有助提升日間功能與課業表現</span>
+                </div>
+                <div className="flex gap-2">
+                  <FaCheckCircle className="text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-slate-300">睡眠不足會加重 ADHD 症狀</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* ADHD 三種類型 */}

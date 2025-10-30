@@ -31,3 +31,6 @@ yarn-error.log*
 # typescript
 *.tsbuild.info
 next-env.d.ts
+# 添加以下內容到 .gitignore
+.netlify/
+tsconfig.tsbuildinfo

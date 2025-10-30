@@ -346,8 +346,15 @@ export default function FocusFinderPrototype() {
   const [showHints, setShowHints] = useState(true);
   const [distractionSettings, setDistractionSettings] = useState({
     enabled: true,
-    intensity: 1, // 0.5, 1, 1.5
+    difficulty: 'normal', // 'easy', 'normal', 'hard'
   });
+
+  // 根據難度計算干擾強度
+  const difficultyIntensity = {
+    easy: 0.5,
+    normal: 1,
+    hard: 1.5,
+  }[distractionSettings.difficulty];
 
   // Distraction states
   const [activeModal, setActiveModal] = useState(false);
@@ -366,7 +373,7 @@ export default function FocusFinderPrototype() {
         type,
         triggeredAt: Date.now(),
         dismissedAt: null,
-        cost: DISTRACTION_CONFIG[type].cost * distractionSettings.intensity,
+        cost: DISTRACTION_CONFIG[type].cost * difficultyIntensity,
       }]);
 
       switch (type) {
@@ -388,7 +395,7 @@ export default function FocusFinderPrototype() {
           audioManager.playAmbientNoise(); // 播放環境噪音
           break;
       }
-    }, [distractionSettings.intensity])
+    }, [difficultyIntensity])
   );
 
   const dismissModal = useCallback(() => {
@@ -659,7 +666,7 @@ export default function FocusFinderPrototype() {
               </ul>
             </div>
             <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-300 shadow-xl">
-              <h2 className="text-base font-semibold text-white">干擾設定</h2>
+              <h2 className="text-base font-semibold text-white">難度設定</h2>
               <div className="mt-4 space-y-4">
                 <label className="flex items-center gap-3">
                   <input
@@ -674,24 +681,32 @@ export default function FocusFinderPrototype() {
                   <span>啟用干擾模組</span>
                 </label>
                 <div>
-                  <label className="block text-xs font-medium mb-2">干擾強度</label>
-                  <select
-                    value={distractionSettings.intensity}
-                    onChange={(e) => setDistractionSettings(prev => ({
-                      ...prev,
-                      intensity: parseFloat(e.target.value)
-                    }))}
-                    className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-slate-400"
-                  >
-                    <option value={0.5}>輕度 (0.5x)</option>
-                    <option value={1}>標準 (1x)</option>
-                    <option value={1.5}>強度 (1.5x)</option>
-                  </select>
+                  <label className="block text-xs font-medium mb-2">遊戲難度</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['easy', 'normal', 'hard'].map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setDistractionSettings(prev => ({
+                          ...prev,
+                          difficulty: level as 'easy' | 'normal' | 'hard'
+                        }))}
+                        className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                          distractionSettings.difficulty === level
+                            ? 'bg-blue-600 text-white border-2 border-blue-400'
+                            : 'bg-slate-800 text-slate-300 border-2 border-slate-700 hover:border-slate-600'
+                        }`}
+                      >
+                        {level === 'easy' && '簡單'}
+                        {level === 'normal' && '普通'}
+                        {level === 'hard' && '困難'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="mt-6 p-3 rounded-2xl bg-slate-800/50">
                 <p className="text-xs text-slate-400">
-                  強度調整會影響干擾頻率與時間懲罰。實際 ADHD 體驗因人而異，此設定僅供參考。
+                  難度會影響干擾頻率與時間懲罰。實際 ADHD 體驗因人而異，此設定僅供參考。
                 </p>
               </div>
             </div>
@@ -719,7 +734,7 @@ export default function FocusFinderPrototype() {
                 )}
               </div>
 
-              <div className="relative h-[60vh] min-h-[300px] w-full">
+              <div className="relative h-[70vh] min-h-[400px] w-full">
                 <div className="absolute inset-x-0 top-0 flex flex-col gap-2 p-4 text-xs font-semibold uppercase tracking-widest text-slate-200">
                   <div className="flex justify-between">
                     <span className="rounded-full bg-slate-900/70 px-3 py-1">#{currentTask?.id ?? '---'}</span>
@@ -756,7 +771,7 @@ export default function FocusFinderPrototype() {
                     key={currentTask.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute left-1/2 top-1/2 flex w-[min(80vw,380px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-3xl border border-sky-400/40 bg-slate-950/80 p-5 text-sm text-slate-100 shadow-[0_0_30px_rgba(56,189,248,0.35)] backdrop-blur"
+                    className="absolute left-1/2 top-1/2 flex w-[min(85vw,420px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-3xl border border-sky-400/40 bg-slate-950/90 p-6 text-sm text-slate-100 shadow-[0_0_30px_rgba(56,189,248,0.35)] backdrop-blur max-h-[60vh] overflow-y-auto"
                   >
                     <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-sky-300">
                       <FaLocationArrow /> 任務目標
@@ -765,11 +780,11 @@ export default function FocusFinderPrototype() {
                     {showHints && (
                       <p className="text-sm text-slate-300">提示：{currentTask.hint}</p>
                     )}
-                    <p className="text-sm text-slate-200">{currentTask.prompt}</p>
+                    <p className="text-sm text-slate-200 whitespace-pre-wrap">{currentTask.prompt}</p>
                     <button
                       type="button"
-                      onClick={completeTask}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-400"
+                      onClick={() => completeTask()}
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-sky-400"
                     >
                       <FaCheck /> 標記已找到
                     </button>

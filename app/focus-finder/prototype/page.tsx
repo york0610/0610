@@ -944,6 +944,30 @@ export default function FocusFinderPrototype() {
                     {errorMessage && (
                       <div className="rounded-lg bg-red-900/50 border border-red-700 p-3 text-sm text-red-200">
                         ⚠️ {errorMessage}
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-3 pt-4">
+                      <button
+                        onClick={(e) => {
+                          console.log('[DEBUG] Camera button clicked!');
+                          console.log('[DEBUG] Event:', e);
+                          console.log('[DEBUG] Current permissionState:', permissionState);
+                          handleRequestCamera();
+                        }}
+                        disabled={permissionState === 'requesting'}
+                        className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed relative z-50"
+                        style={{ pointerEvents: 'auto' }}
+                      >
+                        <FaCamera className="text-2xl" />
+                        {permissionState === 'requesting' ? '請求中...' : '啟用鏡頭開始'}
+                      </button>
+                      <p className="text-xs text-slate-500">
+                        🔒 你的影像不會被儲存或上傳
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+                {permissionState === 'granted' && sessionState === 'idle' && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -1338,10 +1362,9 @@ export default function FocusFinderPrototype() {
                   </div>
                 )}
               </div>
-                        )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       </div>
       <ModalDistraction
         isVisible={activeModal}
@@ -1350,3 +1373,5 @@ export default function FocusFinderPrototype() {
     </div>
   );
 }
+
+export default FocusFinderPrototype;

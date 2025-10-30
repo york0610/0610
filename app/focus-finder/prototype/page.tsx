@@ -867,10 +867,15 @@ export default function FocusFinderPrototype() {
                   </div>
                 )}
               </div>
-            )}
+                        )}
           </div>
         </div>
       </section>
+      </div>
+      <ModalDistraction
+        isVisible={activeModal}
+        onDismiss={dismissDistraction}
+      />
     </div>
   );
 }

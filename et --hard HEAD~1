@@ -1,0 +1,34 @@
+warning: in the working copy of 'app/focus-finder/prototype/page.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/app/focus-finder/prototype/page.tsx b/app/focus-finder/prototype/page.tsx[m
+[1mindex 17eb654..ba02c2c 100644[m
+[1m--- a/app/focus-finder/prototype/page.tsx[m
+[1m+++ b/app/focus-finder/prototype/page.tsx[m
+[36m@@ -856,27 +856,9 @@[m [mexport default function FocusFinderPrototype() {[m
+                       {totalCompleted}/{TASKS.length}[m
+                     </p>[m
+                   </div>[m
+[31m-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">[m
+[31m-                    <p className="text-xs uppercase tracking-widest text-slate-400">總時間</p>[m
+[31m-                    <p className="mt-1 text-3xl font-bold text-sky-400">[m
+[31m-                      {formatSeconds(adjustedTime)}[m
+[31m-                    </p>[m
+[31m-                  </div>[m
+[31m-                </div>[m
+[32m+[m[32m                )}[m
+               </div>[m
+             )}[m
+[31m-              <p className="mt-2 text-sm">[m
+[31m-                與 MindAR 或 Three.js 整合，將虛擬物件固定於空間座標，讓「尋焦器」不再只是畫面疊層，而是真實世界的導引。[m
+[31m-              </p>[m
+[31m-            </div>[m
+[31m-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">[m
+[31m-              <p className="text-xs uppercase tracking-widest text-amber-300/80">反思與分享</p>[m
+[31m-              <p className="mt-2 text-sm">[m
+[31m-                設計結束後的反思問答與分享介面，讓體驗者把心得轉化為對 ADHD 的理解與支持行動。[m
+[31m-              </p>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-        )}[m
+       </div>[m
+     </div>[m
+   );[m

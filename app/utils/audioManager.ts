@@ -23,6 +23,12 @@ export class AudioManager {
   private oscillators: OscillatorNode[] = [];
   private gainNodes: GainNode[] = [];
   private isInitialized = false;
+  private audioBuffers: Map<string, AudioBuffer> = new Map();
+  private audioFiles: Record<string, string> = {
+    notification: '/sounds/notification.mp3',
+    alarm: '/sounds/alarm.mp3',
+    success: '/sounds/success.mp3',
+  };
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -43,6 +49,30 @@ export class AudioManager {
     } catch (error) {
       console.error('Failed to initialize AudioContext:', error);
     }
+  }
+
+  async preloadAudio(type: AudioType): Promise<void> {
+    if (!this.audioContext) {
+      this.initializeAudioContext();
+      if (!this.audioContext) return;
+    }
+
+    const url = this.audioFiles[type];
+    if (!url || this.audioBuffers.has(type)) return;
+
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      this.audioBuffers.set(type, audioBuffer);
+    } catch (error) {
+      console.error(`Failed to preload audio ${type}:`, error);
+    }
+  }
+
+  async preloadAllAudio(): Promise<void> {
+    const types = Object.keys(this.audioFiles) as AudioType[];
+    await Promise.all(types.map(type => this.preloadAudio(type)));
   }
 
   private ensureAudioContextRunning() {

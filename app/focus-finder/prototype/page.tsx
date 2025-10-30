@@ -613,13 +613,39 @@ export default function FocusFinderPrototype() {
                   muted
                   autoPlay
                 />
-                {permissionState !== 'granted' && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950/80 text-center">
-                    <FaCamera className="text-4xl text-sky-300" />
-                    <p className="max-w-sm text-sm text-slate-200">
-                      按下下方按鈕啟動尋焦器。我們將請求使用鏡頭權限，僅用於此互動體驗，不會儲存影像。
-                    </p>
-                  </div>
+                {permissionState !== 'granted' && sessionState === 'idle' && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-center p-8"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <FaCamera className="text-6xl text-cyan-400" />
+                    </motion.div>
+                    <div className="max-w-md space-y-4">
+                      <h3 className="text-3xl font-bold text-white">準備好了嗎？</h3>
+                      <p className="text-lg text-slate-300 leading-relaxed">
+                        你將體驗 ADHD 者在高壓情境下的感受。
+                        <br />
+                        我們需要使用你的鏡頭來創建 AR 體驗。
+                      </p>
+                      <div className="flex flex-col gap-3 pt-4">
+                        <button
+                          onClick={handleRequestCamera}
+                          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50"
+                        >
+                          <FaCamera className="text-2xl" />
+                          啟用鏡頭開始
+                        </button>
+                        <p className="text-xs text-slate-500">
+                          🔒 你的影像不會被儲存或上傳
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
               </div>
 
@@ -794,101 +820,35 @@ export default function FocusFinderPrototype() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
-                <h2 className="text-lg font-semibold text-white">互動控制</h2>
-                <div className="mt-4 grid gap-3 text-sm text-slate-200">
-                  <button
-                    type="button"
-                    onClick={startSession}
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-6 py-3 font-semibold text-white shadow-lg transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700"
-                    disabled={sessionState === 'running'}
-                  >
-                    <FaCamera /> {permissionState === 'granted' ? '重新開始任務' : '啟動尋焦器'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowHints((prev) => !prev)}
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-600 px-6 py-3 font-semibold text-slate-200 transition hover:border-slate-400 hover:text-white"
-                  >
-                    <FaLightbulb /> {showHints ? '隱藏提示' : '顯示提示'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetSession}
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-rose-400/60 px-6 py-3 font-semibold text-rose-200 transition hover:border-rose-300 hover:text-rose-100"
-                  >
-                    重置鏡頭與授權
-                  </button>
-                </div>
-                {errorMessage && (
-                  <p className="mt-4 rounded-2xl border border-rose-500/60 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                    {errorMessage}
+            {/* 側邊欄僅在非全螢幕時顯示 */}
+            {!isFullscreen && sessionState !== 'running' && (
+              <div className="flex flex-col gap-6">
+                <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
+                  <h2 className="text-lg font-semibold text-white">🎮 開始遊戲</h2>
+                  <p className="mt-2 text-sm text-slate-300">
+                    點擊下方按鈕開始你的 ADHD 模擬體驗。遊戲將進入全螢幕模式。
                   </p>
-                )}
-              </div>
-
+                  <div className="mt-4 grid gap-3 text-sm text-slate-200">
+                    <button
+                      type="button"
               <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
-                <h2 className="text-lg font-semibold text-white">任務記錄</h2>
-                <p className="mt-2 text-sm text-slate-300">
-                  依序紀錄每個目標物的開始與完成時間，方便分析專注度變化與干擾注入後的影響。
-                </p>
-                <div className="mt-4 space-y-3 text-sm text-slate-200">
-                  {logs.length === 0 ? (
-                    <p className="rounded-2xl border border-slate-700 px-4 py-3 text-slate-400">
-                      尚未開始，按下「啟動尋焦器」即可記錄第一筆任務。
+                <h2 className="text-lg font-semibold text-white">📊 上次結果</h2>
+                <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-200">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+                    <p className="text-xs uppercase tracking-widest text-slate-400">完成任務</p>
+                    <p className="mt-1 text-3xl font-bold text-emerald-400">
+                      {totalCompleted}/{TASKS.length}
                     </p>
-                  ) : (
-                    logs.map((log, index) => {
-                      const durationSeconds = log.completedAt
-                        ? Math.floor((log.completedAt - log.startedAt) / 1000)
-                        : Math.floor((Date.now() - log.startedAt) / 1000);
-
-                      const taskDefinition = TASKS.find((task) => task.id === log.taskId);
-
-                      return (
-                        <div
-                          key={`${log.taskId}-${log.startedAt}`}
-                          className="rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-3"
-                        >
-                          <div className="flex items-center justify-between text-xs uppercase tracking-widest text-slate-400">
-                            <span>
-                              任務 {index + 1}
-                              {taskDefinition ? `：${taskDefinition.title}` : ''}
-                            </span>
-                            <span>{log.completedAt ? '完成' : '進行中'}</span>
-                          </div>
-                          <div className="mt-2 flex items-center justify-between text-sm text-slate-200">
-                            <span>耗時</span>
-                            <span>{formatSeconds(durationSeconds)}</span>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-                <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-slate-200">
-                  <div className="flex items-center justify-between">
-                    <span>完成任務</span>
-                    <span>{totalCompleted} / {TASKS.length}</span>
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-slate-400">
-                    <span>總耗時</span>
-                    <span>{formatSeconds(adjustedTime)}</span>
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+                    <p className="text-xs uppercase tracking-widest text-slate-400">總時間</p>
+                    <p className="mt-1 text-3xl font-bold text-sky-400">
+                      {formatSeconds(adjustedTime)}
+                    </p>
                   </div>
                 </div>
-            <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-200">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
-                <p className="text-xs uppercase tracking-widest text-slate-400">觸發次數</p>
-                <p className="text-lg font-semibold text-rose-300">{distractions.length}</p>
               </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
-                <p className="text-xs uppercase tracking-widest text-slate-400">時間懲罰</p>
-                <p className="text-lg font-semibold text-amber-300">{totalDistractionCost.toFixed(1)}s</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-              <p className="text-xs uppercase tracking-widest text-emerald-300/80">AR 物件定位</p>
+            )}
               <p className="mt-2 text-sm">
                 與 MindAR 或 Three.js 整合，將虛擬物件固定於空間座標，讓「尋焦器」不再只是畫面疊層，而是真實世界的導引。
               </p>

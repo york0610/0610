@@ -7,7 +7,6 @@
   NODE_VERSION = "20"
   NPM_VERSION = "10"
 
-# Next.js 重寫規則
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/___netlify-handler"

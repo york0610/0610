@@ -7,9 +7,6 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import {
   FaBrain,
-  FaEye,
-  FaBolt,
-  FaHeart,
   FaChild,
   FaUserMd,
   FaStethoscope,
@@ -20,13 +17,12 @@ import {
   FaArrowRight,
   FaCheckCircle,
   FaExclamationTriangle,
-  FaUsers,
   FaLightbulb,
-  FaClock
+  FaClock,
+  FaClipboardList
 } from 'react-icons/fa';
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<'story' | 'mechanics' | 'tech' | 'roadmap'>('story');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">

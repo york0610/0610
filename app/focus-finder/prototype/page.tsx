@@ -39,6 +39,7 @@ type SessionLog = {
   taskId: string;
   startedAt: number;
   completedAt: number | null;
+  skipped?: boolean;
 };
 
 type DistractionEvent = {
@@ -113,10 +114,13 @@ const INTERRUPTION_TASKS = [
   },
 ];
 
-const DISTRACTION_CONFIG: Record<DistractionType, { minDelay: number; maxDelay: number; duration: number; cost: number; title: string }> = {
+type DistractionConfigType = DistractionType | 'timeout';
+
+const DISTRACTION_CONFIG: Record<DistractionConfigType, { minDelay: number; maxDelay: number; duration: number; cost: number; title: string }> = {
   environment: { minDelay: 15, maxDelay: 25, duration: 0, cost: 2, title: '☀️ 陽光太刺眼' },
   biological: { minDelay: 20, maxDelay: 30, duration: 0, cost: 2.5, title: '💧 口渴了，需要喝水' },
   social: { minDelay: 18, maxDelay: 28, duration: 0, cost: 1.5, title: '📱 有人在叫你' },
+  timeout: { minDelay: 0, maxDelay: 0, duration: 0, cost: 5, title: '⏱️ 時間到！' },
   psychological: { minDelay: 12, maxDelay: 22, duration: 0, cost: 1, title: '🤔 突然想到其他事' },
 };
 
@@ -189,15 +193,17 @@ const formatSeconds = (value: number) => {
 };
 
 // Custom hook for distraction management
-const useDistractions = (isActive: boolean, onDistractionTriggered: (type: DistractionType) => void) => {
+const useDistractions = (isActive: boolean, onDistractionTriggered: (type: DistractionType | 'timeout') => void) => {
   const timersRef = useRef<NodeJS.Timeout[]>([]);
   const activeDistractionsRef = useRef<Set<string>>(new Set());
 
   const triggerDistraction = useCallback(
     (type?: DistractionType | 'timeout') => {
-    if (activeDistractionsRef.current.has(type)) return;
+    if (!type || activeDistractionsRef.current.has(type)) return;
 
     const config = DISTRACTION_CONFIG[type];
+    if (!config) return;
+    
     const delay = config.minDelay + Math.random() * (config.maxDelay - config.minDelay);
 
     const timer = setTimeout(() => {
@@ -377,7 +383,7 @@ export default function FocusFinderPrototype() {
 
   const { activeDistractions } = useDistractions(
     sessionState === 'running' && distractionSettings.enabled && !isDistractedTaskActive,
-    useCallback((type: DistractionType) => {
+    useCallback((type: DistractionType | 'timeout') => {
       const audioManager = getAudioManager();
       const intensity = difficultyIntensity || 1;
       
@@ -1373,5 +1379,3 @@ export default function FocusFinderPrototype() {
     </div>
   );
 }
-
-export default FocusFinderPrototype;

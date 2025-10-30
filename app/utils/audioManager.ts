@@ -2,7 +2,7 @@
  * 音效管理系統 - 模擬 ADHD 患者日常的聲音干擾
  */
 
-type AudioType = 'notification' | 'alarm' | 'ambient' | 'distraction' | 'success';
+type AudioType = 'notification' | 'alarm' | 'ambient' | 'distraction' | 'success' | 'error';
 
 interface AudioConfig {
   volume: number;
@@ -16,9 +16,24 @@ const AUDIO_CONFIGS: Record<AudioType, AudioConfig> = {
   ambient: { volume: 0.3, duration: 3000, loop: true },
   distraction: { volume: 0.7, duration: 2000, loop: false },
   success: { volume: 0.5, duration: 800, loop: false },
+  error: { volume: 0.7, duration: 1000, loop: false },
 };
 
-export class AudioManager {
+export interface IAudioManager {
+  play(type: AudioType): Promise<void>;
+  playSuccess(): void;
+  playError(): void;
+  stopAll(): void;
+  preloadAudio(type: AudioType): Promise<void>;
+  preloadAllAudio(): Promise<void>;
+  playNotification(): void;
+  playAlarm(): void;
+  playAmbient(): void;
+  playDistraction(): void;
+  // 其他需要導出的方法...
+}
+
+export class AudioManager implements IAudioManager {
   private audioContext: AudioContext | null = null;
   private oscillators: OscillatorNode[] = [];
   private gainNodes: GainNode[] = [];
@@ -28,6 +43,7 @@ export class AudioManager {
     notification: '/sounds/notification.mp3',
     alarm: '/sounds/alarm.mp3',
     success: '/sounds/success.mp3',
+    error: '/sounds/error.mp3',
   };
 
   constructor() {
@@ -177,6 +193,13 @@ export class AudioManager {
   /**
    * 播放環境音 - 模擬辦公室背景噪音
    */
+  playAmbient(): void {
+    this.playAmbientNoise();
+  }
+
+  /**
+   * 播放環境音 - 模擬辦公室背景噪音
+   */
   playAmbientNoise() {
     this.ensureAudioContextRunning();
     if (!this.audioContext) return;
@@ -242,9 +265,45 @@ export class AudioManager {
   }
 
   /**
+   * 播放音效 - 通用方法
+   */
+  async play(type: AudioType): Promise<void> {
+    this.ensureAudioContextRunning();
+    if (!this.audioContext) return;
+
+    try {
+      if (!this.audioBuffers.has(type)) {
+        await this.preloadAudio(type);
+      }
+
+      const audioBuffer = this.audioBuffers.get(type);
+      if (!audioBuffer) return;
+
+      const source = this.audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      const gainNode = this.audioContext.createGain();
+      const config = AUDIO_CONFIGS[type];
+      
+      gainNode.gain.value = config.volume;
+      
+      source.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      source.start();
+      
+      if (!config.loop) {
+        source.stop(this.audioContext.currentTime + config.duration / 1000);
+      }
+    } catch (error) {
+      console.error(`Error playing audio ${type}:`, error);
+    }
+  }
+
+  /**
    * 播放成功音 - 正向反饋
    */
-  playSuccess() {
+  playSuccess(): void {
     this.ensureAudioContextRunning();
     if (!this.audioContext) return;
     try {
@@ -268,6 +327,34 @@ export class AudioManager {
     });
     } catch (error) {
       console.error('Error playing success:', error);
+    }
+  }
+
+  /**
+   * 播放錯誤音
+   */
+  playError(): void {
+    this.ensureAudioContextRunning();
+    if (!this.audioContext) return;
+    try {
+      const now = this.audioContext.currentTime;
+      const osc = this.audioContext.createOscillator();
+      const gain = this.audioContext.createGain();
+      
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(150, now + 0.3);
+      
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      
+      osc.connect(gain);
+      gain.connect(this.audioContext.destination);
+      
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } catch (error) {
+      console.error('Error playing error sound:', error);
     }
   }
 

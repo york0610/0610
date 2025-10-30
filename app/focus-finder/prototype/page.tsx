@@ -1213,13 +1213,17 @@ export default function FocusFinderPrototype() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                {sessionState === 'completed' && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950/95 text-center p-6"
-                  >
+        {sessionState === 'completed' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950/95 text-center p-6 z-50"
+          >
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -1264,12 +1268,12 @@ export default function FocusFinderPrototype() {
                     </div>
                   </motion.div>
                 )}
-
+                
                 {sessionState === 'failed' && (
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950/95 text-center p-6"
+                    className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950/95 text-center p-6 z-50"
                   >
                     <motion.div
                       initial={{ scale: 0 }}
@@ -1315,57 +1319,53 @@ export default function FocusFinderPrototype() {
                       </button>
                     </div>
                   </motion.div>
-                )}
-              </div>
-
-            {/* 側邊欄僅在非全螢幕時顯示 */}
-            {!isFullscreen && sessionState !== 'running' && (
-              <div className="flex flex-col gap-6">
-                <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
-                  <h2 className="text-lg font-semibold text-white">🎮 開始遊戲</h2>
-                  <p className="mt-2 text-sm text-slate-300">
-                    點擊下方按鈕開始你的 ADHD 模擬體驗。遊戲將進入全螢幕模式。
+        )}
+        
+        {/* 側邊欄僅在非全螢幕時顯示 */}
+        {!isFullscreen && sessionState !== 'running' && (
+          <div className="flex flex-col gap-6">
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
+              <h2 className="text-lg font-semibold text-white">🎮 開始遊戲</h2>
+              <p className="mt-2 text-sm text-slate-300">
+                點擊下方按鈕開始你的 ADHD 模擬體驗。遊戲將進入全螢幕模式。
+              </p>
+              <div className="mt-4 grid gap-3 text-sm text-slate-200">
+                <button
+                  type="button"
+                  onClick={startSession}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
+                >
+                  <FaPlay /> {permissionState === 'granted' ? '重新開始' : '開始挑戰'}
+                </button>
+                {errorMessage && (
+                  <p className="mt-2 rounded-2xl border border-rose-500/60 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                    {errorMessage}
                   </p>
-                  <div className="mt-4 grid gap-3 text-sm text-slate-200">
-                    <button
-                      type="button"
-                      onClick={startSession}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
-                    >
-                      <FaPlay /> {permissionState === 'granted' ? '重新開始' : '開始挑戰'}
-                    </button>
-                    {errorMessage && (
-                      <p className="mt-2 rounded-2xl border border-rose-500/60 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                        {errorMessage}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {logs.length > 0 && (
-                  <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
-                    <h2 className="text-lg font-semibold text-white">📊 上次結果</h2>
-                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-200">
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-                        <p className="text-xs uppercase tracking-widest text-slate-400">完成任務</p>
-                        <p className="mt-1 text-3xl font-bold text-emerald-400">
-                          {totalCompleted}/{TASKS.length}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-                        <p className="text-xs uppercase tracking-widest text-slate-400">總時間</p>
-                        <p className="mt-1 text-3xl font-bold text-sky-400">
-                          {formatSeconds(adjustedTime)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 )}
               </div>
             </div>
+
+            {logs.length > 0 && (
+              <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
+                <h2 className="text-lg font-semibold text-white">📊 上次結果</h2>
+                <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-200">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+                    <p className="text-xs uppercase tracking-widest text-slate-400">完成任務</p>
+                    <p className="mt-1 text-3xl font-bold text-emerald-400">
+                      {totalCompleted}/{TASKS.length}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+                    <p className="text-xs uppercase tracking-widest text-slate-400">總時間</p>
+                    <p className="mt-1 text-3xl font-bold text-sky-400">
+                      {formatSeconds(adjustedTime)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </section>
-      </div>
+        )}
       <ModalDistraction
         isVisible={activeModal}
         onDismiss={dismissDistraction}

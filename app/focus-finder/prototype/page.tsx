@@ -965,42 +965,43 @@ export default function FocusFinderPrototype() {
                         🔒 你的影像不會被儲存或上傳
                       </p>
                     </div>
-                  </motion.div>
+                  </div>
+                </motion.div>
                 )}
               {permissionState === 'granted' && sessionState === 'idle' && (
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 text-center p-8 z-50"
-                    style={{ pointerEvents: 'auto' }}
+                  style={{ pointerEvents: 'auto' }}
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   >
-                    <motion.div
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <FaPlay className="text-6xl text-emerald-400" />
-                    </motion.div>
-                    <div className="max-w-md space-y-4">
-                      <h3 className="text-3xl font-bold text-white">鏡頭已就緒</h3>
-                      <p className="text-lg text-slate-300 leading-relaxed">
-                        您的鏡頭已成功連接。
-                        <br />
-                        物體偵測已準備就緒，點擊下方按鈕開始挑戰吧！
-                      </p>
-                      <div className="flex flex-col gap-3 pt-4">
-                        <button
-                          onClick={startSession}
-                          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-emerald-500/50"
-                        >
-                          <FaPlay className="text-2xl" />
-                          開始遊戲
-                        </button>
-                        <p className="text-xs text-slate-500">
-                          ⏱️ 時間限制：{GAME_TIME_LIMIT} 秒完成所有任務 | 每個任務 {TASK_TIMEOUT} 秒
-                        </p>
-                      </div>
-                    </div>
+                    <FaPlay className="text-6xl text-emerald-400" />
                   </motion.div>
+                  <div className="max-w-md space-y-4">
+                    <h3 className="text-3xl font-bold text-white">鏡頭已就緒</h3>
+                    <p className="text-lg text-slate-300 leading-relaxed">
+                      您的鏡頭已成功連接。
+                      <br />
+                      物體偵測已準備就緒，點擊下方按鈕開始挑戰吧！
+                    </p>
+                    <div className="flex flex-col gap-3 pt-4">
+                      <button
+                        onClick={startSession}
+                        className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-emerald-500/50"
+                      >
+                        <FaPlay className="text-2xl" />
+                        開始遊戲
+                      </button>
+                      <p className="text-xs text-slate-500">
+                        ⏱️ 時間限制：{GAME_TIME_LIMIT} 秒完成所有任務 | 每個任務 {TASK_TIMEOUT} 秒
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
                 )}
               </div>
 
@@ -1224,7 +1225,7 @@ export default function FocusFinderPrototype() {
             animate={{ opacity: 1, scale: 1 }}
             className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950/95 text-center p-6 z-50"
           >
-                    <motion.div
+            <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', delay: 0.2 }}

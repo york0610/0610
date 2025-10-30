@@ -261,6 +261,186 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* ADHD 的成人症狀 */}
+      <div className="mx-auto max-w-7xl px-6 py-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl font-black text-white mb-4">成人 ADHD 的常見症狀</h2>
+          <p className="text-xl text-slate-300">許多成人 ADHD 患者直到成年後才被診斷，因為症狀表現方式與兒童不同</p>
+        </motion.div>
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[
+            { icon: FaClock, title: '時間管理困難', desc: '難以估計時間，經常遲到或錯過截止日期' },
+            { icon: FaClipboard, title: '組織能力弱', desc: '工作和生活空間混亂，難以制定計劃' },
+            { icon: FaBrain, title: '記憶問題', desc: '短期記憶不佳，容易忘記重要信息' },
+            { icon: FaExclamationTriangle, title: '情緒調節困難', desc: '情緒波動大，容易感到沮喪或過度興奮' },
+            { icon: FaComments, title: '社交困難', desc: '難以傾聽他人，容易打斷或說話過多' },
+            { icon: FaHeartbeat, title: '衝動行為', desc: '做決定前缺乏思考，容易衝動消費' }
+          ].map((item, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 hover:border-cyan-500/50 transition"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <item.icon className="text-2xl text-cyan-400" />
+                <h3 className="text-lg font-bold text-white">{item.title}</h3>
+              </div>
+              <p className="text-slate-400">{item.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* ADHD 的診斷和治療 */}
+      <div className="mx-auto max-w-7xl px-6 py-24">
+        <div className="grid gap-12 lg:grid-cols-2">
+          {/* 診斷 */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl font-black text-white mb-6">🔍 ADHD 的診斷</h2>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-blue-500/30 bg-blue-900/20 p-4">
+                <h3 className="font-bold text-blue-300 mb-2">臨床評估</h3>
+                <p className="text-sm text-slate-300">由專業醫生進行詳細的病史採集和症狀評估</p>
+              </div>
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-4">
+                <h3 className="font-bold text-cyan-300 mb-2">心理測試</h3>
+                <p className="text-sm text-slate-300">使用標準化測試工具（如 ADHD-RS、CAARS）評估症狀嚴重程度</p>
+              </div>
+              <div className="rounded-xl border border-teal-500/30 bg-teal-900/20 p-4">
+                <h3 className="font-bold text-teal-300 mb-2">排除其他疾病</h3>
+                <p className="text-sm text-slate-300">確保症狀不是由其他醫學或心理健康狀況引起</p>
+              </div>
+              <div className="rounded-xl border border-green-500/30 bg-green-900/20 p-4">
+                <h3 className="font-bold text-green-300 mb-2">多角度評估</h3>
+                <p className="text-sm text-slate-300">收集來自家庭、工作或學校的多方面信息</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 治療 */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl font-black text-white mb-6">💊 ADHD 的治療方法</h2>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-4">
+                <h3 className="font-bold text-purple-300 mb-2">藥物治療</h3>
+                <p className="text-sm text-slate-300">刺激類或非刺激類藥物可幫助改善注意力和衝動控制</p>
+              </div>
+              <div className="rounded-xl border border-pink-500/30 bg-pink-900/20 p-4">
+                <h3 className="font-bold text-pink-300 mb-2">行為療法</h3>
+                <p className="text-sm text-slate-300">認知行為療法（CBT）幫助改善組織能力和情緒管理</p>
+              </div>
+              <div className="rounded-xl border border-orange-500/30 bg-orange-900/20 p-4">
+                <h3 className="font-bold text-orange-300 mb-2">生活方式調整</h3>
+                <p className="text-sm text-slate-300">規律作息、運動、冥想和時間管理技巧</p>
+              </div>
+              <div className="rounded-xl border border-yellow-500/30 bg-yellow-900/20 p-4">
+                <h3 className="font-bold text-yellow-300 mb-2">教育和支持</h3>
+                <p className="text-sm text-slate-300">了解 ADHD、加入支持小組、獲得工作或學校的適應措施</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ADHD 的影響 */}
+      <div className="mx-auto max-w-7xl px-6 py-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="rounded-3xl border border-red-800/30 bg-gradient-to-r from-red-900/20 to-orange-900/20 p-8"
+        >
+          <h2 className="text-3xl font-black text-white mb-6">⚠️ ADHD 的長期影響</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <h3 className="text-xl font-bold text-red-300 mb-3">如果不進行治療</h3>
+              <ul className="space-y-2">
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-red-400">•</span>
+                  <span>學業成績下降或無法完成教育</span>
+                </li>
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-red-400">•</span>
+                  <span>工作表現不佳，頻繁換工作</span>
+                </li>
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-red-400">•</span>
+                  <span>人際關係困難和社交孤立</span>
+                </li>
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-red-400">•</span>
+                  <span>心理健康問題（焦慮、抑鬱）</span>
+                </li>
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-red-400">•</span>
+                  <span>物質濫用風險增加</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-green-300 mb-3">通過適當治療和支持</h3>
+              <ul className="space-y-2">
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-green-400">✓</span>
+                  <span>改善學業和工作表現</span>
+                </li>
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-green-400">✓</span>
+                  <span>建立更好的人際關係</span>
+                </li>
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-green-400">✓</span>
+                  <span>提升自尊和自信</span>
+                </li>
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-green-400">✓</span>
+                  <span>減少心理健康問題</span>
+                </li>
+                <li className="flex gap-2 text-slate-300">
+                  <span className="text-green-400">✓</span>
+                  <span>提高生活質量和滿意度</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* 重要提醒 */}
+      <div className="mx-auto max-w-7xl px-6 py-16">
+        <motion.div
+          className="rounded-3xl border border-cyan-800/50 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 p-8"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <h3 className="text-2xl font-bold text-cyan-300 mb-4">💡 重要提醒</h3>
+          <p className="text-slate-300 mb-4">
+            ADHD 是一種神經發展差異，不是性格缺陷或智力問題。許多成功的人士都有 ADHD，他們通過了解自己、尋求幫助和制定適應策略而蓬勃發展。
+          </p>
+          <p className="text-slate-300">
+            如果你懷疑自己或親友可能患有 ADHD，請諮詢醫療專業人士進行評估。早期診斷和干預可以顯著改善生活質量。
+          </p>
+        </motion.div>
+      </div>
+
       {/* 開始體驗 CTA */}
       <div className="mx-auto max-w-4xl px-6 py-24 text-center">
         <h2 className="text-4xl font-black text-white mb-6">準備好體驗了嗎？</h2>

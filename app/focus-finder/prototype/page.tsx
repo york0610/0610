@@ -123,12 +123,49 @@ const DISTRACTION_CONFIG: Record<DistractionType, { minDelay: number; maxDelay: 
 // 遊戲時間限制（秒）
 const GAME_TIME_LIMIT = 120; // 增加到 120 秒以適應更多任務
 
+// 單個任務的超時時間（秒）
+const TASK_TIMEOUT = 15; // 15 秒內找不到物體就自動跳過
+
 // 遊戲故事背景
-// 這個遊戲模擬 ADHD 患者的日常挑戰：
-// - 環境干擾：外部事物的中斷
-// - 身體上的需求：口渴、疲劳等
-// - 社交壓不斷：手機、消息等
-// - 心理上的較泯：心情不好、衡動控制不佳等
+const GAME_STORY = `
+你是一位 ADHD 患者，今天有很多重要的事要完成。
+但你的大腦總是不聽使喚...
+
+環境充滿干擾，你的注意力被不斷打斷。
+有時候你能集中精力，有時候卻完全無法專注。
+
+這個遊戲模擬你日常的挑戰：
+• 環境干擾：外部事物的中斷
+• 身體需求：口渴、疲勞等
+• 社交壓力：手機、消息等
+• 心理困擾：心情不好、衝動控制不佳
+
+你能在時間內完成多少任務呢？
+`;
+
+// 遊戲故事章節
+const STORY_CHAPTERS = [
+  {
+    title: '早上的困擾',
+    description: '你剛起床，腦子還很混亂。你需要找到一些日常用品來開始新的一天。',
+    tasks: ['cell phone', 'cup', 'book'],
+  },
+  {
+    title: '工作中的挑戰',
+    description: '現在是工作時間，但干擾不斷。你試著集中精力完成任務。',
+    tasks: ['keyboard', 'laptop', 'mouse'],
+  },
+  {
+    title: '下午的崩潰',
+    description: '下午時段，你的專注力開始下降。周圍的一切都變成了干擾。',
+    tasks: ['monitor', 'bottle', 'chair'],
+  },
+  {
+    title: '傍晚的逃避',
+    description: '你開始逃避，看著窗外或其他東西，試著放鬆。',
+    tasks: ['desk', 'door', 'window'],
+  },
+];
 
 // 常見物品任務 - 容易在身邊找到
 // 這些任務代表了 ADHD 患者需要完成的日常活動
@@ -156,7 +193,8 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
   const timersRef = useRef<NodeJS.Timeout[]>([]);
   const activeDistractionsRef = useRef<Set<string>>(new Set());
 
-  const scheduleDistraction = useCallback((type: DistractionType) => {
+  const triggerDistraction = useCallback(
+    (type?: DistractionType | 'timeout') => {
     if (activeDistractionsRef.current.has(type)) return;
 
     const config = DISTRACTION_CONFIG[type];
@@ -172,7 +210,7 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
           activeDistractionsRef.current.delete(type);
           // 重新排程下一次干擾
           if (isActive) {
-            scheduleDistraction(type);
+            triggerDistraction(type);
           }
         }, config.duration);
       }
@@ -189,11 +227,11 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
     if (!isActive) return;
 
     // Schedule initial distractions
-    scheduleDistraction('environment');
-    scheduleDistraction('biological');
-    scheduleDistraction('social');
-    scheduleDistraction('psychological');
-  }, [isActive, scheduleDistraction]);
+    triggerDistraction('environment');
+    triggerDistraction('biological');
+    triggerDistraction('social');
+    triggerDistraction('psychological');
+  }, [isActive, triggerDistraction]);
 
   const stopDistractionCycle = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
@@ -293,7 +331,6 @@ const ModalDistraction = ({
   );
 };
 
-
 export default function FocusFinderPrototype() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -321,6 +358,11 @@ export default function FocusFinderPrototype() {
   });
   const [focusLevel, setFocusLevel] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [taskStartTime, setTaskStartTime] = useState<number | null>(null);
+  const [skippedTasks, setSkippedTasks] = useState(0);
+  const [taskTimeoutRef, setTaskTimeoutRef] = useState<NodeJS.Timeout | null>(null);
+  const [showStoryModal, setShowStoryModal] = useState(false);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [activeModal, setActiveModal] = useState(false);
   const [currentDistraction, setCurrentDistraction] = useState<DistractionEvent | null>(null);
   const [isDistractedTaskActive, setIsDistractedTaskActive] = useState(false); // 是否有干擾任務進行中
@@ -340,8 +382,19 @@ export default function FocusFinderPrototype() {
       const intensity = difficultyIntensity || 1;
       
       // 隨機選擇一個中斷任務
-      const interruptionTask = INTERRUPTION_TASKS[Math.floor(Math.random() * INTERRUPTION_TASKS.length)];
-      
+      // 如果是超時，使用特殊的干擾任務
+      let interruptionTask;
+      if (type === 'timeout') {
+        interruptionTask = {
+          type: 'psychological' as DistractionType,
+          title: '⏰ 時間壓力！',
+          description: '你花太長時間在這個任務上了，開始感到焦慮和沮喪。',
+          objectToFind: 'sky',
+          cost: 5,
+        };
+      } else {
+        interruptionTask = INTERRUPTION_TASKS[Math.floor(Math.random() * INTERRUPTION_TASKS.length)];
+      }
       const newDistraction: DistractionEvent = {
         id: `${type}-${Date.now()}`,
         type: interruptionTask.type,
@@ -363,6 +416,13 @@ export default function FocusFinderPrototype() {
       // 降低專注力
       setFocusLevel(prev => Math.max(0, prev - 20));
       audioManager.playNotification();
+      audioManager.playDistractionTask(); // 添加干擾任務音
+      
+      // 觸發震動效果
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200, 100, 200]); // 多次震動
+      }
+      
       setActiveModal(true);
     }, [difficultyIntensity])
   );
@@ -479,50 +539,88 @@ export default function FocusFinderPrototype() {
     }
   }, [permissionState, stopStream]);
 
-  const startSession = useCallback(() => {
-    console.log('[DEBUG] startSession called, permissionState:', permissionState);
+  const startSession = useCallback(async () => {
+    console.log('[DEBUG] Starting session');
+    const audioManager = getAudioManager();
+    audioManager.playFocus();
     
-    if (permissionState !== 'granted') {
-      console.log('[DEBUG] Permission not granted, requesting camera');
-      void handleRequestCamera();
-      return;
-    }
+    const resetSession = useCallback(() => {
+      console.log('[DEBUG] Resetting session');
+      setSessionState('idle');
+      setCurrentTaskIndex(0);
+      setTimer(0);
+      setFocusLevel(100);
+      setDistractions([]);
+      setCurrentDistraction(null);
+      setIsDistractedTaskActive(false);
+      setDetectedObject(null);
+      setLogs([]);
+      setShowHints(false);
+      setSkippedTasks(0);
+      setIsFullscreen(false);
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (taskTimeoutRef) {
+        clearTimeout(taskTimeoutRef);
+        setTaskTimeoutRef(null);
+      }
+    }, [taskTimeoutRef]);
 
-    console.log('[DEBUG] Starting game session...');
     setSessionState('running');
-    setTimer(0);
     setCurrentTaskIndex(0);
-    setDistractions([]);
+    setTimer(0);
     setFocusLevel(100);
+    setDistractions([]);
+    setCurrentDistraction(null);
+    setIsDistractedTaskActive(false);
+    setDetectedObject(null);
+    setLogs([{ taskId: TASKS[0].id, startedAt: Date.now(), completedAt: null }]);
+    setShowHints(false);
+    setSkippedTasks(0);
+    
+    // 進入全屏模式
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn('無法進入全屏:', err);
+      });
+    }
     setIsFullscreen(true);
-    setIsDetectionEnabled(true); // 遊戲開始時自動啟用物體偵測
-    setLogs([{ taskId: TASKS[0]?.id ?? 'unknown', startedAt: Date.now(), completedAt: null }]);
-    console.log('[DEBUG] Game session started, first task:', TASKS[0]?.title);
-    console.log('[DEBUG] Object detection enabled');
-
+    
+    // 記錄任務開始時間
+    setTaskStartTime(Date.now());
+    
+    // 啟動計時器
     if (intervalRef.current) {
       window.clearInterval(intervalRef.current);
     }
     intervalRef.current = window.setInterval(() => {
       setTimer((prev) => {
         const newTime = prev + 1;
-        // 檢查是否超時
         if (newTime >= GAME_TIME_LIMIT) {
+          window.clearInterval(intervalRef.current!);
+          intervalRef.current = null;
           setSessionState('failed');
-          if (intervalRef.current) {
-            window.clearInterval(intervalRef.current);
-            intervalRef.current = null;
+          setIsFullscreen(false);
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
           }
+          return GAME_TIME_LIMIT;
         }
         return newTime;
       });
     }, 1000);
-  }, [handleRequestCamera, permissionState]);
+  }, []);
 
   const completeInterruptionTask = useCallback(() => {
     console.log('[DEBUG] Completing interruption task');
     const audioManager = getAudioManager();
     audioManager.playSuccess();
+    audioManager.playDetection(); // 添加物體偵測音
     
     // 解除干擾任務鎖定
     setIsDistractedTaskActive(false);
@@ -539,23 +637,26 @@ export default function FocusFinderPrototype() {
       setCurrentDistraction(null);
     }
     
-    // 恢復一些專注力
+    // 恢複一些專注力
     setFocusLevel(prev => Math.min(100, prev + 15));
     console.log('[DEBUG] Interruption task completed, resuming main task');
   }, [currentDistraction]);
   
-  const completeTask = useCallback(() => {
-    const audioManager = getAudioManager();
-    audioManager.playSuccess();
+  const skipCurrentTask = useCallback(() => {
+    console.log('[DEBUG] Skipping current task');
+    setSkippedTasks(prev => prev + 1);
+    setFocusLevel(prev => Math.max(0, prev - 15)); // 扣分
     
-    // 恢復專注力
-    setFocusLevel(prev => Math.min(100, prev + 25));
+    // 觸發震動效果
+    if (navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]); // 震動模式
+    }
     
     setLogs((prev) => {
       const updated = [...prev];
       const index = updated.length - 1;
       if (updated[index] && updated[index].completedAt === null) {
-        updated[index] = { ...updated[index], completedAt: Date.now() };
+        updated[index] = { ...updated[index], completedAt: Date.now(), skipped: true };
       }
       return updated;
     });
@@ -565,6 +666,9 @@ export default function FocusFinderPrototype() {
       if (nextIndex >= TASKS.length) {
         setSessionState('completed');
         setIsFullscreen(false);
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        }
         if (intervalRef.current) {
           window.clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -580,21 +684,125 @@ export default function FocusFinderPrototype() {
           completedAt: null,
         },
       ]);
+      
+      // 重置任務開始時間
+      setTaskStartTime(Date.now());
+      
+      // 清除之前的超時計時器
+      if (taskTimeoutRef) {
+        clearTimeout(taskTimeoutRef);
+      }
+      
+      // 設置新的超時計時器
+      const timeout = setTimeout(() => {
+        console.log('[DEBUG] Task timeout - skipping task');
+        const audioMgr = getAudioManager();
+        audioMgr.playError();
+        skipCurrentTask();
+      }, TASK_TIMEOUT * 1000);
+      setTaskTimeoutRef(timeout);
 
       return nextIndex;
     });
-  }, []);
+  }, [taskTimeoutRef]);
+
+  const completeTask = useCallback(() => {
+    const audioManager = getAudioManager();
+    audioManager.playSuccess();
+    audioManager.playDetection(); // 添加物體偵測音
+    
+    // 清除超時計時器
+    if (taskTimeoutRef) {
+      clearTimeout(taskTimeoutRef);
+      setTaskTimeoutRef(null);
+    }
+    
+    // 恢複專注力
+    setFocusLevel(prev => Math.min(100, prev + 25));
+    
+    setLogs((prev) => {
+      const updated = [...prev];
+      const index = updated.length - 1;
+      if (updated[index] && updated[index].completedAt === null) {
+        updated[index] = { ...updated[index], completedAt: Date.now() };
+      }
+      return updated;
+    });
+
+    setCurrentTaskIndex((prev) => {
+      const nextIndex = prev + 1;
+      if (nextIndex >= TASKS.length) {
+        const audioMgr = getAudioManager();
+        audioMgr.playVictory(); // 添加勝利音
+        setSessionState('completed');
+        setIsFullscreen(false);
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        }
+        if (intervalRef.current) {
+          window.clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        return prev;
+      }
+
+      setLogs((prevLogs) => [
+        ...prevLogs,
+        {
+          taskId: TASKS[nextIndex].id,
+          startedAt: Date.now(),
+          completedAt: null,
+        },
+      ]);
+      
+      // 重置任務開始時間
+      setTaskStartTime(Date.now());
+      
+      // 顯示故事
+      const storyIndex = Math.floor(nextIndex / 3); // 每 3 個任務顯示一個故事
+      if (storyIndex < STORY_CHAPTERS.length && storyIndex !== currentStoryIndex) {
+        setCurrentStoryIndex(storyIndex);
+        setShowStoryModal(true);
+      }
+      
+      // 設置新的超時計時器
+      const timeout = setTimeout(() => {
+        console.log('[DEBUG] Task timeout - skipping task');
+        const audioMgr = getAudioManager();
+        audioMgr.playError();
+        skipCurrentTask();
+      }, TASK_TIMEOUT * 1000);
+      setTaskTimeoutRef(timeout);
+
+      return nextIndex;
+    });
+  }, [taskTimeoutRef, skipCurrentTask]);
 
   const resetSession = useCallback(() => {
+    console.log('[DEBUG] Resetting session');
     setSessionState('idle');
-    setTimer(0);
     setCurrentTaskIndex(0);
-    setLogs([]);
-    setDistractions([]);
-    setErrorMessage(null);
-    setIsFullscreen(false);
+    setTimer(0);
     setFocusLevel(100);
+    setDistractions([]);
     setCurrentDistraction(null);
+    setIsDistractedTaskActive(false);
+    setDetectedObject(null);
+    setLogs([]);
+    setShowHints(false);
+    setSkippedTasks(0);
+    setIsFullscreen(false);
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+    if (intervalRef.current) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (taskTimeoutRef) {
+      clearTimeout(taskTimeoutRef);
+      setTaskTimeoutRef(null);
+    }
     stopStream();
     setPermissionState('idle');
   }, [stopStream]);
@@ -698,164 +906,44 @@ export default function FocusFinderPrototype() {
 
   return (
     <div className={`${isFullscreen && sessionState === 'running' ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-slate-950 text-slate-100`}>
-      <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex flex-col' : 'mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 pb-24 pt-12'}`}>
-        <header className={`${isFullscreen && sessionState === 'running' ? 'hidden' : 'flex flex-col gap-6 rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl backdrop-blur'}`}>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
-            <Link
-              href="/focus-finder"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-200 transition hover:border-slate-500 hover:text-white"
-            >
-              <FaArrowLeft /> 返回體驗藍圖
-            </Link>
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-200">
-              <FaCamera /> Prototype 1
-            </span>
-          </div>
-          <div className="grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)] md:items-start">
-            <div>
-              <h1 className="text-3xl font-semibold text-white sm:text-4xl">Focus Finder Prototype 1</h1>
-              <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                引入干擾模組，模擬 ADHD 者面對的認知負荷。體驗將在任務過程中隨機觸發中斷事件，測試專注力恢復能力。
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-400">
-                <li className="flex items-start gap-2">
-                  <FaExclamationTriangle className="mt-1 text-rose-400" />
-                  模態干擾：隨機彈出任務提醒，要求立即處理
-                </li>
-                <li className="flex items-start gap-2">
-                  <FaEyeSlash className="mt-1 text-indigo-400" />
-                  視覺干擾：靜電、色彩失真等短暫視覺效果
-                </li>
-                <li className="flex items-start gap-2">
-                  <FaVolumeUp className="mt-1 text-amber-400" />
-                  聽覺干擾：環境噪音干擾（Prototype 1 階段預留）
-                </li>
-                <li className="flex items-start gap-2">
-                  <FaHandPaper className="mt-1 text-fuchsia-400" />
-                  衝動干擾：螢幕角落出現誘人圖示，點擊會增加時間懲罰
-                </li>
-              </ul>
-            </div>
-            <div className={`${isFullscreen && sessionState === 'running' ? 'hidden' : 'rounded-3xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-300 shadow-xl'}`}>
-              <h2 className="text-base font-semibold text-white">難度設定</h2>
-              <div className="mt-4 space-y-4">
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={distractionSettings.enabled}
-                    onChange={(e) => setDistractionSettings(prev => ({
-                      ...prev,
-                      enabled: e.target.checked
-                    }))}
-                    className="rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"
-                  />
-                  <span>啟用干擾模組</span>
-                </label>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <input
-                    type="checkbox"
-                    checked={true}
-                    disabled
-                    className="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 cursor-not-allowed"
-                  />
-                  <span>✓ 物體偵測已啟用 (MediaPipe)</span>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-2">遊戲難度</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['easy', 'normal', 'hard'].map((level) => (
-                      <button
-                        key={level}
-                        onClick={() => setDistractionSettings(prev => ({
-                          ...prev,
-                          difficulty: level as 'easy' | 'normal' | 'hard'
-                        }))}
-                        className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                          distractionSettings.difficulty === level
-                            ? 'bg-blue-600 text-white border-2 border-blue-400'
-                            : 'bg-slate-800 text-slate-300 border-2 border-slate-700 hover:border-slate-600'
-                        }`}
-                      >
-                        {level === 'easy' && '簡單'}
-                        {level === 'normal' && '普通'}
-                        {level === 'hard' && '困難'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 p-3 rounded-2xl bg-slate-800/50">
-                <p className="text-xs text-slate-400">
-                  難度會影響干擾頻率與時間懲罰。實際 ADHD 體驗因人而異，此設定僅供參考。
-                </p>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <section className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex-1' : 'grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]'}`}>
-          <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex flex-col' : 'flex flex-col gap-6'}`}>
-            <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full' : 'relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 shadow-2xl'}`}>
-              <div className="absolute inset-0">
-                <video
-                  ref={videoRef}
-                  className="h-full w-full object-cover"
-                  playsInline
-                  muted
-                  autoPlay
-                  onError={(e) => {
-                    console.error('Video element error:', e);
-                    setErrorMessage('視頻播放錯誤，請重新嘗試');
-                  }}
-                />
-                {permissionState !== 'granted' && sessionState === 'idle' && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-center p-8 z-50"
-                    style={{ pointerEvents: 'auto' }}
+      <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex-1' : 'grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]'}`}>
+        <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex flex-col' : 'flex flex-col gap-6'}`}>
+          <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full' : 'relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 shadow-2xl'}`}>
+            <div className="absolute inset-0">
+              <video
+                ref={videoRef}
+                className="h-full w-full object-cover"
+                playsInline
+                muted
+                autoPlay
+                onError={(e) => {
+                  console.error('Video element error:', e);
+                  setErrorMessage('視頻播放錯誤，請重新嘗試');
+                }}
+              />
+              {permissionState !== 'granted' && sessionState === 'idle' && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-center p-8 z-50"
+                  style={{ pointerEvents: 'auto' }}
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   >
-                    <motion.div
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <FaCamera className="text-6xl text-cyan-400" />
-                    </motion.div>
-                    <div className="max-w-md space-y-4">
-                      <h3 className="text-3xl font-bold text-white">準備好了嗎？</h3>
-                      <p className="text-lg text-slate-300 leading-relaxed">
-                        你將體驗 ADHD 者在體壓情境下的感受。
-                        <br />
-                        我們需要使用你的鏡頭來創建 AR 體驗。
-                      </p>
-                      {errorMessage && (
-                        <div className="rounded-lg bg-red-900/50 border border-red-700 p-3 text-sm text-red-200">
-                          ⚠️ {errorMessage}
-                        </div>
-                      )}
-                      <div className="flex flex-col gap-3 pt-4">
-                        <button
-                          onClick={(e) => {
-                            console.log('[DEBUG] Camera button clicked!');
-                            console.log('[DEBUG] Event:', e);
-                            console.log('[DEBUG] Current permissionState:', permissionState);
-                            handleRequestCamera();
-                          }}
-                          disabled={permissionState === 'requesting'}
-                          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed relative z-50"
-                          style={{ pointerEvents: 'auto' }}
-                        >
-                          <FaCamera className="text-2xl" />
-                          {permissionState === 'requesting' ? '請求中...' : '啟用鏡頭開始'}
-                        </button>
-                        <p className="text-xs text-slate-500">
-                          🔒 你的影像不會被儲存或上傳
-                        </p>
-                      </div>
-                    </div>
+                    <FaCamera className="text-6xl text-cyan-400" />
                   </motion.div>
-                )}
-                {permissionState === 'granted' && sessionState === 'idle' && (
+                  <div className="max-w-md space-y-4">
+                    <h3 className="text-3xl font-bold text-white">準備好了嗎？</h3>
+                    <p className="text-lg text-slate-300 leading-relaxed">
+                      你將體驗 ADHD 者在體壓情境下的感受。
+                      <br />
+                      我們需要使用你的鏡頭來創建 AR 體驗。
+                    </p>
+                    {errorMessage && (
+                      <div className="rounded-lg bg-red-900/50 border border-red-700 p-3 text-sm text-red-200">
+                        ⚠️ {errorMessage}
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -884,7 +972,7 @@ export default function FocusFinderPrototype() {
                           開始遊戲
                         </button>
                         <p className="text-xs text-slate-500">
-                          📷 物體偵測已啟用 | ⏱️ 準備好應對 {GAME_TIME_LIMIT} 秒的挑戰
+                          ⏱️ 時間限制：{GAME_TIME_LIMIT} 秒完成所有任務 | 每個任務 {TASK_TIMEOUT} 秒
                         </p>
                       </div>
                     </div>
@@ -944,55 +1032,53 @@ export default function FocusFinderPrototype() {
                     key={currentDistraction.id}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="absolute left-1/2 top-1/2 flex w-[min(95vw,500px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border-2 border-red-500/80 bg-gradient-to-br from-red-950/95 to-orange-950/95 p-4 sm:p-8 text-xs sm:text-sm text-slate-100 shadow-[0_0_60px_rgba(239,68,68,0.6)] backdrop-blur-xl max-h-[80vh] overflow-y-auto z-50"
+                    className="fixed left-1/2 top-1/2 flex w-[min(95vw,500px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border-2 border-red-500/80 bg-gradient-to-br from-red-950/95 to-orange-950/95 p-3 sm:p-6 text-xs sm:text-sm text-slate-100 shadow-[0_0_60px_rgba(239,68,68,0.6)] backdrop-blur-xl max-h-[70vh] overflow-y-auto z-50"
                   >
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <motion.span 
-                        className="text-2xl sm:text-4xl flex-shrink-0"
+                        className="text-xl sm:text-2xl flex-shrink-0"
                         animate={{ rotate: [0, 10, -10, 0] }}
                         transition={{ duration: 0.5, repeat: Infinity }}
                       >
                         ⚠️
                       </motion.span>
                       <div className="flex-1 min-w-0">
-                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-300 line-clamp-1">
-                          <FaExclamationTriangle className="flex-shrink-0" /> 緊急中斷！
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-red-300 line-clamp-1">
+                          <FaExclamationTriangle className="flex-shrink-0" /> 中斷
                         </span>
-                        <h3 className="text-lg sm:text-2xl font-bold text-white mt-1 line-clamp-2">{currentDistraction.title}</h3>
+                        <h3 className="text-base sm:text-lg font-bold text-white mt-0.5 line-clamp-2">{currentDistraction.title}</h3>
                       </div>
                     </div>
-                    <div className="border-t border-red-700/50 pt-3 sm:pt-4">
-                      <p className="text-xs sm:text-base text-red-200 mb-2 sm:mb-4 font-semibold line-clamp-3">🚨 {currentDistraction.description}</p>
-                      <div className="rounded-lg sm:rounded-xl bg-slate-900/50 border border-red-500/30 p-2 sm:p-4">
-                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                          請將鏡頭對準 <span className="font-bold text-red-300">{currentDistraction.objectToFind}</span>。
-                          <br />
-                          <span className="text-xs text-slate-400 mt-1 sm:mt-2 block">⚠️ 必須先完成此任務才能繼續主任務！</span>
+                    <div className="border-t border-red-700/50 pt-2 sm:pt-3 flex-shrink-0">
+                      <p className="text-xs text-red-200 mb-2 font-semibold line-clamp-2">🚨 {currentDistraction.description}</p>
+                      <div className="rounded-lg bg-slate-900/50 border border-red-500/30 p-2">
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          對準 <span className="font-bold text-red-300">{currentDistraction.objectToFind}</span>
                         </p>
                       </div>
                     </div>
                     {currentDistraction?.objectToFind && (
-                      <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4">
+                      <div className="flex gap-2 pt-2 flex-shrink-0">
                         {detectedObject === currentDistraction.objectToFind ? (
                           <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="flex-1 flex gap-2 sm:gap-3 bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-2 sm:p-3"
+                            className="flex-1 flex gap-2 bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-2"
                           >
                             <div className="flex items-center gap-2 text-emerald-300 flex-1 min-w-0">
                               <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }} className="flex-shrink-0">
-                                <FaCheck className="text-base sm:text-lg" />
+                                <FaCheck className="text-sm" />
                               </motion.div>
-                              <span className="font-semibold text-xs sm:text-sm truncate">✓ 中斷任務已完成！</span>
+                              <span className="font-semibold text-xs truncate">✓ 完成</span>
                             </div>
                           </motion.div>
                         ) : (
-                          <div className="flex-1 flex gap-2 sm:gap-3 bg-red-900/30 border border-red-500/50 rounded-lg p-2 sm:p-3">
-                            <div className="flex items-center gap-2 text-red-300 flex-1 min-w-0 text-xs sm:text-sm">
+                          <div className="flex-1 flex gap-2 bg-red-900/30 border border-red-500/50 rounded-lg p-2">
+                            <div className="flex items-center gap-2 text-red-300 flex-1 min-w-0 text-xs">
                               <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }} className="flex-shrink-0">
-                                <FaCamera className="text-base sm:text-lg" />
+                                <FaCamera className="text-sm" />
                               </motion.div>
-                              <span className="truncate">🔍 掃描中... 請將 <strong>{currentDistraction.objectToFind}</strong> 對準鏡頭</span>
+                              <span className="truncate">🔍 掃描中</span>
                             </div>
                           </div>
                         )}
@@ -1011,49 +1097,98 @@ export default function FocusFinderPrototype() {
                       y: 0,
                       scale: isDistractedTaskActive ? 0.95 : 1
                     }}
-                    className="absolute left-1/2 top-1/2 flex w-[min(95vw,500px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-2xl sm:rounded-3xl border-2 border-cyan-400/60 bg-gradient-to-br from-slate-950/95 to-slate-900/95 p-4 sm:p-8 text-xs sm:text-sm text-slate-100 shadow-[0_0_40px_rgba(34,211,238,0.4)] backdrop-blur-xl max-h-[80vh] overflow-y-auto z-40"
+                    className="fixed left-1/2 top-1/2 flex w-[min(95vw,500px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border-2 border-cyan-400/60 bg-gradient-to-br from-slate-950/95 to-slate-900/95 p-3 sm:p-6 text-xs sm:text-sm text-slate-100 shadow-[0_0_40px_rgba(34,211,238,0.4)] backdrop-blur-xl max-h-[70vh] overflow-y-auto z-40"
                     style={{ pointerEvents: isDistractedTaskActive ? 'none' : 'auto' }}
                   >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <span className="text-2xl sm:text-3xl">{currentTask.emoji}</span>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                      <span className="text-xl sm:text-2xl flex-shrink-0">{currentTask.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-cyan-300 line-clamp-1">
-                          <FaLocationArrow className="flex-shrink-0" /> 任務目標
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-cyan-300 line-clamp-1">
+                          <FaLocationArrow className="flex-shrink-0" /> 任務
                         </span>
-                        <h3 className="text-lg sm:text-xl font-bold text-white mt-1 line-clamp-2">{currentTask.title}</h3>
+                        <h3 className="text-base sm:text-lg font-bold text-white mt-0.5 line-clamp-2">{currentTask.title}</h3>
                       </div>
                     </div>
-                    <div className="border-t border-slate-700/50 pt-3 sm:pt-4">
+                    <div className="border-t border-slate-700/50 pt-2 sm:pt-3 flex-shrink-0">
                       {showHints && (
-                        <p className="text-xs sm:text-sm text-cyan-200 mb-2 sm:mb-3 font-semibold line-clamp-2">💡 提示：{currentTask.hint}</p>
+                        <p className="text-xs text-cyan-200 mb-1 sm:mb-2 font-semibold line-clamp-1">💡 {currentTask.hint}</p>
                       )}
-                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-wrap line-clamp-3">{currentTask.prompt}</p>
+                      <p className="text-xs text-slate-300 leading-relaxed line-clamp-2">{currentTask.prompt}</p>
                     </div>
                     {detectedObject === currentTask.id ? (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="flex gap-2 sm:gap-3 pt-3 sm:pt-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-2 sm:p-3"
+                        className="flex gap-2 pt-2 sm:pt-3 bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-2 flex-shrink-0"
                       >
                         <div className="flex items-center gap-2 text-emerald-300 flex-1 min-w-0">
                           <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }} className="flex-shrink-0">
-                            <FaCheck className="text-base sm:text-lg" />
+                            <FaCheck className="text-sm sm:text-base" />
                           </motion.div>
-                          <span className="font-semibold text-xs sm:text-sm truncate">✓ 已偵測到！自動完成中...</span>
+                          <span className="font-semibold text-xs truncate">✓ 完成中...</span>
                         </div>
                       </motion.div>
                     ) : (
-                      <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4 bg-slate-800/50 border border-slate-700/50 rounded-lg p-2 sm:p-3">
-                        <div className="flex items-center gap-2 text-slate-400 flex-1 min-w-0 text-xs sm:text-sm">
+                      <div className="flex gap-2 pt-2 sm:pt-3 bg-slate-800/50 border border-slate-700/50 rounded-lg p-2 flex-shrink-0">
+                        <div className="flex items-center gap-2 text-slate-400 flex-1 min-w-0 text-xs">
                           <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }} className="flex-shrink-0">
-                            <FaCamera className="text-base sm:text-lg" />
+                            <FaCamera className="text-sm sm:text-base" />
                           </motion.div>
-                          <span className="truncate">🔍 掃描中... 請將物體對準鏡頭</span>
+                          <span className="truncate">🔍 掃描中</span>
                         </div>
                       </div>
                     )}
                   </motion.div>
                 )}
+
+                {/* 故事模態 */}
+                <AnimatePresence>
+                  {showStoryModal && currentStoryIndex < STORY_CHAPTERS.length && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+                    >
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        className="bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/50 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl"
+                      >
+                        <div className="space-y-4">
+                          <div>
+                            <h2 className="text-2xl sm:text-3xl font-bold text-amber-300 mb-2">
+                              {STORY_CHAPTERS[currentStoryIndex].title}
+                            </h2>
+                            <p className="text-slate-300 leading-relaxed text-sm sm:text-base">
+                              {STORY_CHAPTERS[currentStoryIndex].description}
+                            </p>
+                          </div>
+                          <div className="border-t border-slate-700 pt-4">
+                            <p className="text-xs text-slate-400 mb-3">接下來的任務：</p>
+                            <div className="flex gap-2 flex-wrap">
+                              {STORY_CHAPTERS[currentStoryIndex].tasks.map((task, idx) => {
+                                const taskObj = TASKS.find(t => t.id === task);
+                                return (
+                                  <div key={idx} className="bg-slate-700/50 rounded-lg px-3 py-2 text-xs">
+                                    <span className="text-amber-300">{taskObj?.emoji}</span> {taskObj?.title}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setShowStoryModal(false)}
+                            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 rounded-lg transition mt-4"
+                          >
+                            開始任務 →
+                          </button>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {sessionState === 'completed' && (
                   <motion.div 
@@ -1072,8 +1207,14 @@ export default function FocusFinderPrototype() {
                     <div className="max-w-md space-y-3">
                       <div className="rounded-2xl bg-slate-800/50 p-4 border border-emerald-500/30">
                         <p className="text-lg font-semibold text-emerald-300">完成時間：{formatSeconds(adjustedTime)}</p>
-                        <p className="text-sm text-slate-400 mt-1">找到 {TASKS.length} 個物品</p>
+                        <p className="text-sm text-slate-400 mt-1">找到 {TASKS.length - skippedTasks}/{TASKS.length} 個物品</p>
                       </div>
+                      {skippedTasks > 0 && (
+                        <div className="rounded-2xl bg-slate-800/50 p-4 border border-red-500/30">
+                          <p className="text-sm text-red-300">跳過的任務：{skippedTasks} 個</p>
+                          <p className="text-sm text-slate-400 mt-1">（找不到物體或超時）</p>
+                        </div>
+                      )}
                       {distractionSettings.enabled && (
                         <div className="rounded-2xl bg-slate-800/50 p-4 border border-amber-500/30">
                           <p className="text-sm text-amber-300">處理了 {distractions.length} 次干擾事件</p>
@@ -1116,7 +1257,15 @@ export default function FocusFinderPrototype() {
                     <h3 className="text-2xl font-bold text-white">⏰ 時間到！</h3>
                     <div className="max-w-md space-y-3">
                       <p className="text-slate-300">
-                        你在 {GAME_TIME_LIMIT} 秒內只完成了 {totalCompleted}/{TASKS.length} 個任務。
+                        你在 {GAME_TIME_LIMIT} 秒內完成了 {totalCompleted}/{TASKS.length} 個任務。
+                      </p>
+                      {skippedTasks > 0 && (
+                        <p className="text-red-300 text-sm">
+                          跳過了 {skippedTasks} 個任務（找不到物體或超時）
+                        </p>
+                      )}
+                      <p className="text-amber-300 text-sm">
+                        這就是 ADHD 患者每天面對的挑戰：時間壓力、注意力分散、不斷的干擾...
                       </p>
                       {distractionSettings.enabled && (
                         <div className="rounded-2xl bg-slate-800/50 p-4 border border-red-500/30">

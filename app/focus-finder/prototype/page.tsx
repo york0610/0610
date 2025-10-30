@@ -547,6 +547,9 @@ export default function FocusFinderPrototype() {
 
   const startSession = useCallback(async () => {
     console.log('[DEBUG] Starting session');
+    console.log('[DEBUG] videoRef.current:', videoRef.current);
+    console.log('[DEBUG] streamRef.current:', streamRef.current);
+    console.log('[DEBUG] streamRef.current?.active:', streamRef.current?.active);
     const audioManager = getAudioManager();
     audioManager.playFocus();
     

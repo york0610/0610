@@ -332,7 +332,9 @@ export default function FocusFinderPrototype() {
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment',
+          facingMode: { ideal: 'user' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
         },
         audio: false,
       });

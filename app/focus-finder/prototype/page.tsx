@@ -833,8 +833,22 @@ export default function FocusFinderPrototype() {
                   <div className="mt-4 grid gap-3 text-sm text-slate-200">
                     <button
                       type="button"
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
-                <h2 className="text-lg font-semibold text-white">📊 上次結果</h2>
+                      onClick={startSession}
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
+                    >
+                      <FaPlay /> {permissionState === 'granted' ? '重新開始' : '開始挑戰'}
+                    </button>
+                    {errorMessage && (
+                      <p className="mt-2 rounded-2xl border border-rose-500/60 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                        {errorMessage}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {logs.length > 0 && (
+                  <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
+                    <h2 className="text-lg font-semibold text-white">📊 上次結果</h2>
                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-200">
                   <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
                     <p className="text-xs uppercase tracking-widest text-slate-400">完成任務</p>

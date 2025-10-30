@@ -116,16 +116,16 @@ const INTERRUPTION_TASKS = [
 
 type DistractionConfigType = DistractionType | 'timeout';
 
-const DISTRACTION_CONFIG: Record<DistractionConfigType, { minDelay: number; maxDelay: number; duration: number; cost: number; title: string }> = {
-  environment: { minDelay: 15, maxDelay: 25, duration: 0, cost: 2, title: '☀️ 陽光太刺眼' },
-  biological: { minDelay: 20, maxDelay: 30, duration: 0, cost: 2.5, title: '💧 口渴了，需要喝水' },
-  social: { minDelay: 18, maxDelay: 28, duration: 0, cost: 1.5, title: '📱 有人在叫你' },
+const DISTRACTION_CONFIG: Record<DistractionConfigType, { minDelay: number; maxDelay: number; duration: number; cost: number; title: string; objectToFind?: string }> = {
+  environment: { minDelay: 8, maxDelay: 12, duration: 0, cost: 2, title: '☀️ 陽光太刺眼', objectToFind: 'window' },
+  biological: { minDelay: 10, maxDelay: 15, duration: 0, cost: 2.5, title: '💧 口渴了，需要喝水', objectToFind: 'cup' },
+  social: { minDelay: 9, maxDelay: 13, duration: 0, cost: 1.5, title: '📱 有人在叫你', objectToFind: 'person' },
   timeout: { minDelay: 0, maxDelay: 0, duration: 0, cost: 5, title: '⏱️ 時間到！' },
-  psychological: { minDelay: 12, maxDelay: 22, duration: 0, cost: 1, title: '🤔 突然想到其他事' },
+  psychological: { minDelay: 7, maxDelay: 11, duration: 0, cost: 1, title: '🤔 突然想到其他事', objectToFind: 'phone' },
 };
 
 // 遊戲時間限制（秒）
-const GAME_TIME_LIMIT = 120; // 增加到 120 秒以適應更多任務
+const GAME_TIME_LIMIT = 45; // 45 秒時間限制，增加遊戲難度
 
 // 單個任務的超時時間（秒）
 const TASK_TIMEOUT = 15; // 15 秒內找不到物體就自動跳過
@@ -504,16 +504,29 @@ export default function FocusFinderPrototype() {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (error) {
         console.warn('[DEBUG] Failed to get camera with environment facing, trying user facing...');
-        // 如果後置鏡頭失敗，嘗試前置鏡頭
-        const fallbackConstraints = {
-          video: {
-            facingMode: 'user',
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-          audio: false,
-        };
-        stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        try {
+          // 如果後置鏡頭失敗，嘗試前置鏡頭
+          const fallbackConstraints = {
+            video: {
+              facingMode: 'user',
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          };
+          stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        } catch (fallbackError) {
+          console.warn('[DEBUG] Failed to get camera with user facing, trying any camera...');
+          // 最後的備選方案：任何可用的攝像頭
+          const anyConstraints = {
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          };
+          stream = await navigator.mediaDevices.getUserMedia(anyConstraints);
+        }
       }
       console.log('[DEBUG] Camera stream obtained:', stream);
       console.log('[DEBUG] Stream active:', stream.active);

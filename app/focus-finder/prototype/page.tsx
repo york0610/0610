@@ -1218,7 +1218,6 @@ export default function FocusFinderPrototype() {
             </div>
           </div>
         </section>
-
         {sessionState === 'completed' && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}

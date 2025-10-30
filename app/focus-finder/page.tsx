@@ -372,6 +372,68 @@ export default function FocusFinderPage() {
         </header>
       </div>
 
+      {/* ADHD 介紹區塊 */}
+      <div className="relative mx-auto max-w-7xl px-6 py-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-24"
+        >
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-black text-white mb-6">什麼是 ADHD？</h2>
+            <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+              注意力不足/過動症（ADHD）是一種神經發展障礙，影響著全球約 5-10% 的人口。
+              它不是懶惰或缺乏意志力，而是大腦執行功能的差異。
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="rounded-2xl border border-blue-500/30 bg-blue-900/20 p-8 backdrop-blur-sm">
+              <div className="text-4xl mb-4">🧠</div>
+              <h3 className="text-xl font-bold text-blue-300 mb-3">執行功能困難</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                難以規劃、組織和執行任務。時間感知扭曲，容易低估完成時間。
+              </p>
+            </div>
+            <div className="rounded-2xl border border-purple-500/30 bg-purple-900/20 p-8 backdrop-blur-sm">
+              <div className="text-4xl mb-4">⚡</div>
+              <h3 className="text-xl font-bold text-purple-300 mb-3">注意力調節障礙</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                無法維持注意力，容易被無關刺激分散。但在感興趣的事物上可能過度專注。
+              </p>
+            </div>
+            <div className="rounded-2xl border border-pink-500/30 bg-pink-900/20 p-8 backdrop-blur-sm">
+              <div className="text-4xl mb-4">💭</div>
+              <h3 className="text-xl font-bold text-pink-300 mb-3">工作記憶限制</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                同時處理多個信息困難。一旦被打斷，很難回到原本的思路。
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-amber-500/30 bg-amber-900/20 p-12 backdrop-blur-sm">
+            <h3 className="text-2xl font-bold text-amber-300 mb-6">為什麼我們創建 Focus Finder？</h3>
+            <div className="space-y-4 text-slate-300">
+              <p className="leading-relaxed">
+                <span className="font-semibold text-amber-200">同理心設計：</span>
+                大多數人無法真正理解 ADHD 患者的日常挑戰。我們創建了一個互動體驗，
+                讓你在 60 秒內體驗 ADHD 者面對的認知負荷、執行功能困難和感官過載。
+              </p>
+              <p className="leading-relaxed">
+                <span className="font-semibold text-amber-200">提升意識：</span>
+                通過遊戲化的方式，幫助人們理解 ADHD 不是「不夠努力」，
+                而是大腦神經生物學的差異。
+              </p>
+              <p className="leading-relaxed">
+                <span className="font-semibold text-amber-200">實踐策略：</span>
+                體驗中的挑戰反映了真實的 ADHD 困境，幫助患者和支持者找到應對策略。
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
       {/* 遊戲機制介紹區域 */}
       <div className="relative mx-auto max-w-7xl px-6 py-24">
         {/* 難度篩選器 */}
@@ -382,8 +444,8 @@ export default function FocusFinderPage() {
           viewport={{ once: true }}
         >
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-white mb-4">選擇你的挑戰</h2>
-            <p className="text-lg text-slate-400">根據難度等級，選擇最適合你的體驗</p>
+            <h2 className="text-4xl font-bold text-white mb-4">🎮 選擇你的挑戰</h2>
+            <p className="text-lg text-slate-400">根據難度等級，選擇最適合你的體驗。每個挑戰都模擬不同的 ADHD 情境。</p>
           </div>
           
           <div className="flex flex-wrap justify-center gap-3">

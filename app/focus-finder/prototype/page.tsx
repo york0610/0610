@@ -48,30 +48,64 @@ type DistractionEvent = {
   dismissedAt: number | null;
   cost: number;
   title: string;
+  objectToFind?: string; // 需要找到的物體
+  description?: string; // 任務描述
 };
 
 // 情景干擾配置
-const DISTRACTION_CONFIG = {
-  environment: { minDelay: 12, maxDelay: 20, duration: 4000, cost: 2, title: '☀️ 陽光太刺眼' },
-  biological: { minDelay: 15, maxDelay: 25, duration: 5000, cost: 2.5, title: '💧 口渴了，需要喝水' },
-  social: { minDelay: 10, maxDelay: 18, duration: 3000, cost: 1.5, title: '📱 有人在叫你' },
-  psychological: { minDelay: 8, maxDelay: 16, duration: 3500, cost: 1, title: '🤔 突然想到其他事' },
+// 強制中斷型干擾任務：必須先完成才能繼續主任務
+const INTERRUPTION_TASKS = [
+  { 
+    type: 'environment' as DistractionType, 
+    title: '💻 電腦沒關！', 
+    description: '你忘記關電腦了，必須先去關掉它', 
+    objectToFind: 'laptop',
+    cost: 3,
+    emoji: '💻'
+  },
+  { 
+    type: 'biological' as DistractionType, 
+    title: '💧 口好渴！', 
+    description: '你非常口渴，必須先去找水杯喝水', 
+    objectToFind: 'cup',
+    cost: 2,
+    emoji: '☕'
+  },
+  { 
+    type: 'social' as DistractionType, 
+    title: '📱 手機響了！', 
+    description: '手機一直響，必須先去關掉它', 
+    objectToFind: 'cell phone',
+    cost: 2.5,
+    emoji: '📱'
+  },
+  { 
+    type: 'environment' as DistractionType, 
+    title: '💡 燈沒關！', 
+    description: '房間的燈還開著，必須先去關燈', 
+    objectToFind: 'light',
+    cost: 1.5,
+    emoji: '💡'
+  },
+];
+
+const DISTRACTION_CONFIG: Record<DistractionType, { minDelay: number; maxDelay: number; duration: number; cost: number; title: string }> = {
+  environment: { minDelay: 15, maxDelay: 25, duration: 0, cost: 2, title: '☀️ 陽光太刺眼' },
+  biological: { minDelay: 20, maxDelay: 30, duration: 0, cost: 2.5, title: '💧 口渴了，需要喝水' },
+  social: { minDelay: 18, maxDelay: 28, duration: 0, cost: 1.5, title: '📱 有人在叫你' },
+  psychological: { minDelay: 12, maxDelay: 22, duration: 0, cost: 1, title: '🤔 突然想到其他事' },
 };
 
 // 遊戲時間限制（秒）
-const GAME_TIME_LIMIT = 90;
+const GAME_TIME_LIMIT = 60;
 
+// 常見物品任務 - 容易在身邊找到
 const TASKS: Task[] = [
-  { id: 'keys', title: '找到鑰匙', hint: '通常在門邊或桌面', prompt: '掃過可能放置鑰匙的區域。', emoji: '🔑', difficulty: 'easy' },
-  { id: 'wallet', title: '找到錢包', hint: '檢查褲子口袋或書堆', prompt: '仔細查看容易遺漏的地方。', emoji: '👛', difficulty: 'easy' },
-  { id: 'phone', title: '找到手機', hint: '通常在充電器附近', prompt: '追蹤電源線的位置。', emoji: '📱', difficulty: 'normal' },
-  { id: 'glasses', title: '找到眼鏡', hint: '可能在床頭或書桌', prompt: '檢查你經常放置的位置。', emoji: '👓', difficulty: 'normal' },
-  { id: 'remote', title: '找到遙控器', hint: '通常在沙發附近', prompt: '掃過沙發周圍和抽屜下。', emoji: '📺', difficulty: 'normal' },
-  { id: 'charger', title: '找到充電器', hint: '檢查插座附近', prompt: '追蹤電線的位置。', emoji: '🔌', difficulty: 'hard' },
-  { id: 'headphones', title: '找到耳機', hint: '可能在抽屜或床上', prompt: '檢查你常放的地方。', emoji: '🎧', difficulty: 'hard' },
-  { id: 'book', title: '找到書', hint: '書架或床頭櫃', prompt: '掃過書籍堆放的區域。', emoji: '📖', difficulty: 'easy' },
-  { id: 'cup', title: '找到水杯', hint: '廚房或書桌', prompt: '檢查飲用區域。', emoji: '☕', difficulty: 'easy' },
-  { id: 'watch', title: '找到手錶', hint: '床頭或洗手台', prompt: '檢查你脫下的地方。', emoji: '⌚', difficulty: 'hard' },
+  { id: 'cell phone', title: '找到手機', hint: '通常在桌上或口袋裡', prompt: '將鏡頭對準你的手機。', emoji: '�', difficulty: 'easy' },
+  { id: 'cup', title: '找到杯子', hint: '桌上或廚房', prompt: '將鏡頭對準你的水杯或馬克杯。', emoji: '☕', difficulty: 'easy' },
+  { id: 'book', title: '找到書', hint: '桌上或書架', prompt: '將鏡頭對準任何一本書。', emoji: '�', difficulty: 'easy' },
+  { id: 'keyboard', title: '找到鍵盤', hint: '電腦桌上', prompt: '將鏡頭對準你的鍵盤。', emoji: '⌨️', difficulty: 'normal' },
+  { id: 'bottle', title: '找到瓶子', hint: '桌上或包包裡', prompt: '將鏡頭對準任何瓶子。', emoji: '🧪', difficulty: 'easy' },
 ];
 
 const formatSeconds = (value: number) => {
@@ -251,6 +285,7 @@ export default function FocusFinderPrototype() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeModal, setActiveModal] = useState(false);
   const [currentDistraction, setCurrentDistraction] = useState<DistractionEvent | null>(null);
+  const [isDistractedTaskActive, setIsDistractedTaskActive] = useState(false); // 是否有干擾任務進行中
 
   const difficultyIntensity = {
     easy: 0.5,
@@ -261,20 +296,28 @@ export default function FocusFinderPrototype() {
   const currentTask = TASKS[currentTaskIndex] ?? null;
 
   const { activeDistractions } = useDistractions(
-    sessionState === 'running' && distractionSettings.enabled,
+    sessionState === 'running' && distractionSettings.enabled && !isDistractedTaskActive,
     useCallback((type: DistractionType) => {
       const audioManager = getAudioManager();
-      const config = DISTRACTION_CONFIG[type];
       const intensity = difficultyIntensity || 1;
+      
+      // 隨機選擇一個中斷任務
+      const interruptionTask = INTERRUPTION_TASKS[Math.floor(Math.random() * INTERRUPTION_TASKS.length)];
       
       const newDistraction: DistractionEvent = {
         id: `${type}-${Date.now()}`,
-        type,
+        type: interruptionTask.type,
         triggeredAt: Date.now(),
         dismissedAt: null,
-        cost: config.cost * intensity,
-        title: config.title,
+        cost: interruptionTask.cost * intensity,
+        title: interruptionTask.title,
+        objectToFind: interruptionTask.objectToFind,
+        description: interruptionTask.description,
       };
+      
+      // 設置干擾任務為活躍狀態
+      setIsDistractedTaskActive(true);
+      console.log('[DEBUG] Interruption task triggered:', interruptionTask.title);
       
       setDistractions(prev => [...prev, newDistraction]);
       setCurrentDistraction(newDistraction);
@@ -344,7 +387,7 @@ export default function FocusFinderPrototype() {
 
       const constraints = {
         video: {
-          facingMode: { ideal: 'user' },
+          facingMode: { exact: 'environment' }, // 強制使用後置鏡頭
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
@@ -436,6 +479,31 @@ export default function FocusFinderPrototype() {
     }, 1000);
   }, [handleRequestCamera, permissionState]);
 
+  const completeInterruptionTask = useCallback(() => {
+    console.log('[DEBUG] Completing interruption task');
+    const audioManager = getAudioManager();
+    audioManager.playSuccess();
+    
+    // 解除干擾任務鎖定
+    setIsDistractedTaskActive(false);
+    
+    // 標記干擾任務為已完成
+    if (currentDistraction) {
+      setDistractions(prev => 
+        prev.map(d => 
+          d.id === currentDistraction.id 
+            ? { ...d, dismissedAt: Date.now() } 
+            : d
+        )
+      );
+      setCurrentDistraction(null);
+    }
+    
+    // 恢復一些專注力
+    setFocusLevel(prev => Math.min(100, prev + 15));
+    console.log('[DEBUG] Interruption task completed, resuming main task');
+  }, [currentDistraction]);
+  
   const completeTask = useCallback(() => {
     const audioManager = getAudioManager();
     audioManager.playSuccess();
@@ -801,12 +869,63 @@ export default function FocusFinderPrototype() {
                   )}
                 </div>
 
+                {/* 干擾任務卡片：強制中斷 */}
+                {sessionState === 'running' && isDistractedTaskActive && currentDistraction && (
+                  <motion.div
+                    key={currentDistraction.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute left-1/2 top-1/2 flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-3xl border-2 border-red-500/80 bg-gradient-to-br from-red-950/95 to-orange-950/95 p-8 text-sm text-slate-100 shadow-[0_0_60px_rgba(239,68,68,0.6)] backdrop-blur-xl max-h-[70vh] overflow-y-auto z-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <motion.span 
+                        className="text-4xl"
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 0.5, repeat: Infinity }}
+                      >
+                        ⚠️
+                      </motion.span>
+                      <div>
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-300">
+                          <FaExclamationTriangle /> 緊急中斷！
+                        </span>
+                        <h3 className="text-2xl font-bold text-white mt-1">{currentDistraction.title}</h3>
+                      </div>
+                    </div>
+                    <div className="border-t border-red-700/50 pt-4">
+                      <p className="text-base text-red-200 mb-4 font-semibold">🚨 {currentDistraction.description}</p>
+                      <div className="rounded-xl bg-slate-900/50 border border-red-500/30 p-4">
+                        <p className="text-sm text-slate-300 leading-relaxed">
+                          請將鏡頭對準 <span className="font-bold text-red-300">{currentDistraction.objectToFind}</span>，然後點擊「已完成」按鈕。
+                          <br />
+                          <span className="text-xs text-slate-400 mt-2 block">⚠️ 必須先完成此任務才能繼續主任務！</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={completeInterruptionTask}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:shadow-xl hover:scale-105 active:scale-95"
+                      >
+                        <FaCheck /> 已完成中斷任務
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+                
+                {/* 主任務卡片 */}
                 {sessionState === 'running' && currentTask && (
                   <motion.div
                     key={currentTask.id}
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    animate={{ 
+                      opacity: isDistractedTaskActive ? 0.3 : 1, 
+                      y: 0,
+                      scale: isDistractedTaskActive ? 0.95 : 1
+                    }}
                     className="absolute left-1/2 top-1/2 flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-3xl border-2 border-cyan-400/60 bg-gradient-to-br from-slate-950/95 to-slate-900/95 p-8 text-sm text-slate-100 shadow-[0_0_40px_rgba(34,211,238,0.4)] backdrop-blur-xl max-h-[70vh] overflow-y-auto"
+                    style={{ pointerEvents: isDistractedTaskActive ? 'none' : 'auto' }}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">{currentTask.emoji}</span>

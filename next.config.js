@@ -9,7 +9,6 @@ const nextConfig = {
   },
   output: 'standalone',
   experimental: {
-    swcMinify: true,
     optimizePackageImports: [
       'react-icons/fa',
       'framer-motion',

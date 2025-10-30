@@ -6,33 +6,27 @@ import Link from 'next/link';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import {
-  FaBrain,
-  FaChild,
-  FaUserMd,
-  FaStethoscope,
-  FaPills,
-  FaHandsHelping,
-  FaBook,
-  FaGamepad,
   FaArrowRight,
+  FaBolt,
+  FaBrain,
+  FaBook,
   FaCheckCircle,
-  FaExclamationTriangle,
-  FaLightbulb,
-  FaClock,
+  FaChild,
   FaClipboardList,
-  FaUsers,
+  FaClock,
+  FaExclamationTriangle,
+  FaEye,
+  FaGamepad,
+  FaHeart,
   FaPlay,
   FaVideo,
-  FaBolt,
-  FaEye,
-  FaHeart,
-  FaVolumeUp,
-  FaMobileAlt
+  FaUsers,
+  FaVolumeUp
 } from 'react-icons/fa';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <div className="min-h-screen">
       {/* 英雄區塊 */}
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0">
@@ -254,7 +248,7 @@ export default function HomePage() {
                 <span className="text-sm text-slate-400">低通濾波器 + 心跳聲疊加</span>
               </div>
               <div className="flex items-start gap-2">
-                <FaMobileAlt className="text-red-400 mt-1" />
+                <FaHeart className="text-red-400 mt-1" />
                 <span className="text-sm text-slate-400">震動反饋配合心跳節奏</span>
               </div>
             </div>

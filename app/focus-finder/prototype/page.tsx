@@ -1222,7 +1222,6 @@ export default function FocusFinderPrototype() {
                 </AnimatePresence>
               </div>
             </div>
-          </div>
         </section>
         {sessionState === 'completed' && (
           <motion.div 
@@ -1372,6 +1371,7 @@ export default function FocusFinderPrototype() {
             )}
           </div>
         )}
+      </div>
       <ModalDistraction
         isVisible={activeModal}
         onDismiss={dismissDistraction}

@@ -359,56 +359,41 @@ export default function FocusFinderPrototype() {
     sessionState === 'running' && distractionSettings.enabled,
     useCallback((type: DistractionType) => {
       const audioManager = getAudioManager();
+      const config = DISTRACTION_CONFIG[type];
       
-      setDistractions(prev => [...prev, {
+      const newDistraction: DistractionEvent = {
         id: `${type}-${Date.now()}`,
         type,
         triggeredAt: Date.now(),
         dismissedAt: null,
-        cost: DISTRACTION_CONFIG[type].cost * difficultyIntensity,
-      }]);
-
-      switch (type) {
-        case 'modal':
-          audioManager.playNotification(); // 播放通知音
-          setActiveModal(true);
-          break;
-        case 'visual':
-          audioManager.playDistraction(); // 播放干擾音
-          setActiveVisual(true);
-          setTimeout(() => setActiveVisual(false), DISTRACTION_CONFIG.visual.duration);
-          break;
-        case 'impulse':
-          audioManager.playAlarm(); // 播放警報音
-          setActiveImpulse(true);
-          setTimeout(() => setActiveImpulse(false), DISTRACTION_CONFIG.impulse.duration);
-          break;
-        case 'audio':
-          audioManager.playAmbientNoise(); // 播放環境噪音
-          break;
-      }
+        cost: config.cost * difficultyIntensity,
+        title: config.title,
+      };
+      
+      setDistractions(prev => [...prev, newDistraction]);
+      setCurrentDistraction(newDistraction);
+      
+      // 降低專注力
+      setFocusLevel(prev => Math.max(0, prev - 20));
+      audioManager.playNotification();
+      setActiveModal(true);
     }, [difficultyIntensity])
   );
 
-  const dismissModal = useCallback(() => {
+  const dismissDistraction = useCallback(() => {
     setActiveModal(false);
-    setDistractions(prev =>
-      prev.map(d => d.dismissedAt === null && d.type === 'modal'
-        ? { ...d, dismissedAt: Date.now() }
-        : d
-      )
-    );
-  }, []);
-
-  const handleImpulseClick = useCallback(() => {
-    setActiveImpulse(false);
-    setDistractions(prev =>
-      prev.map(d => d.dismissedAt === null && d.type === 'impulse'
-        ? { ...d, dismissedAt: Date.now() }
-        : d
-      )
-    );
-  }, []);
+    if (currentDistraction) {
+      setDistractions(prev =>
+        prev.map(d => d.id === currentDistraction.id
+          ? { ...d, dismissedAt: Date.now() }
+          : d
+        )
+      );
+      // 恢復部分專注力
+      setFocusLevel(prev => Math.min(100, prev + 15));
+      setCurrentDistraction(null);
+    }
+  }, [currentDistraction]);
 
   const stopStream = useCallback(() => {
     if (intervalRef.current) {
@@ -472,6 +457,8 @@ export default function FocusFinderPrototype() {
     setTimer(0);
     setCurrentTaskIndex(0);
     setDistractions([]);
+    setFocusLevel(100);
+    setIsFullscreen(true);
     setLogs([{ taskId: TASKS[0]?.id ?? 'unknown', startedAt: Date.now(), completedAt: null }]);
 
     if (intervalRef.current) {
@@ -495,7 +482,10 @@ export default function FocusFinderPrototype() {
 
   const completeTask = useCallback(() => {
     const audioManager = getAudioManager();
-    audioManager.playSuccess(); // 播放成功音效
+    audioManager.playSuccess();
+    
+    // 恢復專注力
+    setFocusLevel(prev => Math.min(100, prev + 25));
     
     setLogs((prev) => {
       const updated = [...prev];
@@ -510,6 +500,7 @@ export default function FocusFinderPrototype() {
       const nextIndex = prev + 1;
       if (nextIndex >= TASKS.length) {
         setSessionState('completed');
+        setIsFullscreen(false);
         if (intervalRef.current) {
           window.clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -537,6 +528,9 @@ export default function FocusFinderPrototype() {
     setLogs([]);
     setDistractions([]);
     setErrorMessage(null);
+    setIsFullscreen(false);
+    setFocusLevel(100);
+    setCurrentDistraction(null);
     stopStream();
     setPermissionState('idle');
   }, [stopStream]);
@@ -616,11 +610,12 @@ export default function FocusFinderPrototype() {
     .reduce((sum, d) => sum + d.cost, 0);
 
   const adjustedTime = Math.max(0, timer - totalDistractionCost);
+  const focusPercentage = Math.max(0, focusLevel);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 pb-24 pt-12">
-        <header className="flex flex-col gap-6 rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl backdrop-blur">
+    <div className={`${isFullscreen && sessionState === 'running' ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-slate-950 text-slate-100`}>
+      <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex flex-col' : 'mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 pb-24 pt-12'}`}>
+        <header className={`${isFullscreen && sessionState === 'running' ? 'hidden' : 'flex flex-col gap-6 rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl backdrop-blur'}`}>
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
             <Link
               href="/focus-finder"
@@ -657,7 +652,7 @@ export default function FocusFinderPrototype() {
                 </li>
               </ul>
             </div>
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-300 shadow-xl">
+            <div className={`${isFullscreen && sessionState === 'running' ? 'hidden' : 'rounded-3xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-300 shadow-xl'}`}>
               <h2 className="text-base font-semibold text-white">難度設定</h2>
               <div className="mt-4 space-y-4">
                 <label className="flex items-center gap-3">
@@ -702,12 +697,11 @@ export default function FocusFinderPrototype() {
                 </p>
               </div>
             </div>
-          </div>
-        </header>
-
-        <section className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-          <div className="flex flex-col gap-6">
-            <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 shadow-2xl">
+          </header>
+        )}
+        <section className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex-1' : 'grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]'}`}>
+          <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex flex-col' : 'flex flex-col gap-6'}`}>
+            <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full' : 'relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 shadow-2xl'}`}>
               <div className="absolute inset-0">
                 <video
                   ref={videoRef}
@@ -726,34 +720,48 @@ export default function FocusFinderPrototype() {
                 )}
               </div>
 
-              <div className="relative h-[70vh] min-h-[400px] w-full">
-                <div className="absolute inset-x-0 top-0 flex flex-col gap-2 p-4 text-xs font-semibold uppercase tracking-widest text-slate-200">
-                  <div className="flex justify-between">
-                    <span className="rounded-full bg-slate-900/70 px-3 py-1">#{currentTask?.id ?? '---'}</span>
+              <div className={`${isFullscreen && sessionState === 'running' ? 'absolute inset-0' : 'relative h-[70vh] min-h-[400px]'} w-full`}>
+                <div className="absolute inset-x-0 top-0 flex flex-col gap-3 p-4 text-xs font-semibold uppercase tracking-widest text-slate-200">
+                  <div className="flex justify-between items-center">
                     <div className="flex gap-2">
-                      <span className={`rounded-full px-3 py-1 ${
+                      <span className="rounded-full bg-slate-900/80 backdrop-blur px-3 py-1.5">{currentTask?.emoji} {currentTask?.title}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className={`rounded-full px-3 py-1.5 backdrop-blur ${
                         timer > GAME_TIME_LIMIT * 0.8 
-                          ? 'bg-red-900/70 text-red-200 animate-pulse' 
-                          : 'bg-slate-900/70'
+                          ? 'bg-red-900/80 text-red-200 animate-pulse' 
+                          : 'bg-slate-900/80'
                       }`}>
                         ⏱️ {formatSeconds(Math.max(0, GAME_TIME_LIMIT - timer))}
                       </span>
-                      {distractionSettings.enabled && (
-                        <span className="rounded-full bg-rose-900/70 px-3 py-1 text-rose-200">
-                          干擾 -{totalDistractionCost.toFixed(1)}s
-                        </span>
-                      )}
                     </div>
                   </div>
-                  {/* 進度條 */}
+                  {/* 進度條和專注力 */}
                   {sessionState === 'running' && (
-                    <div className="w-full h-2 bg-slate-800/50 rounded-full overflow-hidden">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(totalCompleted / TASKS.length) * 100}%` }}
-                        transition={{ duration: 0.5 }}
-                      />
+                    <div className="space-y-2">
+                      <div className="w-full h-2 bg-slate-800/50 rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(totalCompleted / TASKS.length) * 100}%` }}
+                          transition={{ duration: 0.5 }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">專注力</span>
+                        <div className="flex-1 h-1.5 bg-slate-800/50 rounded-full overflow-hidden">
+                          <motion.div 
+                            className={`h-full ${
+                              focusPercentage > 60 ? 'bg-emerald-500' :
+                              focusPercentage > 30 ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}
+                            animate={{ width: `${focusPercentage}%` }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </div>
+                        <span className="text-xs w-8 text-right">{Math.round(focusPercentage)}%</span>
+                      </div>
                     </div>
                   )}
                 </div>

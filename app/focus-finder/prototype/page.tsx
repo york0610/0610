@@ -602,8 +602,9 @@ export default function FocusFinderPrototype() {
                 </p>
               </div>
             </div>
-          </header>
-        )}
+          </div>
+        </header>
+
         <section className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex-1' : 'grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]'}`}>
           <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex flex-col' : 'flex flex-col gap-6'}`}>
             <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full' : 'relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 shadow-2xl'}`}>
@@ -820,7 +821,6 @@ export default function FocusFinderPrototype() {
                   </motion.div>
                 )}
               </div>
-            </div>
 
             {/* 側邊欄僅在非全螢幕時顯示 */}
             {!isFullscreen && sessionState !== 'running' && (

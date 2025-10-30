@@ -491,7 +491,7 @@ export default function FocusFinderPrototype() {
 
       const constraints = {
         video: {
-          facingMode: 'environment', // 優先使用後置鏡頭，但允許前置鏡頭
+          facingMode: { exact: 'environment' }, // 強制使用後置鏡頭
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
@@ -499,35 +499,7 @@ export default function FocusFinderPrototype() {
       };
       console.log('[DEBUG] Constraints:', JSON.stringify(constraints));
 
-      let stream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (error) {
-        console.warn('[DEBUG] Failed to get camera with environment facing, trying user facing...');
-        try {
-          // 如果後置鏡頭失敗，嘗試前置鏡頭
-          const fallbackConstraints = {
-            video: {
-              facingMode: 'user',
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-            audio: false,
-          };
-          stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-        } catch (fallbackError) {
-          console.warn('[DEBUG] Failed to get camera with user facing, trying any camera...');
-          // 最後的備選方案：任何可用的攝像頭
-          const anyConstraints = {
-            video: {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-            audio: false,
-          };
-          stream = await navigator.mediaDevices.getUserMedia(anyConstraints);
-        }
-      }
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       console.log('[DEBUG] Camera stream obtained:', stream);
       console.log('[DEBUG] Stream active:', stream.active);
       console.log('[DEBUG] Video tracks:', stream.getVideoTracks().length);

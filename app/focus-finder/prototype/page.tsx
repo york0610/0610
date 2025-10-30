@@ -1098,7 +1098,7 @@ export default function FocusFinderPrototype() {
                       </button>
                     </div>
                   </motion.div>
-                )
+                )}
 
                 {sessionState === 'failed' && (
                   <motion.div 

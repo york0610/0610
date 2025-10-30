@@ -1,11 +1,15 @@
 functionsDirectory = "E:\\1111\\1111\\adhd-website\\netlify\\functions"
 functionsDirectoryOrigin = "ui"
+headersOrigin = "config"
 redirectsOrigin = "config"
-headers = []
+
+[dev]
+framework = "#custom"
 
 [functions]
 
 [functions."*"]
+node_bundler = "esbuild"
 
 [[plugins]]
 origin = "config"
@@ -39,11 +43,17 @@ skip_processing = true
 
 [build.services]
 
+[[headers]]
+for = "/*"
+
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
 [[redirects]]
 from = "/*"
 to = "/index.html"
 status = 200.0
-force = true
+force = false
 
 [redirects.query]
 

@@ -1,4 +1,11 @@
-"use client";
+// e:\1111\1111\adhd-website\app\metadata.ts
+export const metadata: Metadata = {
+  title: 'ADHD 知多少 - 認識注意力不足過動症',
+  description: '提供專業的ADHD相關資訊、資源與支持',
+};
+
+// 客戶端組件標記
+'use client';
 
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -14,11 +21,6 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
 });
-
-export const metadata: Metadata = {
-  title: 'ADHD 知多少 - 認識注意力不足過動症',
-  description: '提供專業的ADHD相關資訊、資源與支持',
-};
 
 // 預加載音頻的組件
 function AudioPreloader() {

@@ -221,103 +221,6 @@ const ModalDistraction = ({
   );
 };
 
-// Visual distraction overlay
-const VisualDistraction = ({ isVisible }: { isVisible: boolean }) => {
-  const [effectType, setEffectType] = useState<'noise' | 'invert' | 'blur'>('noise');
-
-  useEffect(() => {
-    if (isVisible) {
-      setEffectType(['noise', 'invert', 'blur'][Math.floor(Math.random() * 3)] as any);
-    }
-  }, [isVisible]);
-
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-40 pointer-events-none"
-        >
-          {effectType === 'noise' && (
-            <div 
-              className="absolute inset-0 opacity-40 animate-pulse" 
-              style={{
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              }}
-            />
-          )}
-          {effectType === 'invert' && (
-            <div className="absolute inset-0 bg-white/30 mix-blend-screen animate-pulse" />
-          )}
-          {effectType === 'blur' && (
-            <div className="absolute inset-0 backdrop-blur-md bg-white/20 animate-pulse" />
-          )}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
-// Impulse distraction component
-const ImpulseDistraction = ({
-  isVisible,
-  onClick
-}: {
-  isVisible: boolean;
-  onClick: () => void;
-}) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    if (isVisible) {
-      // 隨機選擇螢幕角落
-      const corners = [
-        { x: 10, y: 10 },
-        { x: 85, y: 10 },
-        { x: 10, y: 85 },
-        { x: 85, y: 85 },
-      ];
-      const randomCorner = corners[Math.floor(Math.random() * corners.length)];
-      setPosition(randomCorner);
-    }
-  }, [isVisible]);
-
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{
-            scale: [0, 1.3, 1],
-            opacity: 1,
-          }}
-          exit={{ scale: 0, opacity: 0 }}
-          transition={{ duration: 0.4, type: 'spring' }}
-          className="fixed z-50 flex items-center justify-center pointer-events-auto"
-          style={{
-            left: `${position.x}%`,
-            top: `${position.y}%`,
-            transform: 'translate(-50%, -50%)',
-          }}
-        >
-          <button
-            onClick={onClick}
-            className="relative w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-400 via-pink-500 to-rose-600 shadow-2xl hover:shadow-3xl transition-all flex items-center justify-center text-white text-2xl cursor-pointer hover:scale-110 active:scale-95"
-          >
-            <FaHandPaper className="animate-bounce" />
-            {/* 脈衝光環 */}
-            <div className="absolute inset-0 rounded-full border-2 border-fuchsia-300 animate-pulse" />
-            <div className="absolute inset-0 rounded-full border-2 border-pink-300 animate-pulse" style={{ animationDelay: '0.2s' }} />
-          </button>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
 
 export default function FocusFinderPrototype() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -771,23 +674,32 @@ export default function FocusFinderPrototype() {
                     key={currentTask.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute left-1/2 top-1/2 flex w-[min(85vw,420px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-3xl border border-sky-400/40 bg-slate-950/90 p-6 text-sm text-slate-100 shadow-[0_0_30px_rgba(56,189,248,0.35)] backdrop-blur max-h-[60vh] overflow-y-auto"
+                    className="absolute left-1/2 top-1/2 flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-3xl border-2 border-cyan-400/60 bg-gradient-to-br from-slate-950/95 to-slate-900/95 p-8 text-sm text-slate-100 shadow-[0_0_40px_rgba(34,211,238,0.4)] backdrop-blur-xl max-h-[70vh] overflow-y-auto"
                   >
-                    <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-sky-300">
-                      <FaLocationArrow /> 任務目標
-                    </span>
-                    <h3 className="text-lg font-semibold text-white">{currentTask.title}</h3>
-                    {showHints && (
-                      <p className="text-sm text-slate-300">提示：{currentTask.hint}</p>
-                    )}
-                    <p className="text-sm text-slate-200 whitespace-pre-wrap">{currentTask.prompt}</p>
-                    <button
-                      type="button"
-                      onClick={() => completeTask()}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-sky-400"
-                    >
-                      <FaCheck /> 標記已找到
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{currentTask.emoji}</span>
+                      <div>
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-cyan-300">
+                          <FaLocationArrow /> 任務目標
+                        </span>
+                        <h3 className="text-xl font-bold text-white mt-1">{currentTask.title}</h3>
+                      </div>
+                    </div>
+                    <div className="border-t border-slate-700/50 pt-4">
+                      {showHints && (
+                        <p className="text-sm text-cyan-200 mb-3 font-semibold">💡 提示：{currentTask.hint}</p>
+                      )}
+                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{currentTask.prompt}</p>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => completeTask()}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:shadow-xl hover:scale-105 active:scale-95"
+                      >
+                        <FaCheck /> 標記已找到
+                      </button>
+                    </div>
                   </motion.div>
                 )}
 
@@ -965,29 +877,6 @@ export default function FocusFinderPrototype() {
                     <span>{formatSeconds(adjustedTime)}</span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Modal Distraction */}
-        <ModalDistraction
-          isVisible={activeModal}
-          onDismiss={dismissModal}
-        />
-
-        {/* Visual Distraction Overlay */}
-        <VisualDistraction isVisible={activeVisual} />
-
-        {/* Impulse Distraction */}
-        <ImpulseDistraction
-          isVisible={activeImpulse}
-          onClick={handleImpulseClick}
-        />
-
-        {distractionSettings.enabled && (
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl">
-            <h2 className="text-lg font-semibold text-white">干擾統計</h2>
             <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-slate-200">
               <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
                 <p className="text-xs uppercase tracking-widest text-slate-400">觸發次數</p>

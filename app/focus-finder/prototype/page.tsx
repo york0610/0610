@@ -16,6 +16,7 @@ import {
   FaVolumeUp,
   FaEyeSlash,
   FaHandPaper,
+  FaPlay,
 } from 'react-icons/fa';
 import { getAudioManager } from '@/app/utils/audioManager';
 import { getObjectDetector } from '@/app/utils/objectDetection';

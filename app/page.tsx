@@ -19,11 +19,18 @@ import {
   FaExclamationTriangle,
   FaLightbulb,
   FaClock,
-  FaClipboardList
+  FaClipboardList,
+  FaUsers,
+  FaPlay,
+  FaVideo,
+  FaBolt,
+  FaEye,
+  FaHeart,
+  FaVolumeUp,
+  FaMobileAlt
 } from 'react-icons/fa';
 
 export default function HomePage() {
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       {/* 英雄區塊 */}

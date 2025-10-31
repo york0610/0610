@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { FaPlay, FaClock, FaBrain, FaBullseye } from 'react-icons/fa';
+import { FaPlay, FaClock, FaBrain, FaBullseye, FaForward } from 'react-icons/fa';
 
 interface GameIntroProps {
   isVisible: boolean;
@@ -14,6 +14,7 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
   const [currentScene, setCurrentScene] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showButtons, setShowButtons] = useState(false);
 
   const scenes = [
     {
@@ -25,7 +26,7 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
       icon: FaClock,
       iconColor: 'text-blue-400',
       background: 'from-slate-900 via-blue-900/20 to-slate-900',
-      duration: 4000,
+      duration: 3000,
     },
     {
       id: 'challenge',
@@ -36,7 +37,7 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
       icon: FaBrain,
       iconColor: 'text-amber-400',
       background: 'from-slate-900 via-amber-900/20 to-slate-900',
-      duration: 5000,
+      duration: 3000,
     },
     {
       id: 'mission',
@@ -47,17 +48,24 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
       icon: FaBullseye,
       iconColor: 'text-green-400',
       background: 'from-slate-900 via-green-900/20 to-slate-900',
-      duration: 5000,
+      duration: 3000,
     },
   ];
 
   const currentSceneData = scenes[currentScene];
 
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible) {
+      setCurrentScene(0);
+      setDisplayText('');
+      setIsTyping(false);
+      setShowButtons(false);
+      return;
+    }
 
     setDisplayText('');
     setIsTyping(true);
+    setShowButtons(false);
 
     const text = currentSceneData.text;
     let index = 0;
@@ -70,18 +78,22 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
         setIsTyping(false);
         clearInterval(typeInterval);
 
+        // 顯示按鈕
+        setShowButtons(true);
+
+        // 如果不是最後一個場景，自動進入下一個場景
         if (currentScene < scenes.length - 1) {
           const timer = setTimeout(() => {
             setCurrentScene(prev => prev + 1);
-          }, currentSceneData.duration - 3000);
+          }, currentSceneData.duration);
 
           return () => clearTimeout(timer);
         }
       }
-    }, 50);
+    }, 80); // 稍微慢一點的打字速度
 
     return () => clearInterval(typeInterval);
-  }, [currentScene, isVisible, currentSceneData]);
+  }, [currentScene, isVisible, currentSceneData, scenes.length]);
 
   if (!isVisible) return null;
 
@@ -93,9 +105,10 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className={`fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br ${currentSceneData.background}`}
+        className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br ${currentSceneData.background} p-4 sm:p-8`}
         style={{ pointerEvents: 'auto' }}
       >
+        {/* 背景動畫 */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
             animate={{
@@ -111,141 +124,111 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
           />
         </div>
 
-        {currentScene === 0 && (
+        {/* 主要內容 */}
+        <div className="relative z-10 w-full max-w-md mx-auto text-center">
+          {/* 圖標 */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 1 }}
-            className="absolute right-20 top-1/2 transform -translate-y-1/2"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ duration: 0.8, type: "spring" }}
+            className="mb-6"
           >
-            <div className="w-96 h-64 bg-slate-100 rounded-lg shadow-2xl border-8 border-slate-800">
-              <div className="h-8 bg-slate-200 rounded-t-md flex items-center px-4 gap-2">
-                <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                <span className="text-xs text-slate-600 ml-4">重要報告.docx</span>
-              </div>
-              <div className="p-6 h-full bg-white">
-                <motion.div
-                  animate={{ opacity: [1, 0, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="w-0.5 h-6 bg-slate-800"
-                />
-              </div>
+            <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 ${currentSceneData.iconColor}`}>
+              <IconComponent className="text-2xl sm:text-3xl" />
             </div>
-            
-            <div className="absolute -bottom-8 left-4 w-12 h-6 bg-amber-800 rounded-lg shadow-lg" />
-            <div className="absolute -bottom-16 right-8 w-8 h-8 bg-amber-600 rounded-full shadow-lg" />
-            <div className="absolute -top-8 -right-16 w-6 h-16 bg-slate-600 rounded-full shadow-lg" />
           </motion.div>
-        )}
 
-        <div className="relative z-10 max-w-4xl mx-auto px-8 text-center">
+          {/* 標題 */}
           <motion.div
-            key={currentScene}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="space-y-8"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="mb-4"
           >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-              className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-800/50 backdrop-blur-sm border border-slate-700 ${currentSceneData.iconColor}`}
-            >
-              <IconComponent className="text-3xl" />
-            </motion.div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+              {currentSceneData.title}
+            </h2>
+            <p className="text-sm sm:text-base text-slate-300">
+              {currentSceneData.subtitle}
+            </p>
+          </motion.div>
 
-            <div className="space-y-4">
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-5xl font-bold text-white"
-              >
-                {currentSceneData.title}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="text-xl text-slate-300"
-              >
-                {currentSceneData.subtitle}
-              </motion.p>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="space-y-4"
-            >
-              <p className="text-2xl text-white font-medium max-w-3xl mx-auto leading-relaxed">
+          {/* 文字內容 */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+            className="mb-8"
+          >
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-4 sm:p-6 min-h-[120px] flex items-center justify-center">
+              <p className="text-base sm:text-lg text-white leading-relaxed">
                 {displayText}
                 {isTyping && (
                   <motion.span
-                    animate={{ opacity: [1, 0, 1] }}
+                    animate={{ opacity: [1, 0] }}
                     transition={{ duration: 0.8, repeat: Infinity }}
+                    className="ml-1"
                   >
                     |
                   </motion.span>
                 )}
               </p>
-              <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-                {currentSceneData.description}
-              </p>
-            </motion.div>
-
-            <div className="flex justify-center gap-3 pt-8">
-              {scenes.map((_, index) => (
-                <motion.div
-                  key={index}
-                  className={`w-2 h-2 rounded-full ${
-                    index === currentScene ? 'bg-white' : 'bg-slate-600'
-                  }`}
-                  animate={{
-                    scale: index === currentScene ? 1.2 : 1,
-                  }}
-                />
-              ))}
             </div>
+          </motion.div>
 
-            {currentScene === scenes.length - 1 && !isTyping && (
+          {/* 進度指示器 */}
+          <div className="flex justify-center space-x-2 mb-6">
+            {scenes.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentScene
+                    ? 'bg-white scale-125'
+                    : index < currentScene
+                    ? 'bg-slate-400'
+                    : 'bg-slate-600'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* 按鈕 */}
+          <AnimatePresence>
+            {showButtons && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
-                className="flex justify-center gap-4 pt-8"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                className="flex flex-col sm:flex-row gap-3 justify-center"
               >
-                <button
-                  onClick={onStart}
-                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-2xl shadow-2xl hover:scale-105 transition-transform"
-                >
-                  <FaPlay />
-                  開始挑戰
-                </button>
+                {currentScene === scenes.length - 1 ? (
+                  <button
+                    onClick={onStart}
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-6 py-3 rounded-full font-bold text-sm sm:text-base hover:scale-105 transition-transform shadow-lg"
+                  >
+                    <FaPlay className="text-sm" />
+                    開始遊戲
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setCurrentScene(prev => prev + 1)}
+                    className="inline-flex items-center justify-center gap-2 bg-slate-700/50 backdrop-blur-sm text-white px-4 py-2 rounded-full font-medium text-sm hover:bg-slate-600/50 transition-colors border border-slate-600/50"
+                  >
+                    <FaForward className="text-xs" />
+                    下一步
+                  </button>
+                )}
+
                 <button
                   onClick={onSkip}
-                  className="px-6 py-4 text-slate-400 hover:text-white transition-colors"
+                  className="inline-flex items-center justify-center gap-2 bg-slate-800/50 backdrop-blur-sm text-slate-300 px-4 py-2 rounded-full font-medium text-sm hover:bg-slate-700/50 transition-colors border border-slate-700/50"
                 >
                   跳過介紹
                 </button>
               </motion.div>
             )}
-          </motion.div>
+          </AnimatePresence>
         </div>
-
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2 }}
-          onClick={onSkip}
-          className="absolute top-8 right-8 px-4 py-2 text-slate-400 hover:text-white transition-colors text-sm"
-        >
-          跳過 →
-        </motion.button>
       </motion.div>
     </AnimatePresence>
   );

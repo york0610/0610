@@ -783,11 +783,22 @@ export default function FocusFinderPrototype() {
     // 進入全屏模式
     setIsFullscreen(true);
     try {
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
+      // 針對不同瀏覽器的全螢幕 API
+      const docElement = document.documentElement as any;
+      if (docElement.requestFullscreen) {
+        await docElement.requestFullscreen();
+      } else if (docElement.webkitRequestFullscreen) {
+        await docElement.webkitRequestFullscreen();
+      } else if (docElement.mozRequestFullScreen) {
+        await docElement.mozRequestFullScreen();
+      } else if (docElement.msRequestFullscreen) {
+        await docElement.msRequestFullscreen();
+      } else {
+        console.warn('此瀏覽器不支援全螢幕模式');
       }
     } catch (err) {
       console.warn('無法進入全屏:', err);
+      // 即使全螢幕失敗，遊戲仍然可以繼續
     }
     
     // 記錄任務開始時間
@@ -1175,7 +1186,7 @@ export default function FocusFinderPrototype() {
   const focusPercentage = Math.max(0, focusLevel);
 
   return (
-    <div className={`${isFullscreen && sessionState === 'running' ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-slate-950 text-slate-100`}>
+    <div className={`${isFullscreen && sessionState === 'running' ? 'fixed inset-0 z-50 overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100`}>
       {/* 新的專注力條 - 只在遊戲運行時顯示 */}
       <FocusBar
         focusLevel={focusLevel}
@@ -1241,7 +1252,7 @@ export default function FocusFinderPrototype() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-center p-8 z-50"
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-4 sm:gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-center p-4 sm:p-8 z-50"
                   style={{ pointerEvents: 'auto' }}
                 >
                   <motion.div
@@ -1271,10 +1282,10 @@ export default function FocusFinderPrototype() {
                           handleRequestCamera();
                         }}
                         disabled={permissionState === 'requesting'}
-                        className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed relative z-50"
+                        className="inline-flex items-center justify-center gap-2 sm:gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed relative z-50 w-full max-w-xs"
                         style={{ pointerEvents: 'auto' }}
                       >
-                        <FaCamera className="text-2xl" />
+                        <FaCamera className="text-lg sm:text-2xl" />
                         {permissionState === 'requesting' ? '請求中...' : '啟用鏡頭開始'}
                       </button>
                       <p className="text-xs text-slate-500">
@@ -1288,7 +1299,7 @@ export default function FocusFinderPrototype() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 text-center p-8 z-50"
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-4 sm:gap-6 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 text-center p-4 sm:p-8 z-50"
                   style={{ pointerEvents: 'auto' }}
                 >
                   <motion.div
@@ -1297,9 +1308,9 @@ export default function FocusFinderPrototype() {
                   >
                     <FaPlay className="text-6xl text-emerald-400" />
                   </motion.div>
-                  <div className="max-w-md space-y-4">
-                    <h3 className="text-3xl font-bold text-white">鏡頭已就緒</h3>
-                    <p className="text-lg text-slate-300 leading-relaxed">
+                  <div className="max-w-md space-y-4 w-full px-4">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white">鏡頭已就緒</h3>
+                    <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
                       您的鏡頭已成功連接。
                       <br />
                       物體偵測已準備就緒，點擊下方按鈕開始挑戰吧！
@@ -1307,12 +1318,12 @@ export default function FocusFinderPrototype() {
                     <div className="flex flex-col gap-3 pt-4">
                       <button
                         onClick={startSession}
-                        className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-8 py-4 text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-emerald-500/50"
+                        className="inline-flex items-center justify-center gap-2 sm:gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white shadow-2xl transition hover:scale-105 hover:shadow-emerald-500/50 w-full max-w-xs mx-auto"
                       >
-                        <FaPlay className="text-2xl" />
+                        <FaPlay className="text-lg sm:text-2xl" />
                         開始遊戲
                       </button>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 text-center">
                         ⏱️ 時間限制：{GAME_TIME_LIMIT} 秒完成所有任務 | 每個任務 {TASK_TIMEOUT} 秒
                       </p>
                     </div>

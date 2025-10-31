@@ -781,12 +781,14 @@ export default function FocusFinderPrototype() {
     setSkippedTasks(0);
     
     // 進入全屏模式
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.warn('無法進入全屏:', err);
-      });
-    }
     setIsFullscreen(true);
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (err) {
+      console.warn('無法進入全屏:', err);
+    }
     
     // 記錄任務開始時間
     setTaskStartTime(Date.now());
@@ -814,9 +816,18 @@ export default function FocusFinderPrototype() {
   }, []);
 
   // 主要的開始遊戲函數 (顯示介紹)
-  const startSession = useCallback(() => {
-    showIntro();
-  }, [showIntro]);
+  const startSession = useCallback(async () => {
+    // 確保攝影機權限已獲得
+    if (permissionState !== 'granted') {
+      console.log('[DEBUG] Camera permission not granted, requesting...');
+      await handleRequestCamera();
+      // 注意：權限狀態會在 handleRequestCamera 中異步更新
+      // 我們不能立即檢查 permissionState，而是讓用戶再次點擊開始
+      return;
+    } else {
+      showIntro();
+    }
+  }, [showIntro, permissionState, handleRequestCamera]);
 
   const completeInterruptionTask = useCallback(() => {
     console.log('[DEBUG] Completing interruption task');
@@ -1046,6 +1057,10 @@ export default function FocusFinderPrototype() {
     setSkippedTasks(0);
     setRandomTaskSequence([]);
     setCurrentStoryChapter(null);
+    setShowGameIntro(false);
+    setShowRabbitHole(false);
+    setShowWorkingMemoryFailure(false);
+    setForgottenTask('');
     setIsFullscreen(false);
     if (document.fullscreenElement) {
       document.exitFullscreen();
@@ -1192,17 +1207,21 @@ export default function FocusFinderPrototype() {
       />
 
       {/* 遊戲介紹 */}
-      <GameIntro
-        isVisible={showGameIntro}
-        onStart={() => {
-          setShowGameIntro(false);
-          startGameSession();
-        }}
-        onSkip={() => {
-          setShowGameIntro(false);
-          startGameSession();
-        }}
-      />
+      <AnimatePresence>
+        {showGameIntro && (
+          <GameIntro
+            isVisible={showGameIntro}
+            onStart={() => {
+              setShowGameIntro(false);
+              startGameSession();
+            }}
+            onSkip={() => {
+              setShowGameIntro(false);
+              startGameSession();
+            }}
+          />
+        )}
+      </AnimatePresence>
       <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex-1' : 'grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]'}`}>
         <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full flex flex-col' : 'flex flex-col gap-6'}`}>
           <div className={`${isFullscreen && sessionState === 'running' ? 'w-full h-full' : 'relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 shadow-2xl'}`}>

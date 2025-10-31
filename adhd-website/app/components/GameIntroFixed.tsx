@@ -93,7 +93,8 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br ${currentSceneData.background}`}
+        className={`fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br ${currentSceneData.background}`}
+        style={{ pointerEvents: 'auto' }}
       >
         <div className="absolute inset-0 overflow-hidden">
           <motion.div

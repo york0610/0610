@@ -71,8 +71,14 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
 
     const text = currentSceneData.text;
     let index = 0;
+    let isCancelled = false;
 
     const typeInterval = setInterval(() => {
+      if (isCancelled) {
+        clearInterval(typeInterval);
+        return;
+      }
+
       if (index < text.length) {
         setDisplayText(text.slice(0, index + 1));
         index++;
@@ -81,9 +87,10 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
         clearInterval(typeInterval);
         console.log('[GameIntro] Typing completed for scene:', currentScene);
       }
-    }, 60); // 更快的打字速度
+    }, 80); // 稍微慢一點確保穩定
 
     return () => {
+      isCancelled = true;
       clearInterval(typeInterval);
     };
   }, [currentScene, isVisible, currentSceneData]);

@@ -67,40 +67,133 @@ type InterruptionTask = {
   special?: 'rabbit-hole' | 'memory-failure'; // 特殊效果標記
 };
 
-// 情景干擾配置
+// 情景干擾配置 - 擴展版本
 // 強制中斷型干擾任務：必須先完成才能繼續主任務
 const INTERRUPTION_TASKS: InterruptionTask[] = [
-  { 
-    type: 'environment' as DistractionType, 
-    title: '💻 電腦沒關！', 
-    description: '你忘記關電腦了，必須先去關掉它。這是 ADHD 最常見的情形——你總是忘記關掉設備', 
+  // 環境干擾
+  {
+    type: 'environment' as DistractionType,
+    title: '💻 電腦沒關！',
+    description: '你忘記關電腦了，必須先去關掉它。這是 ADHD 最常見的情形——你總是忘記關掉設備',
     objectToFind: 'laptop',
     cost: 3,
     emoji: '💻'
   },
-  { 
-    type: 'biological' as DistractionType, 
-    title: '💧 口好渴！', 
-    description: '你非常口渴，必須先去找水杯營水。你的身體在提醒你需要照顧自己', 
+  {
+    type: 'environment' as DistractionType,
+    title: '📱 手機響了！',
+    description: '你的手機突然響起，雖然可能不重要，但你無法忽視它。ADHD 患者很難過濾不重要的刺激',
+    objectToFind: 'cell phone',
+    cost: 2.5,
+    emoji: '📱'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '🔑 鑰匙在哪？',
+    description: '你突然想起等等要出門，開始擔心鑰匙放在哪裡。這種「預期焦慮」是 ADHD 的典型症狀',
+    objectToFind: 'keys',
+    cost: 2,
+    emoji: '🔑'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '📄 桌子好亂！',
+    description: '你的桌子太亂了，必須先整理一下才能專心。但整理往往會讓你更分心...',
+    objectToFind: 'book',
+    cost: 3.5,
+    emoji: '📚'
+  },
+
+  // 生理干擾
+  {
+    type: 'biological' as DistractionType,
+    title: '💧 口好渴！',
+    description: '你非常口渴，必須先去找水杯喝水。你的身體在提醒你需要照顧自己',
     objectToFind: 'cup',
     cost: 2,
     emoji: '☕'
   },
-  { 
-    type: 'psychological' as DistractionType, 
-    title: '😔 心情不好了', 
-    description: '你突然感到心情不好，想看看天空或窗戶外面來較泯。這是 ADHD 患者常見的逃避機制——你需要抵抗這個誘惑', 
+  {
+    type: 'biological' as DistractionType,
+    title: '🍎 肚子餓了',
+    description: '你的血糖下降，開始感到飢餓。ADHD 患者對血糖變化特別敏感，這會影響專注力',
+    objectToFind: 'apple',
+    cost: 2.5,
+    emoji: '🍎'
+  },
+  {
+    type: 'biological' as DistractionType,
+    title: '😴 好想睡覺',
+    description: '你感到疲勞，想要躺下休息一下。ADHD 患者常有睡眠問題，白天容易疲勞',
+    objectToFind: 'bed',
+    cost: 4,
+    emoji: '🛏️'
+  },
+
+  // 心理干擾
+  {
+    type: 'psychological' as DistractionType,
+    title: '😔 心情不好了',
+    description: '你突然感到心情不好，想看看天空或窗戶外面來舒緩。這是 ADHD 患者常見的情緒調節需求',
     objectToFind: 'sky',
     cost: 1.5,
     emoji: '😔'
   },
-  { 
-    type: 'environment' as DistractionType, 
-    title: '📄 找不到東西了', 
-    description: '你找不到你要的東西，想要開門去外面找找。這是 ADHD 的典型表現：尋找一樣東西時會失去焦點', 
+  {
+    type: 'psychological' as DistractionType,
+    title: '🤔 想起別的事',
+    description: '你突然想起另一件重要的事情，覺得應該先處理。ADHD 的「工作記憶」常常被新想法打斷',
     objectToFind: 'door',
+    cost: 3,
+    emoji: '🚪'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '😰 開始焦慮',
+    description: '你開始擔心這個任務做不完，焦慮感讓你更難專心。這是 ADHD 常見的惡性循環',
+    objectToFind: 'clock',
+    cost: 2.5,
+    emoji: '⏰'
+  },
+
+  // 社交干擾
+  {
+    type: 'social' as DistractionType,
+    title: '👥 想起朋友',
+    description: '你突然想起要回覆朋友的訊息，覺得不回覆很不禮貌。社交焦慮是 ADHD 的常見共病',
+    objectToFind: 'person',
+    cost: 3,
+    emoji: '👤'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '📺 電視聲音',
+    description: '隔壁房間傳來電視聲音，你無法忽視。ADHD 患者對聲音刺激特別敏感',
+    objectToFind: 'tv',
     cost: 2,
-    emoji: '📄'
+    emoji: '📺'
+  },
+
+  // 特殊干擾任務 - 兔子洞效應
+  {
+    type: 'social' as DistractionType,
+    title: '🕳️ 社交媒體兔子洞',
+    description: '你想要「快速」檢查一下社交媒體，結果掉進了無止境的滑動循環...',
+    objectToFind: 'rabbit-hole',
+    cost: 5,
+    emoji: '🕳️',
+    special: 'rabbit-hole'
+  },
+
+  // 特殊干擾任務 - 工作記憶失敗
+  {
+    type: 'psychological' as DistractionType,
+    title: '🧠 工作記憶失敗',
+    description: '你完全忘記了剛才在做什麼...大腦一片空白，需要重新回想',
+    objectToFind: 'memory-failure',
+    cost: 4,
+    emoji: '🧠',
+    special: 'memory-failure'
   },
   { 
     type: 'psychological' as DistractionType, 
@@ -252,11 +345,11 @@ const DISTRACTION_CONFIG: Record<DistractionConfigType, { minDelay: number; maxD
   psychological: { minDelay: 7, maxDelay: 11, duration: 0, cost: 1, title: '🤔 突然想到其他事', objectToFind: 'tv' },
 };
 
-// 遊戲時間限制（秒）
-const GAME_TIME_LIMIT = 45; // 45 秒時間限制，增加遊戲難度
+// 遊戲時間限制（秒）- 更長的遊戲體驗
+const GAME_TIME_LIMIT = 90; // 90 秒時間限制，適應更多任務
 
 // 單個任務的超時時間（秒）
-const TASK_TIMEOUT = 15; // 15 秒內找不到物體就自動跳過
+const TASK_TIMEOUT = 20; // 20 秒內找不到物體就自動跳過，給玩家更多時間
 
 // 遊戲故事背景
 const GAME_STORY = `
@@ -278,57 +371,88 @@ const GAME_STORY = `
 // 遊戲故事章節 - 每個章節有不同的背景故事和任務
 const STORY_CHAPTERS = [
   {
-    title: '早上的困擾',
-    description: '你剛起床，腦子還很混亂。你需要找到一些日常用品來開始新的一天。你感到疲勞，但必須準備好迎接新的挑戰。',
-    tasks: ['cup', 'book', 'bottle'],
-    narrative: '早上 7:30 AM - 你的鬧鐘響了，但你的大腦還沒完全清醒。你需要找到水杯、書籍和瓶子來準備早餐。'
+    title: '早晨的掙扎',
+    description: '你剛起床，腦子還很混亂。ADHD 讓你的早晨特別困難，你需要找到基本用品來開始新的一天。',
+    tasks: ['cup', 'book', 'bottle', 'keys', 'cell phone'],
+    narrative: '早上 7:30 AM - 鬧鐘響了，但你的大腦還沒完全清醒。你需要找到水杯喝水、書籍確認今天的計劃、瓶子裝水、鑰匙和手機。每一樣東西都像在跟你捉迷藏。'
   },
   {
-    title: '工作中的挑戰',
-    description: '現在是工作時間，但干擾不斷。你試著集中精力完成任務，但環境充滿了誘惑。',
-    tasks: ['keyboard', 'laptop', 'monitor'],
-    narrative: '上午 9:00 AM - 工作開始了。你需要找到鍵盤、電腦和螢幕。周圍的同事在走動，你很難保持專注。'
+    title: '通勤的焦慮',
+    description: '準備出門上班，但你總是忘記東西。ADHD 讓簡單的準備工作變得複雜。',
+    tasks: ['keys', 'door', 'apple', 'bottle'],
+    narrative: '早上 8:15 AM - 你需要出門了，但又開始擔心忘記什麼。找到鑰匙、確認門鎖、拿個蘋果當早餐、帶上水瓶。每次出門都是一場戰鬥。'
   },
   {
-    title: '下午的崩潰',
-    description: '下午時段，你的專注力開始下降。周圍的一切都變成了干擾。你感到疲勞和沮喪。',
-    tasks: ['mouse', 'bottle', 'chair'],
-    narrative: '下午 2:00 PM - 午餐後的低谷時段。你需要找到滑鼠、水瓶和椅子。你的能量在下降，很難集中注意力。'
+    title: '工作前的準備',
+    description: '到了辦公室，你需要設置工作環境。但周圍的聲音和動靜讓你很難專心。',
+    tasks: ['laptop', 'keyboard', 'monitor', 'chair', 'desk'],
+    narrative: '上午 9:00 AM - 工作開始了。你需要打開電腦、連接鍵盤、調整螢幕、坐好椅子、整理桌子。同事們的談話聲讓你分心。'
   },
   {
-    title: '傍晚的逃避',
-    description: '你開始逃避，看著窗外或其他東西，試著放鬆。工作即將結束，但還有最後的衝刺。',
-    tasks: ['desk', 'door', 'window'],
-    narrative: '傍晚 5:00 PM - 工作日即將結束。你需要找到桌子、門和窗戶。你渴望離開辦公室，但還需要完成最後的任務。'
+    title: '午餐前的衝刺',
+    description: '上午的工作讓你精疲力盡，但還有任務要完成。你的專注力開始下降。',
+    tasks: ['mouse', 'book', 'cup', 'clock'],
+    narrative: '上午 11:30 AM - 你需要完成一些任務才能去吃午餐。找到滑鼠、查看參考書籍、喝點水、看看時間。但你的大腦已經開始渴望休息。'
   },
   {
-    title: '夜間的反思',
-    description: '夜晚來臨，你回到家中。你需要整理一些東西，準備休息。',
-    tasks: ['cup', 'chair', 'book'],
-    narrative: '晚上 8:00 PM - 你回到家中。你需要找到杯子、椅子和書籍。你感到疲勞，但也有些放鬆。'
+    title: '下午的低潮',
+    description: '午餐後的時段是 ADHD 患者最困難的時候。你感到疲勞和沮喪，專注力急劇下降。',
+    tasks: ['bottle', 'chair', 'window', 'sky'],
+    narrative: '下午 2:00 PM - 午餐後的低谷時段。你需要喝水保持清醒、調整椅子、看看窗外、望望天空來舒緩心情。這是一天中最艱難的時刻。'
   },
   {
-    title: '週末的自由',
-    description: '週末終於來了！你有更多的自由時間，但也有更多的誘惑。',
-    tasks: ['monitor', 'keyboard', 'bottle'],
-    narrative: '週末 - 你有更多的時間來做你喜歡的事情。你需要找到螢幕、鍵盤和水瓶。但社交媒體和遊戲在呼喚你。'
+    title: '傍晚的掙扎',
+    description: '工作日即將結束，但你還有最後的任務。你開始逃避，想著其他事情。',
+    tasks: ['desk', 'door', 'person', 'tv'],
+    narrative: '傍晚 5:00 PM - 你渴望離開辦公室。整理桌子、看看門口、想起家人朋友、想著回家看電視。但還有工作要完成。'
+  },
+  {
+    title: '回家的放鬆',
+    description: '終於回到家了！但 ADHD 讓你很難真正放鬆，你的大腦還在高速運轉。',
+    tasks: ['cup', 'chair', 'book', 'bed'],
+    narrative: '晚上 7:00 PM - 回到家中。你需要喝杯茶、坐在舒適的椅子上、看看書、想著等等要早點睡覺。但你的大腦還在處理一天的事情。'
+  },
+  {
+    title: '夜晚的反思',
+    description: '夜深了，你試著整理思緒。ADHD 讓你的大腦很難安靜下來。',
+    tasks: ['clock', 'window', 'sky', 'bed'],
+    narrative: '晚上 10:00 PM - 你看看時鐘，已經很晚了。透過窗戶看看夜空，試著讓大腦平靜下來，準備上床睡覺。但思緒還在飛舞。'
   },
 ];
 
 // 常見物品任務 - 容易在身邊找到
 // 這些任務代表了 ADHD 患者需要完成的日常活動
 const TASKS: Task[] = [
+  // 基本日常用品
   { id: 'cup', title: '找到杯子', hint: '桌上或廚房', prompt: '將鏡頭對準你的水杯或馬克杯。', emoji: '☕', difficulty: 'easy' },
   { id: 'book', title: '找到書', hint: '桌上或書架', prompt: '將鏡頭對準任何一本書。', emoji: '📖', difficulty: 'easy' },
-  { id: 'keyboard', title: '找到鍵盤', hint: '電腦桌上', prompt: '將鏡頭對準你的鍵盤。', emoji: '⌨️', difficulty: 'normal' },
   { id: 'bottle', title: '找到瓶子', hint: '桌上或包包裡', prompt: '將鏡頭對準任何瓶子。', emoji: '🧪', difficulty: 'easy' },
-  { id: 'laptop', title: '找到電腦', hint: '桌上或包包裡', prompt: '將鏡頭對準你的筆記本電腦。', emoji: '💻', difficulty: 'normal' },
-  { id: 'mouse', title: '找到滑鼠', hint: '電腦桌上', prompt: '將鏡頭對準你的滑鼠。', emoji: '🖱️', difficulty: 'normal' },
-  { id: 'monitor', title: '找到螢幕', hint: '電腦前面', prompt: '將鏡頭對準你的電腦螢幕。', emoji: '🖥️', difficulty: 'easy' },
   { id: 'chair', title: '找到椅子', hint: '你坐著的地方', prompt: '將鏡頭對準你的椅子。', emoji: '🪑', difficulty: 'easy' },
   { id: 'desk', title: '找到桌子', hint: '你面前', prompt: '將鏡頭對準你的桌子。', emoji: '🛏️', difficulty: 'easy' },
   { id: 'door', title: '找到門', hint: '房間的出口', prompt: '將鏡頭對準任何一扇門。', emoji: '🚪', difficulty: 'easy' },
   { id: 'window', title: '找到窗戶', hint: '房間的牆上', prompt: '將鏡頭對準任何一扇窗戶。', emoji: '🪟', difficulty: 'easy' },
+
+  // 電子設備
+  { id: 'keyboard', title: '找到鍵盤', hint: '電腦桌上', prompt: '將鏡頭對準你的鍵盤。', emoji: '⌨️', difficulty: 'normal' },
+  { id: 'laptop', title: '找到電腦', hint: '桌上或包包裡', prompt: '將鏡頭對準你的筆記本電腦。', emoji: '💻', difficulty: 'normal' },
+  { id: 'mouse', title: '找到滑鼠', hint: '電腦桌上', prompt: '將鏡頭對準你的滑鼠。', emoji: '🖱️', difficulty: 'normal' },
+  { id: 'monitor', title: '找到螢幕', hint: '電腦前面', prompt: '將鏡頭對準你的電腦螢幕。', emoji: '🖥️', difficulty: 'easy' },
+  { id: 'cell phone', title: '找到手機', hint: '你的手機', prompt: '將鏡頭對準另一支手機或電話。', emoji: '📱', difficulty: 'easy' },
+  { id: 'tv', title: '找到電視', hint: '客廳或房間', prompt: '將鏡頭對準電視螢幕。', emoji: '📺', difficulty: 'normal' },
+
+  // 時間相關
+  { id: 'clock', title: '找到時鐘', hint: '牆上或桌上', prompt: '將鏡頭對準時鐘或手錶。', emoji: '⏰', difficulty: 'normal' },
+
+  // 食物和飲品
+  { id: 'apple', title: '找到蘋果', hint: '廚房或桌上', prompt: '將鏡頭對準蘋果或其他水果。', emoji: '🍎', difficulty: 'easy' },
+
+  // 個人物品
+  { id: 'keys', title: '找到鑰匙', hint: '桌上或包包裡', prompt: '將鏡頭對準你的鑰匙。', emoji: '🔑', difficulty: 'normal' },
+  { id: 'bed', title: '找到床', hint: '臥室', prompt: '將鏡頭對準床或枕頭。', emoji: '🛏️', difficulty: 'easy' },
+
+  // 環境元素
+  { id: 'person', title: '找到人', hint: '照片或鏡子', prompt: '將鏡頭對準人物照片或鏡子中的自己。', emoji: '👤', difficulty: 'normal' },
+  { id: 'sky', title: '看向天空', hint: '窗外或陽台', prompt: '將鏡頭對準天空或雲朵。', emoji: '☁️', difficulty: 'easy' },
 ];
 
 const formatSeconds = (value: number) => {
@@ -337,24 +461,25 @@ const formatSeconds = (value: number) => {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-// 隨機選擇任務序列
+// 隨機選擇任務序列 - 更長的遊戲體驗
 const getRandomTaskSequence = (): Task[] => {
   // 隨機選擇一個故事章節
   const randomChapter = STORY_CHAPTERS[Math.floor(Math.random() * STORY_CHAPTERS.length)];
-  
+
   // 根據故事章節的任務 ID 獲取對應的任務物件
   const selectedTasks = randomChapter.tasks
     .map(taskId => TASKS.find(t => t.id === taskId))
     .filter((task): task is Task => task !== undefined);
-  
-  // 如果任務不足，補充隨機任務
-  while (selectedTasks.length < 3) {
+
+  // 現在故事章節已經有 4-5 個任務，不需要補充
+  // 但如果任務不足，補充隨機任務
+  while (selectedTasks.length < 4) {
     const randomTask = TASKS[Math.floor(Math.random() * TASKS.length)];
     if (!selectedTasks.find(t => t.id === randomTask.id)) {
       selectedTasks.push(randomTask);
     }
   }
-  
+
   return selectedTasks;
 };
 
@@ -581,6 +706,18 @@ export default function FocusFinderPrototype() {
         };
       } else {
         interruptionTask = INTERRUPTION_TASKS[Math.floor(Math.random() * INTERRUPTION_TASKS.length)];
+      }
+
+      // 檢查是否是特殊任務
+      if (interruptionTask.special === 'rabbit-hole') {
+        console.log('[DEBUG] Triggering rabbit hole effect');
+        setShowRabbitHole(true);
+        return;
+      } else if (interruptionTask.special === 'memory-failure') {
+        console.log('[DEBUG] Triggering working memory failure');
+        setForgottenTask(currentTask?.title || '未知任務');
+        setShowWorkingMemoryFailure(true);
+        return;
       }
       const newDistraction: DistractionEvent = {
         id: `${type}-${Date.now()}`,

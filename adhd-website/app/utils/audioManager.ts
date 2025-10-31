@@ -157,6 +157,8 @@ export class AudioManager implements IAudioManager {
   private masterVolume = 1.0;
   private isMuted = false;
   private activeSources: AudioBufferSourceNode[] = [];
+  private readonly MAX_CONCURRENT_SOUNDS = 5; // 限制同時播放的音效數量
+  private currentlyPlayingCount = 0;
   private audioFiles: Record<string, string> = {
     // 基礎音效 - 使用現有的音檔
     notification: '/sounds/2021-preview.mp3',
@@ -444,6 +446,12 @@ export class AudioManager implements IAudioManager {
   async play(type: AudioType): Promise<void> {
     if (this.isMuted) return;
 
+    // 限制同時播放的音效數量，避免音效堆疊
+    if (this.currentlyPlayingCount >= this.MAX_CONCURRENT_SOUNDS) {
+      console.log(`[AUDIO] Skipping ${type} - too many concurrent sounds (${this.currentlyPlayingCount}/${this.MAX_CONCURRENT_SOUNDS})`);
+      return;
+    }
+
     this.ensureAudioContextRunning();
     if (!this.audioContext) return;
 
@@ -494,18 +502,20 @@ export class AudioManager implements IAudioManager {
 
       source.start();
       this.activeSources.push(source);
+      this.currentlyPlayingCount++;
 
       // 設置停止時間
       if (!config.loop) {
         const stopTime = this.audioContext.currentTime + config.duration / 1000;
         source.stop(stopTime);
 
-        // 清理已完成的音源
+        // 清理已完成的音源並更新計數
         source.onended = () => {
           const index = this.activeSources.indexOf(source);
           if (index > -1) {
             this.activeSources.splice(index, 1);
           }
+          this.currentlyPlayingCount = Math.max(0, this.currentlyPlayingCount - 1);
         };
       }
 
@@ -680,11 +690,20 @@ export class AudioManager implements IAudioManager {
   private playGeneratedSound(type: AudioType): void {
     if (this.isMuted) return;
 
+    // 限制同時播放的音效數量
+    if (this.currentlyPlayingCount >= this.MAX_CONCURRENT_SOUNDS) {
+      console.log(`[AUDIO] Skipping generated ${type} - too many concurrent sounds`);
+      return;
+    }
+
     this.ensureAudioContextRunning();
     if (!this.audioContext) return;
 
     const now = this.audioContext.currentTime;
     const config = AUDIO_CONFIGS[type];
+
+    // 增加播放計數
+    this.currentlyPlayingCount++;
 
     try {
       switch (type) {
@@ -1054,6 +1073,13 @@ export class AudioManager implements IAudioManager {
       gain.connect(this.audioContext!.destination);
       osc.start(startTime + i * 0.1);
       osc.stop(startTime + i * 0.1 + 0.08);
+
+      // 在最後一個振盪器結束時減少計數
+      if (i === 2) { // 最後一個振盪器
+        osc.onended = () => {
+          this.currentlyPlayingCount = Math.max(0, this.currentlyPlayingCount - 1);
+        };
+      }
 
       this.oscillators.push(osc);
       this.gainNodes.push(gain);

@@ -728,11 +728,11 @@ const INTERRUPTION_TASKS: InterruptionTask[] = [
 type DistractionConfigType = DistractionType | 'timeout';
 
 const DISTRACTION_CONFIG: Record<DistractionConfigType, { minDelay: number; maxDelay: number; duration: number; cost: number; title: string; objectToFind?: string }> = {
-  environment: { minDelay: 8, maxDelay: 12, duration: 0, cost: 2, title: '☀️ 陽光太刺眼', objectToFind: 'window' },
-  biological: { minDelay: 10, maxDelay: 15, duration: 0, cost: 2.5, title: '💧 口渴了，需要喝水', objectToFind: 'cup' },
-  social: { minDelay: 9, maxDelay: 13, duration: 0, cost: 1.5, title: '👥 有人在叫你', objectToFind: 'person' },
+  environment: { minDelay: 15, maxDelay: 25, duration: 3000, cost: 2, title: '☀️ 陽光太刺眼', objectToFind: 'window' },
+  biological: { minDelay: 20, maxDelay: 30, duration: 4000, cost: 2.5, title: '💧 口渴了，需要喝水', objectToFind: 'cup' },
+  social: { minDelay: 18, maxDelay: 28, duration: 3500, cost: 1.5, title: '👥 有人在叫你', objectToFind: 'person' },
   timeout: { minDelay: 0, maxDelay: 0, duration: 0, cost: 5, title: '⏱️ 時間到！' },
-  psychological: { minDelay: 7, maxDelay: 11, duration: 0, cost: 1, title: '🤔 突然想到其他事', objectToFind: 'tv' },
+  psychological: { minDelay: 12, maxDelay: 22, duration: 3000, cost: 1, title: '🤔 突然想到其他事', objectToFind: 'tv' },
 };
 
 // 遊戲時間限制（秒）- 更長的遊戲體驗
@@ -901,13 +901,10 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
         activeDistractionsRef.current.add(type);
         onDistractionTriggered(type);
 
-        // Auto-dismiss after duration and reschedule
+        // Auto-dismiss after duration - 移除遞歸觸發避免無限循環
         setTimeout(() => {
           activeDistractionsRef.current.delete(type);
-          // 重新排程下一次干擾
-          if (isActive) {
-            triggerDistraction(type);
-          }
+          // 不再自動重新觸發，避免干擾失控
         }, config.duration);
       }
     }, delay * 1000);
@@ -922,26 +919,30 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
 
     if (!isActive) return;
 
-    // 動態調整干擾頻率 - 基於遊戲進度的漸進式干擾系統
+    // 重新設計的漸進式干擾系統 - 避免過度干擾
     const scheduleProgressiveDistractions = () => {
-      // 初期：較少干擾，讓玩家適應
-      setTimeout(() => triggerDistraction('environment'), 8000 + Math.random() * 4000);
-      setTimeout(() => triggerDistraction('biological'), 12000 + Math.random() * 6000);
+      const distractionTypes: DistractionType[] = ['environment', 'biological', 'psychological', 'social'];
+      let currentTime = 10000; // 從10秒開始
 
-      // 中期：增加心理和社交干擾
-      setTimeout(() => triggerDistraction('psychological'), 15000 + Math.random() * 5000);
-      setTimeout(() => triggerDistraction('social'), 20000 + Math.random() * 8000);
+      // 為每種類型安排合理的干擾時間
+      distractionTypes.forEach((type, index) => {
+        const baseDelay = currentTime + (index * 8000); // 每種類型間隔8秒
 
-      // 後期：高頻率干擾，模擬 ADHD 的認知負荷
-      setTimeout(() => triggerDistraction('environment'), 25000 + Math.random() * 3000);
-      setTimeout(() => triggerDistraction('biological'), 30000 + Math.random() * 4000);
-      setTimeout(() => triggerDistraction('psychological'), 35000 + Math.random() * 3000);
-      setTimeout(() => triggerDistraction('social'), 40000 + Math.random() * 5000);
+        // 初期干擾（較溫和）
+        setTimeout(() => triggerDistraction(type), baseDelay + Math.random() * 5000);
 
-      // 最後階段：密集干擾，測試極限專注力
-      setTimeout(() => triggerDistraction('environment'), 45000 + Math.random() * 2000);
-      setTimeout(() => triggerDistraction('psychological'), 50000 + Math.random() * 2000);
-      setTimeout(() => triggerDistraction('social'), 55000 + Math.random() * 3000);
+        // 中期干擾（適中頻率）
+        if (baseDelay + 25000 < 90000) { // 確保不超過遊戲時間
+          setTimeout(() => triggerDistraction(type), baseDelay + 25000 + Math.random() * 8000);
+        }
+
+        // 後期干擾（較頻繁但不失控）
+        if (baseDelay + 50000 < 90000) {
+          setTimeout(() => triggerDistraction(type), baseDelay + 50000 + Math.random() * 10000);
+        }
+      });
+
+      console.log('[DISTRACTION] Progressive distraction system initialized - max 12 distractions over 90 seconds');
     };
 
     scheduleProgressiveDistractions();
@@ -1335,10 +1336,7 @@ export default function FocusFinderPrototype() {
       }
     }
 
-    // 添加基礎干擾任務音作為背景
-    setTimeout(() => {
-      audioManager.playDistractionTask();
-    }, 200);
+    // 移除重複的背景音效，避免音效堆疊
   }, []);
 
   const { activeDistractions } = useDistractions(

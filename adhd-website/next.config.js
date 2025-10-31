@@ -7,7 +7,8 @@ const nextConfig = {
   compiler: { 
     styledComponents: true 
   },
-  output: 'standalone',
+  output: 'export',
+  trailingSlash: true,
   experimental: {
     optimizePackageImports: [
       'react-icons/fa',

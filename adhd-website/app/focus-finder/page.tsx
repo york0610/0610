@@ -202,44 +202,45 @@ export default function FocusFinderPage() {
             </motion.div>
             
             {/* 主標題 */}
-            <motion.h1 
+            <motion.h1
               className="mt-10 bg-gradient-to-r from-red-200 via-orange-200 to-yellow-200 bg-clip-text text-6xl font-black tracking-tight text-transparent sm:text-7xl lg:text-8xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              60秒環境掃描挑戰
+              Focus Finder
             </motion.h1>
-            
+
             {/* 副標題 */}
-            <motion.p 
+            <motion.p
               className="mt-4 text-2xl font-bold text-red-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              The 60-Second Environment Scan Challenge
+              ADHD 認知挑戰模擬器 - 90 秒沉浸式體驗
             </motion.p>
             
             {/* 描述 */}
-            <motion.p 
-              className="mx-auto mt-8 max-w-3xl text-xl leading-relaxed text-slate-300"
+            <motion.p
+              className="mx-auto mt-8 max-w-4xl text-xl leading-relaxed text-slate-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              你需要在 <span className="font-bold text-cyan-400">60 秒</span> 內完成環境掃描任務：
-              使用手機鏡頭找到地板、天花板、牆壁、門和窗戶。
+              歡迎來到 <span className="font-bold text-cyan-400">Focus Finder</span> - 一個讓你親身體驗 ADHD 認知挑戰的互動遊戲。
               <br /><br />
-              但是——<span className="font-bold text-red-400">你會不斷被突發的干擾任務打斷</span>：
-              電腦沒關、手機響了、口好渴……
+              <span className="font-bold text-yellow-300">🎯 你的任務很簡單</span>：在 60 秒內使用手機鏡頭找到 5 個環境物件 - 地板、天花板、牆壁、門和窗戶。
               <br /><br />
-              <span className="font-bold text-yellow-300">你必須先完成干擾任務才能繼續主任務。</span>
-              這就是 ADHD 者每天面對的挑戰：<span className="font-bold text-orange-300">不斷被打斷，難以保持專注。</span>
+              <span className="font-bold text-red-400">⚡ 但現實很複雜</span>：你會不斷被突發的干擾任務打斷 - 電腦沒關、手機響了、口好渴、想上廁所...
+              <br /><br />
+              <span className="font-bold text-orange-300">🧠 這就是 ADHD 大腦的日常</span>：每個干擾都必須先處理，才能回到原本的任務。你會體驗到工作記憶的負荷、注意力的分散，以及執行功能的挑戰。
+              <br /><br />
+              <span className="text-lg font-semibold text-emerald-300">這不只是遊戲，這是一場 60 秒的同理心之旅。</span>
             </motion.p>
 
             {/* 核心數據 */}
-            <motion.div 
+            <motion.div
               className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -248,30 +249,30 @@ export default function FocusFinderPage() {
               <div className="rounded-2xl border border-red-800/30 bg-red-900/20 p-6 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2 text-3xl font-bold text-red-400">
                   <FaClock />
-                  <span>60秒</span>
+                  <span>90秒</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-400">單局體驗時長</p>
+                <p className="mt-2 text-sm text-slate-400">沉浸式體驗時長</p>
               </div>
               <div className="rounded-2xl border border-orange-800/30 bg-orange-900/20 p-6 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-400">
                   <FaBrain />
-                  <span>4層</span>
+                  <span>60+</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-400">機制疊加系統</p>
+                <p className="mt-2 text-sm text-slate-400">真實干擾場景</p>
               </div>
               <div className="rounded-2xl border border-yellow-800/30 bg-yellow-900/20 p-6 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2 text-3xl font-bold text-yellow-400">
                   <FaExclamationTriangle />
-                  <span>23%</span>
+                  <span>S-D</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-400">完成率（極高難度）</p>
+                <p className="mt-2 text-sm text-slate-400">評級系統</p>
               </div>
               <div className="rounded-2xl border border-green-800/30 bg-green-900/20 p-6 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2 text-3xl font-bold text-green-400">
                   <FaUsers />
-                  <span>48K+</span>
+                  <span>40+</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-400">累積體驗人次</p>
+                <p className="mt-2 text-sm text-slate-400">專業音效類型</p>
               </div>
             </motion.div>
 
@@ -287,7 +288,7 @@ export default function FocusFinderPage() {
                 className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 px-10 py-5 text-lg font-black text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-red-500/50"
               >
                 <FaPlay className="mr-3 text-xl" />
-                立即開始 60 秒挑戰
+                開始 90 秒 ADHD 體驗
                 <div className="absolute inset-0 -z-10 bg-gradient-to-r from-red-600 to-yellow-600 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
               </Link>
               <button
@@ -300,6 +301,58 @@ export default function FocusFinderPage() {
             </motion.div>
           </div>
         </header>
+      </div>
+
+      {/* 遊戲特色區塊 */}
+      <div className="relative mx-auto max-w-7xl px-6 py-16">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-4xl font-bold text-white mb-12 text-center">🎮 遊戲亮點</h2>
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="rounded-2xl border border-cyan-500/30 bg-cyan-900/20 p-8 backdrop-blur-sm">
+              <div className="text-5xl mb-4 text-center">🎭</div>
+              <h3 className="text-xl font-bold text-cyan-400 mb-4 text-center">沉浸式故事體驗</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                跟隨主角的內心獨白，從平靜的開始到逐漸失控的認知負荷。體驗真實的 ADHD 情緒波動與思維跳躍。
+              </p>
+            </div>
+            <div className="rounded-2xl border border-orange-500/30 bg-orange-900/20 p-8 backdrop-blur-sm">
+              <div className="text-5xl mb-4 text-center">🧠</div>
+              <h3 className="text-xl font-bold text-orange-400 mb-4 text-center">科學化干擾系統</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                60+ 種真實干擾場景，涵蓋環境噪音、生理需求、心理壓力、社交打擾四大類型，精準模擬 ADHD 認知挑戰。
+              </p>
+            </div>
+            <div className="rounded-2xl border border-purple-500/30 bg-purple-900/20 p-8 backdrop-blur-sm">
+              <div className="text-5xl mb-4 text-center">🎵</div>
+              <h3 className="text-xl font-bold text-purple-400 mb-4 text-center">專業音效設計</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                40+ 種程序化音效搭配 Tuna.js 專業音效處理，從環境音樂到干擾音效，營造身臨其境的感官體驗。
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 grid gap-8 md:grid-cols-2">
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-900/20 p-8 backdrop-blur-sm">
+              <div className="text-4xl mb-4 text-center">🏆</div>
+              <h3 className="text-xl font-bold text-emerald-400 mb-4 text-center">S-A-B-C-D 評級系統</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                根據完成任務數、反應時間、死亡次數等多維度指標，提供詳細的表現分析與成就系統。
+              </p>
+            </div>
+            <div className="rounded-2xl border border-pink-500/30 bg-pink-900/20 p-8 backdrop-blur-sm">
+              <div className="text-4xl mb-4 text-center">💥</div>
+              <h3 className="text-xl font-bold text-pink-400 mb-4 text-center">視覺特效與動畫</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                粒子效果、死亡動畫、全螢幕沉浸體驗，搭配 Framer Motion 流暢動畫，打造電影級遊戲體驗。
+              </p>
+            </div>
+          </div>
+        </motion.section>
       </div>
 
       {/* ADHD 介紹區塊 */}
@@ -346,18 +399,24 @@ export default function FocusFinderPage() {
             <h3 className="text-2xl font-bold text-amber-300 mb-6">為什麼我們創建 Focus Finder？</h3>
             <div className="space-y-4 text-slate-300">
               <p className="leading-relaxed">
-                <span className="font-semibold text-amber-200">同理心設計：</span>
-                大多數人無法真正理解 ADHD 患者的日常挑戰。我們創建了一個互動體驗，
-                讓你在 60 秒內體驗 ADHD 者面對的認知負荷、執行功能困難和感官過載。
+                <span className="font-semibold text-amber-200">沉浸式同理心體驗：</span>
+                透過故事化的第一人稱視角，讓你親身體驗 ADHD 大腦的內在世界 - 從平靜的開始到逐漸失控的認知風暴。
+                這不只是遊戲，而是一場 90 秒的情感與認知之旅。
               </p>
               <p className="leading-relaxed">
-                <span className="font-semibold text-amber-200">提升意識：</span>
-                通過遊戲化的方式，幫助人們理解 ADHD 不是「不夠努力」，
-                而是大腦神經生物學的差異。
+                <span className="font-semibold text-amber-200">科學化模擬設計：</span>
+                基於神經科學研究，精確模擬 ADHD 的執行功能障礙、工作記憶限制、注意力調節困難。
+                60+ 種干擾場景涵蓋環境、生理、心理、社交四大維度，真實還原 ADHD 認知負荷。
               </p>
               <p className="leading-relaxed">
-                <span className="font-semibold text-amber-200">實踐策略：</span>
-                體驗中的挑戰反映了真實的 ADHD 困境，幫助患者和支持者找到應對策略。
+                <span className="font-semibold text-amber-200">技術創新突破：</span>
+                結合 AI 物件偵測、專業音效處理、粒子特效系統，打造前所未有的 ADHD 模擬體驗。
+                每一個音效、每一個視覺效果都經過精心設計，為了讓你真正「感受」而非僅僅「理解」。
+              </p>
+              <p className="leading-relaxed">
+                <span className="font-semibold text-amber-200">社會影響使命：</span>
+                消除對 ADHD 的誤解與偏見，建立更包容的社會環境。讓每個人都能理解：
+                ADHD 不是缺陷，而是大腦的另一種美麗運作方式。
               </p>
             </div>
           </div>

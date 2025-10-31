@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FaArrowLeft, FaCheckCircle, FaBook, FaHospital, FaUsers, FaLightbulb } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaBook, FaHospital, FaUsers, FaLightbulb, FaGamepad } from 'react-icons/fa';
 
 export default function ResourcesPage() {
   return (
@@ -145,12 +145,38 @@ export default function ResourcesPage() {
             </div>
           </motion.div>
 
-          <motion.div className="text-center" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }}>
+          <motion.div className="mb-12 rounded-3xl border border-indigo-800/50 bg-indigo-900/20 p-8" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }}>
+            <div className="flex items-center gap-3 mb-6">
+              <FaBook className="text-3xl text-indigo-400" />
+              <h2 className="text-2xl font-bold text-white">深度學習章節</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Link href="/resources/chapter1" className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 transition hover:bg-slate-700/50">
+                <h3 className="text-lg font-bold text-indigo-300 mb-3">第一章：立方體解析法</h3>
+                <p className="text-sm text-slate-300">從生物、心理、社會三個維度全面理解 ADHD</p>
+              </Link>
+              <Link href="/resources/chapter2" className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 transition hover:bg-slate-700/50">
+                <h3 className="text-lg font-bold text-indigo-300 mb-3">第二章：神經科學基礎</h3>
+                <p className="text-sm text-slate-300">深入了解 ADHD 的大腦科學與神經機制</p>
+              </Link>
+              <Link href="/resources/chapter3" className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 transition hover:bg-slate-700/50">
+                <h3 className="text-lg font-bold text-indigo-300 mb-3">第三章：實踐策略</h3>
+                <p className="text-sm text-slate-300">ADHD 患者的日常應對技巧與自我管理</p>
+              </Link>
+            </div>
+          </motion.div>
+
+          <motion.div className="text-center" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.5 }}>
             <h3 className="text-2xl font-bold text-white mb-4">準備好開始了嗎？</h3>
             <p className="text-slate-300 mb-6">進行 ASRS 量表評估，了解您的 ADHD 風險指標</p>
-            <Link href="/assessment" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 font-bold text-white transition hover:shadow-lg hover:shadow-cyan-500/50">
-              <FaLightbulb /> 進行量表評估
-            </Link>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link href="/assessment" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-8 py-4 font-bold text-white transition hover:shadow-lg hover:shadow-cyan-500/50">
+                <FaLightbulb /> 進行量表評估
+              </Link>
+              <Link href="/focus-finder" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-8 py-4 font-bold text-white transition hover:shadow-lg hover:shadow-orange-500/50">
+                <FaGamepad className="text-lg" /> 體驗 ADHD 模擬器
+              </Link>
+            </div>
           </motion.div>
         </section>
       </main>

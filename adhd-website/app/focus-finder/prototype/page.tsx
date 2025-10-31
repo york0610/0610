@@ -371,6 +371,354 @@ const INTERRUPTION_TASKS: InterruptionTask[] = [
     cost: 1.5,
     emoji: '🤧'
   },
+
+  // 新增：細節強迫症干擾
+  {
+    type: 'environment' as DistractionType,
+    title: '⌨️ 鍵盤有灰塵！',
+    description: '你注意到鍵盤縫隙裡有灰塵，必須先清理乾淨才能繼續工作。ADHD 患者常被小細節困住',
+    objectToFind: 'keyboard',
+    cost: 3.5,
+    emoji: '⌨️'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '📚 書籍過期了',
+    description: '你發現桌上的書已經過期要還了，開始擔心圖書館罰款。這種「未完成任務」會一直困擾你',
+    objectToFind: 'book',
+    cost: 4,
+    emoji: '📚'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '🖱️ 滑鼠不順',
+    description: '滑鼠移動不順暢，你覺得必須先清理滑鼠墊。這種完美主義傾向會打斷工作流程',
+    objectToFind: 'mouse',
+    cost: 2.5,
+    emoji: '🖱️'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '💡 燈光太暗了',
+    description: '你覺得燈光不夠亮，影響工作效率。必須先調整照明才能繼續',
+    objectToFind: 'window',
+    cost: 2,
+    emoji: '💡'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '🖥️ 螢幕太髒了',
+    description: '螢幕上有指紋和灰塵，你覺得必須先擦乾淨。這種完美主義會無限延遲工作',
+    objectToFind: 'monitor',
+    cost: 3,
+    emoji: '🖥️'
+  },
+
+  // 新增：時間焦慮干擾
+  {
+    type: 'psychological' as DistractionType,
+    title: '⏰ 時間不夠用',
+    description: '你開始計算剩餘時間，越算越焦慮。時間感知困難是 ADHD 的核心症狀',
+    objectToFind: 'clock',
+    cost: 3.5,
+    emoji: '⏰'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '📅 忘記約會了嗎？',
+    description: '你突然想起可能有約會忘記了，開始檢查行事曆。這種「可能遺漏」的焦慮很常見',
+    objectToFind: 'cell phone',
+    cost: 4,
+    emoji: '📅'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🎯 目標太遙遠',
+    description: '你開始質疑這個任務的意義，感到目標太遙遠。ADHD 患者需要立即的成就感',
+    objectToFind: 'sky',
+    cost: 3,
+    emoji: '🎯'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🔄 想要重新開始',
+    description: '你覺得之前做錯了，想要全部重新開始。這種完美主義會導致無限循環',
+    objectToFind: 'door',
+    cost: 4.5,
+    emoji: '🔄'
+  },
+
+  // 新增：身體不適干擾
+  {
+    type: 'biological' as DistractionType,
+    title: '🦵 腿麻了',
+    description: '你坐太久腿麻了，需要起來走動。ADHD 患者很難長時間保持同一姿勢',
+    objectToFind: 'chair',
+    cost: 2,
+    emoji: '🦵'
+  },
+  {
+    type: 'biological' as DistractionType,
+    title: '👁️ 眼睛乾澀',
+    description: '長時間盯著螢幕讓眼睛很乾澀，你需要休息一下眼睛',
+    objectToFind: 'monitor',
+    cost: 2.5,
+    emoji: '👁️'
+  },
+  {
+    type: 'biological' as DistractionType,
+    title: '🤧 鼻子癢',
+    description: '鼻子突然很癢，可能是過敏。這種身體不適會持續干擾注意力',
+    objectToFind: 'window',
+    cost: 1.5,
+    emoji: '🤧'
+  },
+  {
+    type: 'biological' as DistractionType,
+    title: '🥤 想喝咖啡',
+    description: '你覺得需要咖啡因來提神，但去泡咖啡又會打斷工作節奏',
+    objectToFind: 'cup',
+    cost: 3,
+    emoji: '☕'
+  },
+  {
+    type: 'biological' as DistractionType,
+    title: '🍫 想吃零食',
+    description: '你突然很想吃甜食，血糖可能下降了。但找零食會讓你完全分心',
+    objectToFind: 'apple',
+    cost: 2.5,
+    emoji: '🍫'
+  },
+
+  // 新增：創意干擾
+  {
+    type: 'psychological' as DistractionType,
+    title: '💡 突然有靈感',
+    description: '你突然想到一個很棒的點子，覺得必須立刻記錄下來。創意爆發常常打斷 ADHD 患者的工作',
+    objectToFind: 'book',
+    cost: 4,
+    emoji: '💡'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🎨 想要重新設計',
+    description: '你開始想要重新整理工作環境，覺得現在的配置不夠完美',
+    objectToFind: 'desk',
+    cost: 5,
+    emoji: '🎨'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '📝 想要做筆記',
+    description: '你覺得應該做更詳細的筆記，但這會讓你偏離主要任務',
+    objectToFind: 'book',
+    cost: 3.5,
+    emoji: '📝'
+  },
+
+  // 新增：社交媒體進階干擾
+  {
+    type: 'social' as DistractionType,
+    title: '📧 Email 通知',
+    description: '你收到新的 Email，可能很重要。你忍不住想要立刻查看',
+    objectToFind: 'laptop',
+    cost: 3.5,
+    emoji: '📧'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '🔔 Discord 訊息',
+    description: '朋友在 Discord 群組裡聊天，你想要參與對話',
+    objectToFind: 'rabbit-hole',
+    cost: 4.5,
+    emoji: '🔔',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '📰 新聞推播',
+    description: '手機推播了重要新聞，你覺得應該了解一下時事',
+    objectToFind: 'rabbit-hole',
+    cost: 5,
+    emoji: '📰',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '🎬 Netflix 新劇',
+    description: '你想起 Netflix 有新的劇集上線，只是看一集而已...',
+    objectToFind: 'rabbit-hole',
+    cost: 6,
+    emoji: '🎬',
+    special: 'rabbit-hole'
+  },
+
+  // 新增：記憶相關干擾
+  {
+    type: 'psychological' as DistractionType,
+    title: '🧠 想起重要的事',
+    description: '你突然想起一件很重要的事情，但又想不起來是什麼。這種「舌尖現象」很困擾',
+    objectToFind: 'memory-failure',
+    cost: 4,
+    emoji: '🧠',
+    special: 'memory-failure'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '📝 忘記寫下來',
+    description: '你想起有東西忘記寫下來了，但記不起來是什麼。工作記憶的限制讓你很焦慮',
+    objectToFind: 'memory-failure',
+    cost: 3.5,
+    emoji: '📝',
+    special: 'memory-failure'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🔍 找不到檔案',
+    description: '你需要一個檔案但找不到在哪裡。這種「東西不見了」的焦慮會完全打斷工作',
+    objectToFind: 'laptop',
+    cost: 4,
+    emoji: '🔍'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🤔 剛才在想什麼？',
+    description: '你完全忘記剛才在想什麼，大腦一片空白。工作記憶失效是 ADHD 的典型症狀',
+    objectToFind: 'memory-failure',
+    cost: 4.5,
+    emoji: '🤔',
+    special: 'memory-failure'
+  },
+
+  // 新增：環境敏感干擾
+  {
+    type: 'environment' as DistractionType,
+    title: '🌡️ 溫度不對',
+    description: '房間太熱或太冷，你無法專心。ADHD 患者對環境變化特別敏感',
+    objectToFind: 'window',
+    cost: 2.5,
+    emoji: '🌡️'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '🔊 噪音干擾',
+    description: '外面有施工聲音或其他噪音，讓你無法集中注意力',
+    objectToFind: 'door',
+    cost: 3,
+    emoji: '🔊'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '🪑 椅子不舒服',
+    description: '椅子坐起來不舒服，你需要調整姿勢或換個位置',
+    objectToFind: 'chair',
+    cost: 2,
+    emoji: '🪑'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '💨 空氣不流通',
+    description: '房間空氣悶熱，你覺得需要開窗通風才能繼續工作',
+    objectToFind: 'window',
+    cost: 2.5,
+    emoji: '💨'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '🌅 陽光刺眼',
+    description: '陽光太刺眼影響螢幕顯示，你需要調整窗簾或位置',
+    objectToFind: 'window',
+    cost: 2,
+    emoji: '🌅'
+  },
+
+  // 新增：拖延症干擾
+  {
+    type: 'psychological' as DistractionType,
+    title: '😴 想要拖延',
+    description: '你開始找藉口拖延，覺得「等一下再做也可以」。拖延是 ADHD 的經典症狀',
+    objectToFind: 'bed',
+    cost: 4.5,
+    emoji: '😴'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🎮 想要放鬆',
+    description: '你覺得應該先放鬆一下，玩個小遊戲或看個影片',
+    objectToFind: 'tv',
+    cost: 5,
+    emoji: '🎮'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🛌 想要躺一下',
+    description: '你覺得很累，想要躺在床上休息一下。但這通常會變成長時間的拖延',
+    objectToFind: 'bed',
+    cost: 5.5,
+    emoji: '🛌'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '📱 滑手機放鬆',
+    description: '你想要滑手機放鬆一下，但這很容易變成無止境的滑動',
+    objectToFind: 'rabbit-hole',
+    cost: 5,
+    emoji: '📱',
+    special: 'rabbit-hole'
+  },
+
+  // 新增：完美主義干擾
+  {
+    type: 'psychological' as DistractionType,
+    title: '✨ 想要做得更好',
+    description: '你覺得現在做的不夠好，想要重新來過。這種完美主義會導致無限循環',
+    objectToFind: 'door',
+    cost: 4,
+    emoji: '✨'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🔧 想要優化流程',
+    description: '你開始思考如何優化工作流程，但這會讓你偏離當前任務',
+    objectToFind: 'laptop',
+    cost: 4.5,
+    emoji: '🔧'
+  },
+  {
+    type: 'environment' as DistractionType,
+    title: '📐 東西沒對齊',
+    description: '你注意到桌上的東西沒有對齊，必須先整理好才能繼續工作',
+    objectToFind: 'desk',
+    cost: 3,
+    emoji: '📐'
+  },
+
+  // 新增：衝動控制干擾
+  {
+    type: 'psychological' as DistractionType,
+    title: '🛒 想要網購',
+    description: '你突然想起需要買某樣東西，忍不住想要立刻上網購物',
+    objectToFind: 'rabbit-hole',
+    cost: 5.5,
+    emoji: '🛒',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '💌 想要傳訊息',
+    description: '你想起要回覆朋友的訊息，覺得現在不回會很失禮',
+    objectToFind: 'cell phone',
+    cost: 3.5,
+    emoji: '💌'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '🎲 想要嘗試新方法',
+    description: '你突然想到一個新的做法，忍不住想要立刻嘗試',
+    objectToFind: 'laptop',
+    cost: 4,
+    emoji: '🎲'
+  },
 ];
 
 type DistractionConfigType = DistractionType | 'timeout';
@@ -570,11 +918,29 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
 
     if (!isActive) return;
 
-    // Schedule initial distractions
-    triggerDistraction('environment');
-    triggerDistraction('biological');
-    triggerDistraction('social');
-    triggerDistraction('psychological');
+    // 動態調整干擾頻率 - 基於遊戲進度的漸進式干擾系統
+    const scheduleProgressiveDistractions = () => {
+      // 初期：較少干擾，讓玩家適應
+      setTimeout(() => triggerDistraction('environment'), 8000 + Math.random() * 4000);
+      setTimeout(() => triggerDistraction('biological'), 12000 + Math.random() * 6000);
+
+      // 中期：增加心理和社交干擾
+      setTimeout(() => triggerDistraction('psychological'), 15000 + Math.random() * 5000);
+      setTimeout(() => triggerDistraction('social'), 20000 + Math.random() * 8000);
+
+      // 後期：高頻率干擾，模擬 ADHD 的認知負荷
+      setTimeout(() => triggerDistraction('environment'), 25000 + Math.random() * 3000);
+      setTimeout(() => triggerDistraction('biological'), 30000 + Math.random() * 4000);
+      setTimeout(() => triggerDistraction('psychological'), 35000 + Math.random() * 3000);
+      setTimeout(() => triggerDistraction('social'), 40000 + Math.random() * 5000);
+
+      // 最後階段：密集干擾，測試極限專注力
+      setTimeout(() => triggerDistraction('environment'), 45000 + Math.random() * 2000);
+      setTimeout(() => triggerDistraction('psychological'), 50000 + Math.random() * 2000);
+      setTimeout(() => triggerDistraction('social'), 55000 + Math.random() * 3000);
+    };
+
+    scheduleProgressiveDistractions();
   }, [isActive, triggerDistraction]);
 
   const stopDistractionCycle = useCallback(() => {
@@ -717,6 +1083,24 @@ export default function FocusFinderPrototype() {
   const [showWorkingMemoryFailure, setShowWorkingMemoryFailure] = useState(false);
   const [forgottenTask, setForgottenTask] = useState<string>('');
 
+  // 干擾任務統計系統
+  const [distractionStats, setDistractionStats] = useState({
+    total: 0,
+    byType: {
+      environment: 0,
+      biological: 0,
+      psychological: 0,
+      social: 0,
+    },
+    bySpecial: {
+      'rabbit-hole': 0,
+      'memory-failure': 0,
+    },
+    completed: 0,
+    skipped: 0,
+    averageCompletionTime: 0,
+  });
+
   const difficultyIntensity = {
     easy: 0.5,
     normal: 1,
@@ -743,19 +1127,93 @@ export default function FocusFinderPrototype() {
           cost: 5,
         };
       } else {
-        // 增加特殊任務（社交媒體兔子洞和工作記憶失敗）的觸發機率
+        // 智能干擾任務選擇系統
         const specialTasks = INTERRUPTION_TASKS.filter(task => task.special);
-        const normalTasks = INTERRUPTION_TASKS.filter(task => !task.special);
+        const environmentTasks = INTERRUPTION_TASKS.filter(task => task.type === 'environment' && !task.special);
+        const biologicalTasks = INTERRUPTION_TASKS.filter(task => task.type === 'biological' && !task.special);
+        const psychologicalTasks = INTERRUPTION_TASKS.filter(task => task.type === 'psychological' && !task.special);
+        const socialTasks = INTERRUPTION_TASKS.filter(task => task.type === 'social' && !task.special);
 
-        // 40% 機率觸發特殊任務，60% 機率觸發普通任務
-        if (Math.random() < 0.4 && specialTasks.length > 0) {
-          interruptionTask = specialTasks[Math.floor(Math.random() * specialTasks.length)];
-          console.log('[DEBUG] Selected special task:', interruptionTask.title);
-        } else {
-          interruptionTask = normalTasks[Math.floor(Math.random() * normalTasks.length)];
-          console.log('[DEBUG] Selected normal task:', interruptionTask.title);
+        // 根據遊戲進度和專注力調整觸發機率
+        const gameProgress = currentTaskIndex / randomTaskSequence.length;
+        const focusRatio = focusLevel / 100;
+
+        // 計算各類型任務的權重
+        let specialWeight = 0.35; // 基礎 35%
+        let environmentWeight = 0.25;
+        let biologicalWeight = 0.15;
+        let psychologicalWeight = 0.15;
+        let socialWeight = 0.10;
+
+        // 遊戲後期增加心理壓力和社交干擾
+        if (gameProgress > 0.6) {
+          specialWeight += 0.15;
+          psychologicalWeight += 0.10;
+          socialWeight += 0.10;
+          environmentWeight -= 0.15;
+          biologicalWeight -= 0.10;
         }
+
+        // 專注力低時增加生理和環境干擾
+        if (focusRatio < 0.5) {
+          biologicalWeight += 0.15;
+          environmentWeight += 0.10;
+          specialWeight -= 0.10;
+          psychologicalWeight -= 0.10;
+          socialWeight -= 0.05;
+        }
+
+        // 專注力高時增加特殊任務和社交干擾
+        if (focusRatio > 0.8) {
+          specialWeight += 0.10;
+          socialWeight += 0.15;
+          environmentWeight -= 0.10;
+          biologicalWeight -= 0.10;
+          psychologicalWeight -= 0.05;
+        }
+
+        // 根據權重選擇任務類型
+        const random = Math.random();
+        let cumulativeWeight = 0;
+
+        if (random < (cumulativeWeight += specialWeight) && specialTasks.length > 0) {
+          interruptionTask = specialTasks[Math.floor(Math.random() * specialTasks.length)];
+          console.log('[DEBUG] Selected SPECIAL task:', interruptionTask.title, `(${(specialWeight * 100).toFixed(1)}% chance)`);
+        } else if (random < (cumulativeWeight += environmentWeight) && environmentTasks.length > 0) {
+          interruptionTask = environmentTasks[Math.floor(Math.random() * environmentTasks.length)];
+          console.log('[DEBUG] Selected ENVIRONMENT task:', interruptionTask.title, `(${(environmentWeight * 100).toFixed(1)}% chance)`);
+        } else if (random < (cumulativeWeight += biologicalWeight) && biologicalTasks.length > 0) {
+          interruptionTask = biologicalTasks[Math.floor(Math.random() * biologicalTasks.length)];
+          console.log('[DEBUG] Selected BIOLOGICAL task:', interruptionTask.title, `(${(biologicalWeight * 100).toFixed(1)}% chance)`);
+        } else if (random < (cumulativeWeight += psychologicalWeight) && psychologicalTasks.length > 0) {
+          interruptionTask = psychologicalTasks[Math.floor(Math.random() * psychologicalTasks.length)];
+          console.log('[DEBUG] Selected PSYCHOLOGICAL task:', interruptionTask.title, `(${(psychologicalWeight * 100).toFixed(1)}% chance)`);
+        } else if (socialTasks.length > 0) {
+          interruptionTask = socialTasks[Math.floor(Math.random() * socialTasks.length)];
+          console.log('[DEBUG] Selected SOCIAL task:', interruptionTask.title, `(${(socialWeight * 100).toFixed(1)}% chance)`);
+        } else {
+          // 備用方案：隨機選擇
+          const allNormalTasks = INTERRUPTION_TASKS.filter(task => !task.special);
+          interruptionTask = allNormalTasks[Math.floor(Math.random() * allNormalTasks.length)];
+          console.log('[DEBUG] Selected FALLBACK task:', interruptionTask.title);
+        }
+
+        console.log(`[DEBUG] Game progress: ${(gameProgress * 100).toFixed(1)}%, Focus: ${focusLevel}%, Weights: Special=${(specialWeight * 100).toFixed(1)}%, Env=${(environmentWeight * 100).toFixed(1)}%, Bio=${(biologicalWeight * 100).toFixed(1)}%, Psy=${(psychologicalWeight * 100).toFixed(1)}%, Soc=${(socialWeight * 100).toFixed(1)}%`);
       }
+
+      // 更新干擾統計
+      setDistractionStats(prev => ({
+        ...prev,
+        total: prev.total + 1,
+        byType: {
+          ...prev.byType,
+          [interruptionTask.type]: prev.byType[interruptionTask.type] + 1,
+        },
+        bySpecial: interruptionTask.special ? {
+          ...prev.bySpecial,
+          [interruptionTask.special]: prev.bySpecial[interruptionTask.special] + 1,
+        } : prev.bySpecial,
+      }));
 
       // 檢查是否是特殊任務
       if (interruptionTask.special === 'rabbit-hole') {
@@ -768,6 +1226,8 @@ export default function FocusFinderPrototype() {
         setShowWorkingMemoryFailure(true);
         return;
       }
+
+      // 創建普通干擾事件
       const newDistraction: DistractionEvent = {
         id: `${type}-${Date.now()}`,
         type: interruptionTask.type,
@@ -778,24 +1238,9 @@ export default function FocusFinderPrototype() {
         objectToFind: interruptionTask.objectToFind,
         description: interruptionTask.description,
       };
-      
-      // 檢查是否為特殊任務
-      if (interruptionTask.special === 'rabbit-hole') {
-        console.log('[DEBUG] Rabbit hole effect triggered!');
-        setShowRabbitHole(true);
-        // 兔子洞特效不需要物體偵測，直接等待用戶逃脫
-      } else if (interruptionTask.special === 'memory-failure') {
-        console.log('[DEBUG] Working memory failure triggered!');
-        const currentTask = randomTaskSequence[currentTaskIndex];
-        if (currentTask) {
-          setForgottenTask(currentTask.title);
-          setShowWorkingMemoryFailure(true);
-        }
-        // 工作記憶失敗不需要物體偵測，直接等待用戶恢復
-      } else {
-        // 設置干擾任務為活躍狀態
-        setIsDistractedTaskActive(true);
-      }
+
+      // 設置干擾任務為活躍狀態
+      setIsDistractedTaskActive(true);
 
       console.log('[DEBUG] Interruption task triggered:', interruptionTask.title);
 
@@ -1035,16 +1480,28 @@ export default function FocusFinderPrototype() {
     const audioManager = getAudioManager();
     audioManager.playSuccess();
     audioManager.playDetection(); // 添加物體偵測音
-    
+
+    // 更新干擾統計 - 完成任務
+    if (currentDistraction) {
+      const completionTime = Date.now() - currentDistraction.triggeredAt;
+      setDistractionStats(prev => ({
+        ...prev,
+        completed: prev.completed + 1,
+        averageCompletionTime: prev.completed > 0
+          ? (prev.averageCompletionTime * prev.completed + completionTime) / (prev.completed + 1)
+          : completionTime,
+      }));
+    }
+
     // 解除干擾任務鎖定
     setIsDistractedTaskActive(false);
-    
+
     // 標記干擾任務為已完成
     if (currentDistraction) {
-      setDistractions(prev => 
-        prev.map(d => 
-          d.id === currentDistraction.id 
-            ? { ...d, dismissedAt: Date.now() } 
+      setDistractions(prev =>
+        prev.map(d =>
+          d.id === currentDistraction.id
+            ? { ...d, dismissedAt: Date.now() }
             : d
         )
       );
@@ -1263,6 +1720,24 @@ export default function FocusFinderPrototype() {
     setShowWorkingMemoryFailure(false);
     setForgottenTask('');
     setIsFullscreen(false);
+
+    // 重置干擾統計
+    setDistractionStats({
+      total: 0,
+      byType: {
+        environment: 0,
+        biological: 0,
+        psychological: 0,
+        social: 0,
+      },
+      bySpecial: {
+        'rabbit-hole': 0,
+        'memory-failure': 0,
+      },
+      completed: 0,
+      skipped: 0,
+      averageCompletionTime: 0,
+    });
     if (document.fullscreenElement) {
       document.exitFullscreen();
     }

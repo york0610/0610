@@ -28,6 +28,7 @@ import WorkingMemoryFailure from '../../components/WorkingMemoryFailure';
 import AudioSettings from '../../components/AudioSettings';
 import DeathAnimation from '../../components/DeathAnimation';
 import GameResultsScreen from '../../components/GameResultsScreen';
+import ParticleEffects, { ScreenShake, BlurOverlay, PulseEffect, DetectionSuccess } from '../../components/ParticleEffects';
 
 type PermissionState = 'idle' | 'requesting' | 'granted' | 'denied';
 type SessionState = 'idle' | 'running' | 'completed' | 'failed';
@@ -1093,6 +1094,20 @@ export default function FocusFinderPrototype() {
   const [deathReason, setDeathReason] = useState<string>('');
   const [taskTimeLeft, setTaskTimeLeft] = useState(TASK_TIMEOUT); // 當前任務剩餘時間
 
+  // 特效系統
+  const [particleEffect, setParticleEffect] = useState<{
+    type: 'success' | 'error' | 'distraction' | 'focus' | 'detection';
+    active: boolean;
+    position?: { x: number; y: number };
+  }>({ type: 'success', active: false });
+  const [screenShake, setScreenShake] = useState(false);
+  const [blurOverlay, setBlurOverlay] = useState(false);
+  const [detectionSuccess, setDetectionSuccess] = useState<{
+    visible: boolean;
+    position: { x: number; y: number };
+    objectName: string;
+  }>({ visible: false, position: { x: 0, y: 0 }, objectName: '' });
+
   // 干擾任務統計系統
   const [distractionStats, setDistractionStats] = useState({
     total: 0,
@@ -1119,6 +1134,34 @@ export default function FocusFinderPrototype() {
 
   const currentTask = randomTaskSequence[currentTaskIndex] ?? null;
 
+  // 特效觸發函數
+  const triggerParticleEffect = useCallback((
+    type: 'success' | 'error' | 'distraction' | 'focus' | 'detection',
+    position?: { x: number; y: number }
+  ) => {
+    setParticleEffect({ type, active: true, position });
+    setTimeout(() => {
+      setParticleEffect(prev => ({ ...prev, active: false }));
+    }, 2000);
+  }, []);
+
+  const triggerScreenShake = useCallback((duration = 500) => {
+    setScreenShake(true);
+    setTimeout(() => setScreenShake(false), duration);
+  }, []);
+
+  const triggerBlurEffect = useCallback((duration = 1000) => {
+    setBlurOverlay(true);
+    setTimeout(() => setBlurOverlay(false), duration);
+  }, []);
+
+  const showDetectionSuccess = useCallback((position: { x: number; y: number }, objectName: string) => {
+    setDetectionSuccess({ visible: true, position, objectName });
+    setTimeout(() => {
+      setDetectionSuccess(prev => ({ ...prev, visible: false }));
+    }, 2000);
+  }, []);
+
   // 處理任務超時
   const handleTaskTimeout = useCallback(() => {
     const TIMEOUT_PENALTY = 15; // 超時扣15分
@@ -1141,10 +1184,14 @@ export default function FocusFinderPrototype() {
       return newScore;
     });
 
-    // 觸發紅色閃爍效果
+    // 觸發紅色閃爍效果和視覺特效
     if (navigator.vibrate) {
       navigator.vibrate([300, 100, 300, 100, 300]);
     }
+
+    // 觸發錯誤特效
+    triggerParticleEffect('error');
+    triggerScreenShake(800);
 
     // 顯示扣分提示
     setErrorMessage(`⏰ 任務超時！扣除 ${TIMEOUT_PENALTY} 分`);
@@ -1436,12 +1483,16 @@ export default function FocusFinderPrototype() {
 
       setDistractions(prev => [...prev, newDistraction]);
       setCurrentDistraction(newDistraction);
-      
+
       // 降低專注力
       setFocusLevel(prev => Math.max(0, prev - 20));
 
       // 根據干擾任務類型播放對應音效
       playDistractionAudio(audioManager, interruptionTask);
+
+      // 觸發干擾特效
+      triggerParticleEffect('distraction');
+      triggerBlurEffect(2000);
 
       // 觸發震動效果
       if (navigator.vibrate) {
@@ -1831,13 +1882,29 @@ export default function FocusFinderPrototype() {
     const audioManager = getAudioManager();
     audioManager.playSuccess();
     audioManager.playDetection(); // 添加物體偵測音
-    
+
+    // 觸發成功特效
+    triggerParticleEffect('success', { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+
+    // 顯示檢測成功動畫
+    if (currentTask) {
+      showDetectionSuccess(
+        { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+        currentTask.title
+      );
+    }
+
+    // 觸發震動回饋
+    if (navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]);
+    }
+
     // 清除超時計時器
     if (taskTimeoutRef) {
       clearTimeout(taskTimeoutRef);
       setTaskTimeoutRef(null);
     }
-    
+
     // 恢複專注力
     setFocusLevel(prev => Math.min(100, prev + 25));
     
@@ -2050,20 +2117,28 @@ export default function FocusFinderPrototype() {
   const focusPercentage = Math.max(0, focusLevel);
 
   return (
-    <div className={`${isFullscreen && sessionState === 'running' ? 'fixed inset-0 z-50 overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100`}>
+    <ScreenShake isActive={screenShake} intensity={8} duration={800}>
+      <div className={`${isFullscreen && sessionState === 'running' ? 'fixed inset-0 z-50 overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100`}>
       {/* 新的專注力條 - 只在遊戲運行時顯示 */}
-      <FocusBar
-        focusLevel={focusLevel}
-        isVisible={sessionState === 'running'}
-        onCriticalLevel={() => {
-          // 當專注力過低時的回調
-          const audioManager = getAudioManager();
-          audioManager.playError();
-          if (navigator.vibrate) {
-            navigator.vibrate([300, 100, 300, 100, 300]);
-          }
-        }}
-      />
+      <PulseEffect
+        isActive={focusLevel <= 30}
+        color="#ef4444"
+        intensity={0.3}
+      >
+        <FocusBar
+          focusLevel={focusLevel}
+          isVisible={sessionState === 'running'}
+          onCriticalLevel={() => {
+            // 當專注力過低時的回調
+            const audioManager = getAudioManager();
+            audioManager.playError();
+            triggerParticleEffect('error');
+            if (navigator.vibrate) {
+              navigator.vibrate([300, 100, 300, 100, 300]);
+            }
+          }}
+        />
+      </PulseEffect>
 
       {/* 兔子洞特效 */}
       <RabbitHoleEffect
@@ -2514,6 +2589,27 @@ export default function FocusFinderPrototype() {
           // 可以在這裡觸發結算畫面
         }}
       />
+
+      {/* 特效組件 */}
+      <ParticleEffects
+        isActive={particleEffect.active}
+        type={particleEffect.type}
+        intensity={1.5}
+        position={particleEffect.position}
+      />
+
+      <BlurOverlay
+        isActive={blurOverlay}
+        intensity={6}
+        color="rgba(0, 0, 0, 0.4)"
+      />
+
+      <DetectionSuccess
+        isVisible={detectionSuccess.visible}
+        position={detectionSuccess.position}
+        objectName={detectionSuccess.objectName}
+      />
     </div>
+    </ScreenShake>
   );
 }

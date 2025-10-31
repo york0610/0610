@@ -102,7 +102,7 @@ export default function FocusBar({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50">
+    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ 

@@ -26,6 +26,7 @@ import GameIntro from '../../components/GameIntroFixed';
 import RabbitHoleEffect from '../../components/RabbitHoleEffect';
 import WorkingMemoryFailure from '../../components/WorkingMemoryFailure';
 import AudioSettings from '../../components/AudioSettings';
+import DeathAnimation from '../../components/DeathAnimation';
 
 type PermissionState = 'idle' | 'requesting' | 'granted' | 'denied';
 type SessionState = 'idle' | 'running' | 'completed' | 'failed';
@@ -815,7 +816,7 @@ const TASKS: Task[] = [
   { id: 'book', title: '找到書', hint: '桌上或書架', prompt: '將鏡頭對準任何一本書。', emoji: '📖', difficulty: 'easy' },
   { id: 'bottle', title: '找到瓶子', hint: '桌上或包包裡', prompt: '將鏡頭對準任何瓶子。', emoji: '🧪', difficulty: 'easy' },
   { id: 'chair', title: '找到椅子', hint: '你坐著的地方', prompt: '將鏡頭對準你的椅子。', emoji: '🪑', difficulty: 'easy' },
-  { id: 'desk', title: '找到桌子', hint: '你面前', prompt: '將鏡頭對準你的桌子。', emoji: '🛏️', difficulty: 'easy' },
+  { id: 'desk', title: '找到桌子', hint: '你面前', prompt: '將鏡頭對準你的桌子。', emoji: '🗃️', difficulty: 'easy' },
   { id: 'door', title: '找到門', hint: '房間的出口', prompt: '將鏡頭對準任何一扇門。', emoji: '🚪', difficulty: 'easy' },
   { id: 'window', title: '找到窗戶', hint: '房間的牆上', prompt: '將鏡頭對準任何一扇窗戶。', emoji: '🪟', difficulty: 'easy' },
 
@@ -1085,6 +1086,12 @@ export default function FocusFinderPrototype() {
   const [forgottenTask, setForgottenTask] = useState<string>('');
   const [showAudioSettings, setShowAudioSettings] = useState(false);
 
+  // 分數系統和死亡機制
+  const [playerScore, setPlayerScore] = useState(100); // 初始分數100分
+  const [showDeathAnimation, setShowDeathAnimation] = useState(false);
+  const [deathReason, setDeathReason] = useState<string>('');
+  const [taskTimeLeft, setTaskTimeLeft] = useState(TASK_TIMEOUT); // 當前任務剩餘時間
+
   // 干擾任務統計系統
   const [distractionStats, setDistractionStats] = useState({
     total: 0,
@@ -1110,6 +1117,113 @@ export default function FocusFinderPrototype() {
   }[distractionSettings.difficulty];
 
   const currentTask = randomTaskSequence[currentTaskIndex] ?? null;
+
+  // 處理任務超時
+  const handleTaskTimeout = useCallback(() => {
+    const TIMEOUT_PENALTY = 15; // 超時扣15分
+
+    console.log('[SCORE] Task timeout! Deducting points:', TIMEOUT_PENALTY);
+
+    const audioManager = getAudioManager();
+    audioManager.playError();
+
+    // 扣分
+    setPlayerScore(prev => {
+      const newScore = Math.max(0, prev - TIMEOUT_PENALTY);
+
+      // 檢查是否死亡
+      if (newScore <= 0) {
+        handlePlayerDeath('分數歸零 - 任務超時過多');
+        return 0;
+      }
+
+      return newScore;
+    });
+
+    // 觸發紅色閃爍效果
+    if (navigator.vibrate) {
+      navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+
+    // 顯示扣分提示
+    setErrorMessage(`⏰ 任務超時！扣除 ${TIMEOUT_PENALTY} 分`);
+    setTimeout(() => setErrorMessage(''), 3000);
+
+    // 繼續下一個任務（不扣專注力分數，因為已經扣了玩家分數）
+    setCurrentTaskIndex((prev) => {
+      const nextIndex = prev + 1;
+      if (nextIndex >= randomTaskSequence.length) {
+        setSessionState('completed');
+        return prev;
+      }
+      return nextIndex;
+    });
+  }, [currentTaskIndex, randomTaskSequence]);
+
+  // 處理玩家死亡
+  const handlePlayerDeath = useCallback((reason: string) => {
+    console.log('[DEATH] Player died:', reason);
+
+    const audioManager = getAudioManager();
+    audioManager.playError();
+    audioManager.playOverwhelm(); // 播放壓倒性音效
+
+    setDeathReason(reason);
+    setShowDeathAnimation(true);
+    setSessionState('failed');
+
+    // 停止所有計時器
+    if (intervalRef.current) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // 退出全螢幕
+    setIsFullscreen(false);
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+
+    // 3秒後顯示結算畫面
+    setTimeout(() => {
+      setShowDeathAnimation(false);
+      // 這裡會顯示結算畫面
+    }, 3000);
+  }, []);
+
+  // 任務計時器 - 每個任務的倒數計時
+  useEffect(() => {
+    if (sessionState !== 'running' || !currentTask) return;
+
+    const taskInterval = setInterval(() => {
+      setTaskTimeLeft(prev => {
+        const newTime = prev - 1;
+
+        // 時間警告音效
+        if (newTime === 5) {
+          const audioManager = getAudioManager();
+          audioManager.playError(); // 警告音
+        }
+
+        // 時間到了，扣分
+        if (newTime <= 0) {
+          handleTaskTimeout();
+          return TASK_TIMEOUT; // 重置為下一個任務
+        }
+
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(taskInterval);
+  }, [sessionState, currentTask, handleTaskTimeout]);
+
+  // 重置任務計時器當任務改變時
+  useEffect(() => {
+    if (currentTask) {
+      setTaskTimeLeft(TASK_TIMEOUT);
+    }
+  }, [currentTask]);
 
   // 根據干擾任務類型播放對應音效
   const playDistractionAudio = useCallback((audioManager: any, task: any) => {
@@ -1486,6 +1600,12 @@ export default function FocusFinderPrototype() {
     setLogs([{ taskId: newTaskSequence[0]?.id || TASKS[0].id, startedAt: Date.now(), completedAt: null }]);
     setShowHints(false);
     setSkippedTasks(0);
+
+    // 重置分數系統
+    setPlayerScore(100);
+    setTaskTimeLeft(TASK_TIMEOUT);
+    setShowDeathAnimation(false);
+    setDeathReason('');
     
     // 全螢幕已在 startSession 中處理，這裡只設置狀態
     setIsFullscreen(true);
@@ -2086,15 +2206,36 @@ export default function FocusFinderPrototype() {
               </div>
 
               <div className={`${isFullscreen && sessionState === 'running' ? 'absolute inset-0' : 'relative h-[70vh] min-h-[400px]'} w-full`}>
-                <div className="absolute inset-x-0 top-0 flex flex-col gap-3 p-4 text-xs font-semibold uppercase tracking-widest text-slate-200">
+                <div className="absolute inset-x-0 top-0 flex flex-col gap-3 p-4 text-xs font-semibold uppercase tracking-widest text-slate-200 z-50">
                   <div className="flex justify-between items-center">
                     <div className="flex gap-2">
                       <span className="rounded-full bg-slate-900/80 backdrop-blur px-3 py-1.5">{currentTask?.emoji} {currentTask?.title}</span>
                     </div>
                     <div className="flex gap-2">
+                      {/* 分數顯示 */}
                       <span className={`rounded-full px-3 py-1.5 backdrop-blur ${
-                        timer > GAME_TIME_LIMIT * 0.8 
-                          ? 'bg-red-900/80 text-red-200 animate-pulse' 
+                        playerScore <= 20
+                          ? 'bg-red-900/80 text-red-200 animate-pulse'
+                          : playerScore <= 50
+                          ? 'bg-yellow-900/80 text-yellow-200'
+                          : 'bg-slate-900/80'
+                      }`}>
+                        💯 {playerScore}
+                      </span>
+
+                      {/* 任務倒數計時 */}
+                      <span className={`rounded-full px-3 py-1.5 backdrop-blur ${
+                        taskTimeLeft <= 5
+                          ? 'bg-red-900/80 text-red-200 animate-pulse'
+                          : 'bg-slate-900/80'
+                      }`}>
+                        ⏳ {taskTimeLeft}s
+                      </span>
+
+                      {/* 總時間 */}
+                      <span className={`rounded-full px-3 py-1.5 backdrop-blur ${
+                        timer > GAME_TIME_LIMIT * 0.8
+                          ? 'bg-red-900/80 text-red-200 animate-pulse'
                           : 'bg-slate-900/80'
                       }`}>
                         ⏱️ {formatSeconds(Math.max(0, GAME_TIME_LIMIT - timer))}
@@ -2446,6 +2587,16 @@ export default function FocusFinderPrototype() {
       <AudioSettings
         isOpen={showAudioSettings}
         onClose={() => setShowAudioSettings(false)}
+      />
+
+      {/* 死亡動畫 */}
+      <DeathAnimation
+        isVisible={showDeathAnimation}
+        reason={deathReason}
+        onComplete={() => {
+          setShowDeathAnimation(false);
+          // 可以在這裡觸發結算畫面
+        }}
       />
     </div>
   );

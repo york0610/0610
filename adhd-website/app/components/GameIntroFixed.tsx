@@ -149,7 +149,7 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
           </p>
         </motion.div>
 
-        {/* 文字內容 */}
+        {/* 文字內容 - 修正顯示問題 */}
         <motion.div
           key={`text-${currentScene}`}
           initial={{ y: 20, opacity: 0 }}
@@ -157,8 +157,9 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
           transition={{ delay: 0.6, duration: 0.6 }}
           className="mb-8"
         >
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-4 sm:p-6 min-h-[120px] flex items-center justify-center">
-            <p className="text-base sm:text-lg text-white leading-relaxed">
+          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-4 sm:p-6 min-h-[120px] flex flex-col justify-center">
+            {/* 主要文字 */}
+            <p className="text-base sm:text-lg text-white leading-relaxed text-center mb-3">
               {displayText}
               {isTyping && (
                 <motion.span
@@ -170,6 +171,13 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
                 </motion.span>
               )}
             </p>
+
+            {/* 描述文字 */}
+            {currentSceneData.description && (
+              <p className="text-sm text-slate-300 text-center leading-relaxed">
+                {currentSceneData.description}
+              </p>
+            )}
           </div>
         </motion.div>
 

@@ -100,7 +100,10 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br ${currentSceneData.background} p-4 sm:p-8`}
-      style={{ pointerEvents: 'auto' }}
+      style={{
+        pointerEvents: 'auto',
+        backgroundColor: 'rgba(0, 0, 0, 0.95)' // 確保背景完全不透明
+      }}
     >
       {/* 背景動畫 */}
       <div className="absolute inset-0 overflow-hidden">
@@ -157,7 +160,7 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
           transition={{ delay: 0.6, duration: 0.6 }}
           className="mb-8"
         >
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-4 sm:p-6 min-h-[120px] flex flex-col justify-center">
+          <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700/80 rounded-2xl p-4 sm:p-6 min-h-[120px] flex flex-col justify-center shadow-2xl">
             {/* 主要文字 */}
             <p className="text-base sm:text-lg text-white leading-relaxed text-center mb-3">
               {displayText}

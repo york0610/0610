@@ -1072,6 +1072,7 @@ export default function FocusFinderPrototype() {
   });
   const [focusLevel, setFocusLevel] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenLocked, setFullscreenLocked] = useState(false); // 防止意外退出全螢幕
   const [taskStartTime, setTaskStartTime] = useState<number | null>(null);
   const [skippedTasks, setSkippedTasks] = useState(0);
   const [taskTimeoutRef, setTaskTimeoutRef] = useState<NodeJS.Timeout | null>(null);
@@ -1226,11 +1227,7 @@ export default function FocusFinderPrototype() {
       intervalRef.current = null;
     }
 
-    // 退出全螢幕
-    setIsFullscreen(false);
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    }
+    // 不要立即退出全螢幕，讓死亡動畫在全螢幕中播放
 
     // 3秒後顯示結算畫面
     setTimeout(() => {
@@ -1620,6 +1617,44 @@ export default function FocusFinderPrototype() {
     setShowGameIntro(true);
   }, []);
 
+  // 全螢幕事件監聽器 - 防止意外退出
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      console.log('[FULLSCREEN] Fullscreen change detected:', isCurrentlyFullscreen);
+
+      // 如果遊戲正在運行但全螢幕被意外退出，嘗試重新進入
+      if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen) {
+        console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter');
+        setTimeout(async () => {
+          try {
+            const docElement = document.documentElement as any;
+            if (docElement.requestFullscreen) {
+              await docElement.requestFullscreen();
+            }
+          } catch (error) {
+            console.warn('[FULLSCREEN] Failed to re-enter fullscreen:', error);
+          }
+        }, 100);
+      }
+
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    // 監聽全螢幕變化事件
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, [sessionState, isFullscreen]);
+
   // 跳過介紹直接開始遊戲
   const skipIntroAndStart = useCallback(() => {
     setShowGameIntro(false);
@@ -1676,10 +1711,7 @@ export default function FocusFinderPrototype() {
           window.clearInterval(intervalRef.current!);
           intervalRef.current = null;
           setSessionState('failed');
-          setIsFullscreen(false);
-          if (document.fullscreenElement) {
-            document.exitFullscreen();
-          }
+          // 不要立即退出全螢幕，讓結算畫面在全螢幕中顯示
           return GAME_TIME_LIMIT;
         }
         return newTime;
@@ -1837,10 +1869,7 @@ export default function FocusFinderPrototype() {
       const nextIndex = prev + 1;
       if (nextIndex >= randomTaskSequence.length) {
         setSessionState('completed');
-        setIsFullscreen(false);
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        }
+        // 不要立即退出全螢幕，讓結算畫面在全螢幕中顯示
         if (intervalRef.current) {
           window.clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -1923,10 +1952,7 @@ export default function FocusFinderPrototype() {
         const audioMgr = getAudioManager();
         audioMgr.playVictory(); // 添加勝利音
         setSessionState('completed');
-        setIsFullscreen(false);
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        }
+        // 不要立即退出全螢幕，讓結算畫面在全螢幕中顯示
         if (intervalRef.current) {
           window.clearInterval(intervalRef.current);
           intervalRef.current = null;

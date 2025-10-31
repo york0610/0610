@@ -296,13 +296,31 @@ export default function GameResultsScreen({
             className="flex flex-col gap-3"
           >
             <button
-              onClick={onRestart}
+              onClick={() => {
+                // 退出全螢幕後重新開始
+                if (document.fullscreenElement) {
+                  document.exitFullscreen().then(() => {
+                    setTimeout(onRestart, 100);
+                  });
+                } else {
+                  onRestart();
+                }
+              }}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
             >
               <FaRedo /> 再次挑戰
             </button>
             <button
-              onClick={onReset}
+              onClick={() => {
+                // 退出全螢幕後重設
+                if (document.fullscreenElement) {
+                  document.exitFullscreen().then(() => {
+                    setTimeout(onReset, 100);
+                  });
+                } else {
+                  onReset();
+                }
+              }}
               className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-600 px-6 py-3 text-sm font-bold text-slate-200 transition hover:border-slate-400 hover:bg-slate-800/50"
             >
               重設體驗

@@ -25,6 +25,7 @@ import FocusBar from '../../components/FocusBar';
 import GameIntro from '../../components/GameIntroFixed';
 import RabbitHoleEffect from '../../components/RabbitHoleEffect';
 import WorkingMemoryFailure from '../../components/WorkingMemoryFailure';
+import AudioSettings from '../../components/AudioSettings';
 
 type PermissionState = 'idle' | 'requesting' | 'granted' | 'denied';
 type SessionState = 'idle' | 'running' | 'completed' | 'failed';
@@ -1082,6 +1083,7 @@ export default function FocusFinderPrototype() {
   const [showRabbitHole, setShowRabbitHole] = useState(false);
   const [showWorkingMemoryFailure, setShowWorkingMemoryFailure] = useState(false);
   const [forgottenTask, setForgottenTask] = useState<string>('');
+  const [showAudioSettings, setShowAudioSettings] = useState(false);
 
   // 干擾任務統計系統
   const [distractionStats, setDistractionStats] = useState({
@@ -1108,6 +1110,77 @@ export default function FocusFinderPrototype() {
   }[distractionSettings.difficulty];
 
   const currentTask = randomTaskSequence[currentTaskIndex] ?? null;
+
+  // 根據干擾任務類型播放對應音效
+  const playDistractionAudio = useCallback((audioManager: any, task: any) => {
+    // 根據任務標題和類型選擇合適的音效
+    const title = task.title.toLowerCase();
+
+    if (title.includes('手機') || title.includes('phone')) {
+      audioManager.playPhoneBuzz();
+    } else if (title.includes('email') || title.includes('郵件')) {
+      audioManager.playEmailPing();
+    } else if (title.includes('社交媒體') || title.includes('instagram') || title.includes('line') || title.includes('tiktok') || title.includes('youtube')) {
+      audioManager.playSocialMedia();
+    } else if (title.includes('鍵盤') || title.includes('keyboard')) {
+      audioManager.playKeyboardTyping();
+    } else if (title.includes('滑鼠') || title.includes('mouse')) {
+      audioManager.playMouseClick();
+    } else if (title.includes('門') || title.includes('door')) {
+      audioManager.playDoorSlam();
+    } else if (title.includes('施工') || title.includes('construction')) {
+      audioManager.playConstruction();
+    } else if (title.includes('交通') || title.includes('traffic')) {
+      audioManager.playTraffic();
+    } else if (title.includes('對話') || title.includes('conversation') || title.includes('朋友')) {
+      audioManager.playConversation();
+    } else if (title.includes('電視') || title.includes('tv') || title.includes('netflix')) {
+      audioManager.playTvSound();
+    } else if (title.includes('肚子') || title.includes('飢餓') || title.includes('stomach')) {
+      audioManager.playStomachGrowl();
+    } else if (title.includes('打哈欠') || title.includes('yawn')) {
+      audioManager.playYawn();
+    } else if (title.includes('打噴嚏') || title.includes('sneeze')) {
+      audioManager.playSneeze();
+    } else if (title.includes('咳嗽') || title.includes('cough')) {
+      audioManager.playCough();
+    } else if (title.includes('心跳') || title.includes('heartbeat')) {
+      audioManager.playHeartbeat();
+    } else if (title.includes('焦慮') || title.includes('anxiety')) {
+      audioManager.playAnxietyPulse();
+    } else if (title.includes('記憶') || title.includes('memory') || title.includes('忘記')) {
+      audioManager.playMemoryGlitch();
+    } else if (title.includes('過度專注') || title.includes('hyperfocus')) {
+      audioManager.playHyperfocus();
+    } else if (title.includes('腦霧') || title.includes('brain fog')) {
+      audioManager.playBrainFog();
+    } else if (title.includes('壓倒') || title.includes('overwhelm')) {
+      audioManager.playOverwhelm();
+    } else {
+      // 根據干擾類型選擇預設音效
+      switch (task.type) {
+        case 'environment':
+          audioManager.playConstruction();
+          break;
+        case 'biological':
+          audioManager.playHeartbeat();
+          break;
+        case 'psychological':
+          audioManager.playAnxietyPulse();
+          break;
+        case 'social':
+          audioManager.playSocialMedia();
+          break;
+        default:
+          audioManager.playNotification();
+      }
+    }
+
+    // 添加基礎干擾任務音作為背景
+    setTimeout(() => {
+      audioManager.playDistractionTask();
+    }, 200);
+  }, []);
 
   const { activeDistractions } = useDistractions(
     sessionState === 'running' && distractionSettings.enabled && !isDistractedTaskActive,
@@ -1218,10 +1291,12 @@ export default function FocusFinderPrototype() {
       // 檢查是否是特殊任務
       if (interruptionTask.special === 'rabbit-hole') {
         console.log('[DEBUG] Triggering rabbit hole effect');
+        audioManager.playRabbitHoleEnter();
         setShowRabbitHole(true);
         return;
       } else if (interruptionTask.special === 'memory-failure') {
         console.log('[DEBUG] Triggering working memory failure');
+        audioManager.playWorkingMemoryFail();
         setForgottenTask(currentTask?.title || '未知任務');
         setShowWorkingMemoryFailure(true);
         return;
@@ -1249,9 +1324,10 @@ export default function FocusFinderPrototype() {
       
       // 降低專注力
       setFocusLevel(prev => Math.max(0, prev - 20));
-      audioManager.playNotification();
-      audioManager.playDistractionTask(); // 添加干擾任務音
-      
+
+      // 根據干擾任務類型播放對應音效
+      playDistractionAudio(audioManager, interruptionTask);
+
       // 觸發震動效果
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200, 100, 200]); // 多次震動
@@ -1517,6 +1593,7 @@ export default function FocusFinderPrototype() {
   const escapeRabbitHole = useCallback(() => {
     console.log('[DEBUG] Escaping rabbit hole');
     const audioManager = getAudioManager();
+    audioManager.playRabbitHoleEscape();
     audioManager.playSuccess();
 
     setShowRabbitHole(false);
@@ -1542,6 +1619,7 @@ export default function FocusFinderPrototype() {
   const recoverWorkingMemory = useCallback(() => {
     console.log('[DEBUG] Recovering working memory');
     const audioManager = getAudioManager();
+    audioManager.playWorkingMemoryRecover();
     audioManager.playSuccess();
 
     setShowWorkingMemoryFailure(false);
@@ -1988,6 +2066,16 @@ export default function FocusFinderPrototype() {
                         <FaPlay className="text-lg sm:text-2xl" />
                         開始遊戲
                       </button>
+
+                      {/* 音效設定按鈕 */}
+                      <button
+                        onClick={() => setShowAudioSettings(true)}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 px-4 py-2 text-sm font-medium text-slate-300 hover:text-slate-100 transition-all mx-auto"
+                      >
+                        <FaVolumeUp className="text-sm" />
+                        音效設定
+                      </button>
+
                       <p className="text-xs text-slate-500 text-center">
                         ⏱️ 時間限制：{GAME_TIME_LIMIT} 秒完成所有任務 | 每個任務 {TASK_TIMEOUT} 秒
                       </p>
@@ -2352,6 +2440,12 @@ export default function FocusFinderPrototype() {
       <ModalDistraction
         isVisible={activeModal}
         onDismiss={dismissDistraction}
+      />
+
+      {/* 音效設定組件 */}
+      <AudioSettings
+        isOpen={showAudioSettings}
+        onClose={() => setShowAudioSettings(false)}
       />
     </div>
   );

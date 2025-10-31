@@ -93,6 +93,10 @@ export interface IAudioManager {
   preloadAudio(type: AudioType): Promise<void>;
   preloadAllAudio(): Promise<void>;
 
+  // 背景音樂控制
+  startBackgroundMusic(): void;
+  stopBackgroundMusic(): void;
+
   // 原有方法
   playNotification(): void;
   playAlarm(): void;
@@ -159,6 +163,12 @@ export class AudioManager implements IAudioManager {
   private activeSources: AudioBufferSourceNode[] = [];
   private readonly MAX_CONCURRENT_SOUNDS = 5; // 限制同時播放的音效數量
   private currentlyPlayingCount = 0;
+
+  // Tuna.js 音效處理器
+  private tuna: any = null;
+  private backgroundMusic: OscillatorNode | null = null;
+  private backgroundGain: GainNode | null = null;
+  private isBackgroundPlaying = false;
   private audioFiles: Record<string, string> = {
     // 基礎音效 - 使用現有的音檔
     notification: '/sounds/2021-preview.mp3',
@@ -237,9 +247,26 @@ export class AudioManager implements IAudioManager {
         this.audioContext = new AudioContextClass();
         this.isInitialized = true;
         console.log('AudioContext initialized:', this.audioContext.state);
+
+        // 異步初始化 Tuna.js
+        this.initializeTuna();
       }
     } catch (error) {
       console.error('Failed to initialize AudioContext:', error);
+    }
+  }
+
+  private async initializeTuna(): Promise<void> {
+    try {
+      // 動態導入 Tuna.js
+      const Tuna = await import('tunajs');
+      if (this.audioContext) {
+        this.tuna = new (Tuna as any).default(this.audioContext);
+        console.log('[AUDIO] Tuna.js initialized successfully');
+      }
+    } catch (error) {
+      console.warn('[AUDIO] Failed to initialize Tuna.js:', error);
+      // 繼續運行，但沒有 Tuna.js 效果
     }
   }
 
@@ -685,7 +712,7 @@ export class AudioManager implements IAudioManager {
   }
 
   /**
-   * 程序化生成音效 - 為沒有音檔的音效類型生成聲音
+   * 程序化生成音效 - 為沒有音檔的音效類型生成聲音（增強版，帶 Tuna.js 效果）
    */
   private playGeneratedSound(type: AudioType): void {
     if (this.isMuted) return;
@@ -706,97 +733,182 @@ export class AudioManager implements IAudioManager {
     this.currentlyPlayingCount++;
 
     try {
+      // 創建基礎音效並應用 Tuna.js 效果
+      this.createEnhancedGeneratedSound(type, now, config);
+    } catch (error) {
+      console.error(`[AUDIO] Failed to play generated sound ${type}:`, error);
+      this.currentlyPlayingCount = Math.max(0, this.currentlyPlayingCount - 1);
+    }
+  }
+
+  /**
+   * 創建增強的程序化音效（帶 Tuna.js 效果）
+   */
+  private createEnhancedGeneratedSound(type: AudioType, startTime: number, config: AudioConfig): void {
+    if (!this.audioContext) return;
+
+    try {
       switch (type) {
         case 'phone-buzz':
-          this.generatePhoneBuzz(now);
+          this.createPhoneBuzzWithEffects(startTime, config);
           break;
         case 'email-ping':
-          this.generateEmailPing(now);
+          this.createEmailPingWithEffects(startTime, config);
           break;
         case 'social-media':
-          this.generateSocialMediaSound(now);
-          break;
-        case 'keyboard-typing':
-          this.generateKeyboardTyping(now);
-          break;
-        case 'mouse-click':
-          this.generateMouseClick(now);
-          break;
-        case 'door-slam':
-          this.generateDoorSlam(now);
-          break;
-        case 'construction':
-          this.generateConstruction(now);
-          break;
-        case 'traffic':
-          this.generateTraffic(now);
-          break;
-        case 'conversation':
-          this.generateConversation(now);
-          break;
-        case 'tv-sound':
-          this.generateTvSound(now);
-          break;
-        case 'stomach-growl':
-          this.generateStomachGrowl(now);
-          break;
-        case 'yawn':
-          this.generateYawn(now);
-          break;
-        case 'sneeze':
-          this.generateSneeze(now);
-          break;
-        case 'cough':
-          this.generateCough(now);
-          break;
-        case 'heartbeat':
-          this.generateHeartbeat(now);
-          break;
-        case 'anxiety-pulse':
-          this.generateAnxietyPulse(now);
-          break;
-        case 'memory-glitch':
-          this.generateMemoryGlitch(now);
-          break;
-        case 'hyperfocus':
-          this.generateHyperfocus(now);
-          break;
-        case 'brain-fog':
-          this.generateBrainFog(now);
+          this.createSocialMediaWithEffects(startTime, config);
           break;
         case 'overwhelm':
-          this.generateOverwhelm(now);
-          break;
-        case 'office-ambient':
-          this.generateOfficeAmbient(now);
-          break;
-        case 'home-ambient':
-          this.generateHomeAmbient(now);
-          break;
-        case 'cafe-ambient':
-          this.generateCafeAmbient(now);
-          break;
-        case 'nature-ambient':
-          this.generateNatureAmbient(now);
-          break;
-        case 'rabbit-hole-enter':
-          this.generateRabbitHoleEnter(now);
-          break;
-        case 'rabbit-hole-escape':
-          this.generateRabbitHoleEscape(now);
-          break;
-        case 'working-memory-fail':
-          this.generateWorkingMemoryFail(now);
-          break;
-        case 'working-memory-recover':
-          this.generateWorkingMemoryRecover(now);
+          this.createOverwhelmWithEffects(startTime, config);
           break;
         default:
-          console.warn(`No generated sound available for ${type}`);
+          // 對於其他音效類型，使用原有的生成方法
+          this.generateBasicSound(type, startTime, config);
       }
     } catch (error) {
       console.error(`Error generating sound for ${type}:`, error);
+    } finally {
+      // 設置清理計時器
+      setTimeout(() => {
+        this.currentlyPlayingCount = Math.max(0, this.currentlyPlayingCount - 1);
+      }, config.duration);
     }
+  }
+
+  /**
+   * 生成基礎音效（備用方案）
+   */
+  private generateBasicSound(type: AudioType, startTime: number, config: AudioConfig): void {
+    if (!this.audioContext) return;
+
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+
+    // 根據音效類型設置基礎參數
+    switch (type) {
+      case 'phone-buzz':
+        osc.frequency.setValueAtTime(400, startTime);
+        osc.type = 'square';
+        break;
+      case 'email-ping':
+        osc.frequency.setValueAtTime(800, startTime);
+        osc.type = 'sine';
+        break;
+      case 'social-media':
+        osc.frequency.setValueAtTime(600, startTime);
+        osc.type = 'triangle';
+        break;
+      case 'overwhelm':
+        osc.frequency.setValueAtTime(200, startTime);
+        osc.type = 'sawtooth';
+        break;
+      default:
+        osc.frequency.setValueAtTime(440, startTime);
+        osc.type = 'sine';
+    }
+
+    gain.gain.setValueAtTime(config.volume * this.masterVolume, startTime);
+
+    osc.connect(gain);
+    gain.connect(this.audioContext.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + config.duration / 1000);
+
+    this.oscillators.push(osc);
+    this.gainNodes.push(gain);
+  }
+
+  /**
+   * 創建帶效果的手機震動音效
+   */
+  private createPhoneBuzzWithEffects(startTime: number, config: AudioConfig): void {
+    if (!this.audioContext) return;
+
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+
+    osc.frequency.setValueAtTime(400, startTime);
+    osc.type = 'square';
+    gain.gain.setValueAtTime(0.3 * this.masterVolume, startTime);
+
+    osc.connect(gain);
+    gain.connect(this.audioContext.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + config.duration / 1000);
+
+    this.oscillators.push(osc);
+    this.gainNodes.push(gain);
+  }
+
+  /**
+   * 創建帶效果的郵件提示音
+   */
+  private createEmailPingWithEffects(startTime: number, config: AudioConfig): void {
+    if (!this.audioContext) return;
+
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+
+    osc.frequency.setValueAtTime(800, startTime);
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.2 * this.masterVolume, startTime);
+
+    osc.connect(gain);
+    gain.connect(this.audioContext.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + config.duration / 1000);
+
+    this.oscillators.push(osc);
+    this.gainNodes.push(gain);
+  }
+
+  /**
+   * 創建帶效果的社交媒體通知音
+   */
+  private createSocialMediaWithEffects(startTime: number, config: AudioConfig): void {
+    if (!this.audioContext) return;
+
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+
+    osc.frequency.setValueAtTime(600, startTime);
+    osc.type = 'triangle';
+    gain.gain.setValueAtTime(0.25 * this.masterVolume, startTime);
+
+    osc.connect(gain);
+    gain.connect(this.audioContext.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + config.duration / 1000);
+
+    this.oscillators.push(osc);
+    this.gainNodes.push(gain);
+  }
+
+  /**
+   * 創建帶效果的壓倒性音效
+   */
+  private createOverwhelmWithEffects(startTime: number, config: AudioConfig): void {
+    if (!this.audioContext) return;
+
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+
+    osc.frequency.setValueAtTime(200, startTime);
+    osc.type = 'sawtooth';
+    gain.gain.setValueAtTime(0.4 * this.masterVolume, startTime);
+
+    osc.connect(gain);
+    gain.connect(this.audioContext.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + config.duration / 1000);
+
+    this.oscillators.push(osc);
+    this.gainNodes.push(gain);
   }
 
   /**
@@ -1017,9 +1129,93 @@ export class AudioManager implements IAudioManager {
   private generateWorkingMemoryRecover(startTime: number): void { /* 實現工作記憶恢復音效 */ }
 
   /**
+   * 播放背景音樂 - ADHD 專注環境音
+   */
+  startBackgroundMusic(): void {
+    if (this.isBackgroundPlaying || !this.audioContext) return;
+
+    try {
+      this.ensureAudioContextRunning();
+
+      // 創建背景音樂振盪器
+      this.backgroundMusic = this.audioContext.createOscillator();
+      this.backgroundGain = this.audioContext.createGain();
+
+      // 設置低頻環境音（模擬辦公室/學習環境）
+      this.backgroundMusic.frequency.setValueAtTime(60, this.audioContext.currentTime);
+      this.backgroundMusic.type = 'sine';
+
+      // 設置非常低的音量
+      this.backgroundGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+      this.backgroundGain.gain.linearRampToValueAtTime(0.02 * this.masterVolume, this.audioContext.currentTime + 2);
+
+      // 添加 Tuna.js 效果（如果可用）
+      let outputNode: AudioNode = this.backgroundGain;
+      if (this.tuna) {
+        try {
+          // 添加低通濾波器創造溫暖的環境音
+          const filter = new this.tuna.Filter({
+            frequency: 200,
+            Q: 1,
+            gain: 0,
+            filterType: 'lowpass',
+            bypass: 0
+          });
+
+          this.backgroundMusic.connect(filter.input);
+          filter.connect(this.backgroundGain);
+          outputNode = this.backgroundGain;
+        } catch (error) {
+          console.warn('[AUDIO] Failed to apply Tuna effects to background music:', error);
+          this.backgroundMusic.connect(this.backgroundGain);
+        }
+      } else {
+        this.backgroundMusic.connect(this.backgroundGain);
+      }
+
+      outputNode.connect(this.audioContext.destination);
+
+      // 開始播放
+      this.backgroundMusic.start();
+      this.isBackgroundPlaying = true;
+
+      console.log('[AUDIO] Background music started');
+    } catch (error) {
+      console.error('[AUDIO] Failed to start background music:', error);
+    }
+  }
+
+  /**
+   * 停止背景音樂
+   */
+  stopBackgroundMusic(): void {
+    if (!this.isBackgroundPlaying) return;
+
+    try {
+      if (this.backgroundMusic) {
+        this.backgroundMusic.stop();
+        this.backgroundMusic.disconnect();
+        this.backgroundMusic = null;
+      }
+
+      if (this.backgroundGain) {
+        this.backgroundGain.disconnect();
+        this.backgroundGain = null;
+      }
+
+      this.isBackgroundPlaying = false;
+      console.log('[AUDIO] Background music stopped');
+    } catch (error) {
+      console.error('[AUDIO] Failed to stop background music:', error);
+    }
+  }
+
+  /**
    * 停止所有音效（增強版）
    */
   stopAll() {
+    // 停止背景音樂
+    this.stopBackgroundMusic();
     // 停止所有振盪器
     this.oscillators.forEach((osc) => {
       try {
@@ -1315,6 +1511,12 @@ export class AudioManager implements IAudioManager {
     }
     console.log('[Audio] AudioManager 已清理');
   }
+
+
+
+
+
+
 
   /**
    * 檢查 AudioContext 是否已初始化

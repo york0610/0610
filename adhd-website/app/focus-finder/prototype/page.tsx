@@ -1675,6 +1675,9 @@ export default function FocusFinderPrototype() {
     console.log('[DEBUG] streamRef.current?.active:', streamRef.current?.active);
     const audioManager = getAudioManager();
     audioManager.playFocus();
+
+    // 開始背景音樂
+    audioManager.startBackgroundMusic();
     
     // 生成隨機任務序列
     const newTaskSequence = getRandomTaskSequence();

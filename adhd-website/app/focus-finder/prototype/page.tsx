@@ -715,6 +715,133 @@ const INTERRUPTION_TASKS: InterruptionTask[] = [
     cost: 3.5,
     emoji: '💌'
   },
+
+  // 新增：更多社交媒體干擾任務
+  {
+    type: 'social' as DistractionType,
+    title: '📸 Instagram 限時動態',
+    description: '你想要發個限時動態分享現在的心情，只需要幾秒鐘...',
+    objectToFind: 'rabbit-hole',
+    cost: 4,
+    emoji: '📸',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '🎮 朋友在線上遊戲',
+    description: '你看到朋友在玩遊戲，想要加入他們一起玩',
+    objectToFind: 'rabbit-hole',
+    cost: 7,
+    emoji: '🎮',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '📱 Threads 新貼文',
+    description: '你想要看看 Threads 上有什麼新的討論話題',
+    objectToFind: 'rabbit-hole',
+    cost: 4.5,
+    emoji: '📱',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '💭 想要發文抱怨',
+    description: '你對某件事感到不滿，想要在社交媒體上發文抱怨',
+    objectToFind: 'rabbit-hole',
+    cost: 5,
+    emoji: '💭',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '🔍 Google 搜尋兔子洞',
+    description: '你想要快速搜尋一個問題，結果越搜越深...',
+    objectToFind: 'rabbit-hole',
+    cost: 6,
+    emoji: '🔍',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '📺 YouTube Shorts',
+    description: '你想要看一個短影片放鬆一下，結果停不下來...',
+    objectToFind: 'rabbit-hole',
+    cost: 6.5,
+    emoji: '📺',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '💬 WhatsApp 群組',
+    description: '家人群組有新訊息，你想要看看是什麼重要事情',
+    objectToFind: 'cell phone',
+    cost: 3,
+    emoji: '💬'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '🎵 Spotify 新歌單',
+    description: '你想要聽聽 Spotify 推薦的新歌單，音樂能幫助專注...',
+    objectToFind: 'rabbit-hole',
+    cost: 4,
+    emoji: '🎵',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '📧 工作 Email 焦慮',
+    description: '你擔心錯過重要的工作郵件，想要再檢查一次信箱',
+    objectToFind: 'laptop',
+    cost: 4,
+    emoji: '📧'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '🛍️ 網購比價',
+    description: '你想起要買的東西，決定快速比較一下價格...',
+    objectToFind: 'rabbit-hole',
+    cost: 5.5,
+    emoji: '🛍️',
+    special: 'rabbit-hole'
+  },
+
+  // 新增：特殊認知干擾任務
+  {
+    type: 'psychological' as DistractionType,
+    title: '🧠 多工處理誘惑',
+    description: '你覺得可以同時做好幾件事，想要開始多工處理',
+    objectToFind: 'laptop',
+    cost: 4,
+    emoji: '🧠',
+    special: 'memory-failure'
+  },
+  {
+    type: 'psychological' as DistractionType,
+    title: '⚡ 衝動決定',
+    description: '你突然有個「絕佳」的想法，想要立刻行動',
+    objectToFind: 'cell phone',
+    cost: 3.5,
+    emoji: '⚡'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '📱 手機成癮檢查',
+    description: '你無意識地想要拿起手機，即使沒有通知',
+    objectToFind: 'cell phone',
+    cost: 2.5,
+    emoji: '📱'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '🎬 Netflix 自動播放',
+    description: '你想要「背景播放」一部劇來幫助專注，但...',
+    objectToFind: 'rabbit-hole',
+    cost: 7,
+    emoji: '🎬',
+    special: 'rabbit-hole'
+  },
+
   {
     type: 'psychological' as DistractionType,
     title: '🎲 想要嘗試新方法',
@@ -758,37 +885,37 @@ const GAME_STORY = `
 你能在時間內完成多少任務呢？
 `;
 
-// 遊戲故事章節 - 每個章節有不同的背景故事和任務
+// 遊戲故事章節 - 每個章節有不同的背景故事和任務 (增加到8個任務)
 const STORY_CHAPTERS = [
   {
     title: '早晨的掙扎',
     description: '你剛起床，腦子還很混亂。ADHD 讓你的早晨特別困難，你需要找到基本用品來開始新的一天。',
-    tasks: ['cup', 'book', 'bottle', 'keys', 'cell phone'],
-    narrative: '早上 7:30 AM - 鬧鐘響了，但你的大腦還沒完全清醒。你需要找到水杯喝水、書籍確認今天的計劃、瓶子裝水、鑰匙和手機。每一樣東西都像在跟你捉迷藏。'
+    tasks: ['cup', 'book', 'bottle', 'keys', 'cell phone', 'chair', 'door', 'window'],
+    narrative: '早上 7:30 AM - 鬧鐘響了，但你的大腦還沒完全清醒。你需要找到水杯喝水、書籍確認今天的計劃、瓶子裝水、鑰匙和手機、坐好椅子、確認門鎖、看看窗外的天氣。每一樣東西都像在跟你捉迷藏。'
   },
   {
     title: '通勤的焦慮',
     description: '準備出門上班，但你總是忘記東西。ADHD 讓簡單的準備工作變得複雜。',
-    tasks: ['keys', 'door', 'apple', 'bottle'],
-    narrative: '早上 8:15 AM - 你需要出門了，但又開始擔心忘記什麼。找到鑰匙、確認門鎖、拿個蘋果當早餐、帶上水瓶。每次出門都是一場戰鬥。'
+    tasks: ['keys', 'door', 'apple', 'bottle', 'backpack', 'umbrella', 'clock', 'mirror'],
+    narrative: '早上 8:15 AM - 你需要出門了，但又開始擔心忘記什麼。找到鑰匙、確認門鎖、拿個蘋果當早餐、帶上水瓶、背包、雨傘、看看時間、照照鏡子確認儀容。每次出門都是一場戰鬥。'
   },
   {
     title: '工作前的準備',
     description: '到了辦公室，你需要設置工作環境。但周圍的聲音和動靜讓你很難專心。',
-    tasks: ['laptop', 'keyboard', 'monitor', 'chair', 'desk'],
-    narrative: '上午 9:00 AM - 工作開始了。你需要打開電腦、連接鍵盤、調整螢幕、坐好椅子、整理桌子。同事們的談話聲讓你分心。'
+    tasks: ['laptop', 'keyboard', 'monitor', 'chair', 'desk', 'mouse', 'cup', 'book'],
+    narrative: '上午 9:00 AM - 工作開始了。你需要打開電腦、連接鍵盤、調整螢幕、坐好椅子、整理桌子、設定滑鼠、倒杯咖啡、拿出參考書籍。同事們的談話聲讓你分心。'
   },
   {
     title: '午餐前的衝刺',
     description: '上午的工作讓你精疲力盡，但還有任務要完成。你的專注力開始下降。',
-    tasks: ['mouse', 'book', 'cup', 'clock'],
-    narrative: '上午 11:30 AM - 你需要完成一些任務才能去吃午餐。找到滑鼠、查看參考書籍、喝點水、看看時間。但你的大腦已經開始渴望休息。'
+    tasks: ['mouse', 'book', 'cup', 'clock', 'cell phone', 'bottle', 'monitor', 'keyboard'],
+    narrative: '上午 11:30 AM - 你需要完成一些任務才能去吃午餐。找到滑鼠、查看參考書籍、喝點水、看看時間、檢查手機、補充水分、調整螢幕、使用鍵盤。但你的大腦已經開始渴望休息。'
   },
   {
     title: '下午的低潮',
     description: '午餐後的時段是 ADHD 患者最困難的時候。你感到疲勞和沮喪，專注力急劇下降。',
-    tasks: ['bottle', 'chair', 'window', 'sky'],
-    narrative: '下午 2:00 PM - 午餐後的低谷時段。你需要喝水保持清醒、調整椅子、看看窗外、望望天空來舒緩心情。這是一天中最艱難的時刻。'
+    tasks: ['bottle', 'chair', 'window', 'sky', 'cup', 'door', 'clock', 'apple'],
+    narrative: '下午 2:00 PM - 午餐後的低谷時段。你需要喝水保持清醒、調整椅子、看看窗外、望望天空來舒緩心情、再喝杯咖啡、確認門是否關好、看看時間、吃個蘋果補充能量。這是一天中最艱難的時刻。'
   },
   {
     title: '傍晚的掙扎',
@@ -851,7 +978,7 @@ const formatSeconds = (value: number) => {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-// 隨機選擇任務序列 - 更長的遊戲體驗
+// 隨機選擇任務序列 - 8個任務的遊戲體驗
 const getRandomTaskSequence = (): Task[] => {
   // 隨機選擇一個故事章節
   const randomChapter = STORY_CHAPTERS[Math.floor(Math.random() * STORY_CHAPTERS.length)];
@@ -861,16 +988,17 @@ const getRandomTaskSequence = (): Task[] => {
     .map(taskId => TASKS.find(t => t.id === taskId))
     .filter((task): task is Task => task !== undefined);
 
-  // 現在故事章節已經有 4-5 個任務，不需要補充
-  // 但如果任務不足，補充隨機任務
-  while (selectedTasks.length < 4) {
+  // 現在故事章節已經有 8 個任務，直接返回
+  // 如果任務不足8個，補充隨機任務
+  while (selectedTasks.length < 8) {
     const randomTask = TASKS[Math.floor(Math.random() * TASKS.length)];
     if (!selectedTasks.find(t => t.id === randomTask.id)) {
       selectedTasks.push(randomTask);
     }
   }
 
-  return selectedTasks;
+  // 確保只返回8個任務
+  return selectedTasks.slice(0, 8);
 };
 
 // 獲取當前故事章節

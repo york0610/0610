@@ -230,13 +230,13 @@ export default function FocusFinderPage() {
             >
               歡迎來到 <span className="font-bold text-cyan-400">Focus Finder</span> - 一個讓你親身體驗 ADHD 認知挑戰的互動遊戲。
               <br /><br />
-              <span className="font-bold text-yellow-300">🎯 你的任務很簡單</span>：在 60 秒內使用手機鏡頭找到 5 個環境物件 - 地板、天花板、牆壁、門和窗戶。
+              <span className="font-bold text-yellow-300">🎯 你的任務看似簡單</span>：在 90 秒內使用手機鏡頭找到 8 個日常物件 - 杯子、書本、椅子、門、窗戶等生活用品。
               <br /><br />
-              <span className="font-bold text-red-400">⚡ 但現實很複雜</span>：你會不斷被突發的干擾任務打斷 - 電腦沒關、手機響了、口好渴、想上廁所...
+              <span className="font-bold text-red-400">⚡ 但現實很複雜</span>：你會不斷被突發的干擾任務打斷 - 社交媒體通知、電腦沒關、手機響了、口好渴、想上廁所...
               <br /><br />
               <span className="font-bold text-orange-300">🧠 這就是 ADHD 大腦的日常</span>：每個干擾都必須先處理，才能回到原本的任務。你會體驗到工作記憶的負荷、注意力的分散，以及執行功能的挑戰。
               <br /><br />
-              <span className="text-lg font-semibold text-emerald-300">這不只是遊戲，這是一場 60 秒的同理心之旅。</span>
+              <span className="text-lg font-semibold text-emerald-300">這不只是遊戲，這是一場 90 秒的同理心之旅。</span>
             </motion.p>
 
             {/* 核心數據 */}
@@ -256,7 +256,7 @@ export default function FocusFinderPage() {
               <div className="rounded-2xl border border-orange-800/30 bg-orange-900/20 p-6 backdrop-blur-sm">
                 <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-400">
                   <FaBrain />
-                  <span>60+</span>
+                  <span>80+</span>
                 </div>
                 <p className="mt-2 text-sm text-slate-400">真實干擾場景</p>
               </div>
@@ -324,7 +324,7 @@ export default function FocusFinderPage() {
               <div className="text-5xl mb-4 text-center">🧠</div>
               <h3 className="text-xl font-bold text-orange-400 mb-4 text-center">科學化干擾系統</h3>
               <p className="text-slate-300 text-sm leading-relaxed">
-                60+ 種真實干擾場景，涵蓋環境噪音、生理需求、心理壓力、社交打擾四大類型，精準模擬 ADHD 認知挑戰。
+                80+ 種真實干擾場景，包含社交媒體成癮、兔子洞效應、工作記憶失敗等特殊認知挑戰，涵蓋環境、生理、心理、社交四大維度。
               </p>
             </div>
             <div className="rounded-2xl border border-purple-500/30 bg-purple-900/20 p-8 backdrop-blur-sm">
@@ -406,7 +406,7 @@ export default function FocusFinderPage() {
               <p className="leading-relaxed">
                 <span className="font-semibold text-amber-200">科學化模擬設計：</span>
                 基於神經科學研究，精確模擬 ADHD 的執行功能障礙、工作記憶限制、注意力調節困難。
-                60+ 種干擾場景涵蓋環境、生理、心理、社交四大維度，真實還原 ADHD 認知負荷。
+                80+ 種干擾場景包含社交媒體成癮、兔子洞效應等現代挑戰，涵蓋環境、生理、心理、社交四大維度。
               </p>
               <p className="leading-relaxed">
                 <span className="font-semibold text-amber-200">技術創新突破：</span>

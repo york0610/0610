@@ -60,39 +60,17 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
     }
   }, [isVisible]);
 
-  // 處理打字機效果
+  // 直接顯示完整文字，移除有問題的打字機效果
   useEffect(() => {
     if (!isVisible) return;
 
     console.log('[GameIntro] Starting scene:', currentScene, currentSceneData.title);
 
-    setDisplayText('');
-    setIsTyping(true);
+    // 直接設置完整文字，不使用打字機效果
+    setDisplayText(currentSceneData.text);
+    setIsTyping(false);
 
-    const text = currentSceneData.text;
-    let index = 0;
-    let isCancelled = false;
-
-    const typeInterval = setInterval(() => {
-      if (isCancelled) {
-        clearInterval(typeInterval);
-        return;
-      }
-
-      if (index < text.length) {
-        setDisplayText(text.slice(0, index + 1));
-        index++;
-      } else {
-        setIsTyping(false);
-        clearInterval(typeInterval);
-        console.log('[GameIntro] Typing completed for scene:', currentScene);
-      }
-    }, 80); // 稍微慢一點確保穩定
-
-    return () => {
-      isCancelled = true;
-      clearInterval(typeInterval);
-    };
+    console.log('[GameIntro] Scene text set immediately:', currentScene);
   }, [currentScene, isVisible, currentSceneData]);
 
   const handleNextScene = () => {
@@ -225,11 +203,10 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
           ) : (
             <button
               onClick={handleNextScene}
-              disabled={isTyping}
-              className="inline-flex items-center justify-center gap-2 bg-slate-700/50 backdrop-blur-sm text-white px-4 py-2 rounded-full font-medium text-sm hover:bg-slate-600/50 transition-colors border border-slate-600/50 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 bg-blue-600/80 backdrop-blur-sm text-white px-6 py-3 rounded-full font-medium text-base hover:bg-blue-500/80 transition-colors border border-blue-500/50 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <FaForward className="text-xs" />
-              {isTyping ? '打字中...' : '下一步'}
+              <FaForward className="text-sm" />
+              下一步
             </button>
           )}
 
@@ -244,7 +221,7 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
 
         {/* Debug 信息 */}
         <div className="mt-4 text-xs text-slate-500">
-          場景 {currentScene + 1} / {scenes.length} | {isTyping ? '打字中' : '完成'}
+          場景 {currentScene + 1} / {scenes.length} | 完成
         </div>
       </div>
     </motion.div>

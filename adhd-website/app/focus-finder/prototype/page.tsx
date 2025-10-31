@@ -219,6 +219,44 @@ const INTERRUPTION_TASKS: InterruptionTask[] = [
     cost: 2,
     emoji: '👥'
   },
+
+  // 更多社交媒體和數位干擾任務
+  {
+    type: 'social' as DistractionType,
+    title: '📱 Instagram 通知',
+    description: '你的手機響了，可能是 Instagram 的通知。你忍不住想要查看...',
+    objectToFind: 'rabbit-hole',
+    cost: 5,
+    emoji: '📱',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '💬 LINE 訊息來了',
+    description: '朋友傳了訊息給你，你想要立刻回覆...',
+    objectToFind: 'rabbit-hole',
+    cost: 4,
+    emoji: '💬',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '🎵 TikTok 短影片',
+    description: '你突然想起昨天看到的有趣短影片，想要再看一遍...',
+    objectToFind: 'rabbit-hole',
+    cost: 6,
+    emoji: '🎵',
+    special: 'rabbit-hole'
+  },
+  {
+    type: 'social' as DistractionType,
+    title: '📺 YouTube 推薦',
+    description: '你想起 YouTube 可能有新的推薦影片，只是看一下而已...',
+    objectToFind: 'rabbit-hole',
+    cost: 5,
+    emoji: '📺',
+    special: 'rabbit-hole'
+  },
   {
     type: 'biological' as DistractionType,
     title: '😴 突然很疲勞',
@@ -705,7 +743,18 @@ export default function FocusFinderPrototype() {
           cost: 5,
         };
       } else {
-        interruptionTask = INTERRUPTION_TASKS[Math.floor(Math.random() * INTERRUPTION_TASKS.length)];
+        // 增加特殊任務（社交媒體兔子洞和工作記憶失敗）的觸發機率
+        const specialTasks = INTERRUPTION_TASKS.filter(task => task.special);
+        const normalTasks = INTERRUPTION_TASKS.filter(task => !task.special);
+
+        // 40% 機率觸發特殊任務，60% 機率觸發普通任務
+        if (Math.random() < 0.4 && specialTasks.length > 0) {
+          interruptionTask = specialTasks[Math.floor(Math.random() * specialTasks.length)];
+          console.log('[DEBUG] Selected special task:', interruptionTask.title);
+        } else {
+          interruptionTask = normalTasks[Math.floor(Math.random() * normalTasks.length)];
+          console.log('[DEBUG] Selected normal task:', interruptionTask.title);
+        }
       }
 
       // 檢查是否是特殊任務
@@ -917,26 +966,8 @@ export default function FocusFinderPrototype() {
     setShowHints(false);
     setSkippedTasks(0);
     
-    // 進入全屏模式
+    // 全螢幕已在 startSession 中處理，這裡只設置狀態
     setIsFullscreen(true);
-    try {
-      // 針對不同瀏覽器的全螢幕 API
-      const docElement = document.documentElement as any;
-      if (docElement.requestFullscreen) {
-        await docElement.requestFullscreen();
-      } else if (docElement.webkitRequestFullscreen) {
-        await docElement.webkitRequestFullscreen();
-      } else if (docElement.mozRequestFullScreen) {
-        await docElement.mozRequestFullScreen();
-      } else if (docElement.msRequestFullscreen) {
-        await docElement.msRequestFullscreen();
-      } else {
-        console.warn('此瀏覽器不支援全螢幕模式');
-      }
-    } catch (err) {
-      console.warn('無法進入全屏:', err);
-      // 即使全螢幕失敗，遊戲仍然可以繼續
-    }
     
     // 記錄任務開始時間
     setTaskStartTime(Date.now());
@@ -963,7 +994,7 @@ export default function FocusFinderPrototype() {
     }, 1000);
   }, []);
 
-  // 主要的開始遊戲函數 (顯示介紹)
+  // 主要的開始遊戲函數 (立即進入全螢幕並顯示介紹)
   const startSession = useCallback(async () => {
     // 確保攝影機權限已獲得
     if (permissionState !== 'granted') {
@@ -973,6 +1004,28 @@ export default function FocusFinderPrototype() {
       // 我們不能立即檢查 permissionState，而是讓用戶再次點擊開始
       return;
     } else {
+      // 立即進入全螢幕
+      console.log('[DEBUG] Entering fullscreen immediately');
+      try {
+        // 針對不同瀏覽器的全螢幕 API
+        const docElement = document.documentElement as any;
+        if (docElement.requestFullscreen) {
+          await docElement.requestFullscreen();
+        } else if (docElement.webkitRequestFullscreen) {
+          await docElement.webkitRequestFullscreen();
+        } else if (docElement.mozRequestFullScreen) {
+          await docElement.mozRequestFullScreen();
+        } else if (docElement.msRequestFullscreen) {
+          await docElement.msRequestFullscreen();
+        } else {
+          console.warn('此瀏覽器不支援全螢幕模式');
+        }
+        console.log('[DEBUG] Fullscreen entered successfully');
+      } catch (error) {
+        console.warn('[DEBUG] Fullscreen failed, continuing anyway:', error);
+      }
+
+      // 顯示故事介紹
       showIntro();
     }
   }, [showIntro, permissionState, handleRequestCamera]);

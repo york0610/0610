@@ -14,7 +14,6 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
   const [currentScene, setCurrentScene] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [showButtons, setShowButtons] = useState(false);
 
   const scenes = [
     {
@@ -26,7 +25,6 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
       icon: FaClock,
       iconColor: 'text-blue-400',
       background: 'from-slate-900 via-blue-900/20 to-slate-900',
-      duration: 3000,
     },
     {
       id: 'challenge',
@@ -37,7 +35,6 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
       icon: FaBrain,
       iconColor: 'text-amber-400',
       background: 'from-slate-900 via-amber-900/20 to-slate-900',
-      duration: 3000,
     },
     {
       id: 'mission',
@@ -48,24 +45,29 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
       icon: FaBullseye,
       iconColor: 'text-green-400',
       background: 'from-slate-900 via-green-900/20 to-slate-900',
-      duration: 3000,
     },
   ];
 
   const currentSceneData = scenes[currentScene];
 
+  // 重置狀態當組件變為不可見
   useEffect(() => {
     if (!isVisible) {
       setCurrentScene(0);
       setDisplayText('');
       setIsTyping(false);
-      setShowButtons(false);
       return;
     }
+  }, [isVisible]);
+
+  // 處理打字機效果
+  useEffect(() => {
+    if (!isVisible) return;
+
+    console.log('[GameIntro] Starting scene:', currentScene, currentSceneData.title);
 
     setDisplayText('');
     setIsTyping(true);
-    setShowButtons(false);
 
     const text = currentSceneData.text;
     let index = 0;
@@ -77,159 +79,167 @@ export default function GameIntro({ isVisible, onStart, onSkip }: GameIntroProps
       } else {
         setIsTyping(false);
         clearInterval(typeInterval);
-
-        // 顯示按鈕
-        setShowButtons(true);
-
-        // 如果不是最後一個場景，自動進入下一個場景
-        if (currentScene < scenes.length - 1) {
-          const timer = setTimeout(() => {
-            setCurrentScene(prev => prev + 1);
-          }, currentSceneData.duration);
-
-          return () => clearTimeout(timer);
-        }
+        console.log('[GameIntro] Typing completed for scene:', currentScene);
       }
-    }, 80); // 稍微慢一點的打字速度
+    }, 60); // 更快的打字速度
 
-    return () => clearInterval(typeInterval);
-  }, [currentScene, isVisible, currentSceneData, scenes.length]);
+    return () => {
+      clearInterval(typeInterval);
+    };
+  }, [currentScene, isVisible, currentSceneData]);
+
+  const handleNextScene = () => {
+    console.log('[GameIntro] Next scene clicked, current:', currentScene);
+    if (currentScene < scenes.length - 1) {
+      setCurrentScene(prev => prev + 1);
+    }
+  };
+
+  const handleStart = () => {
+    console.log('[GameIntro] Start game clicked');
+    onStart();
+  };
+
+  const handleSkip = () => {
+    console.log('[GameIntro] Skip clicked');
+    onSkip();
+  };
 
   if (!isVisible) return null;
 
   const IconComponent = currentSceneData.icon;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br ${currentSceneData.background} p-4 sm:p-8`}
-        style={{ pointerEvents: 'auto' }}
-      >
-        {/* 背景動畫 */}
-        <div className="absolute inset-0 overflow-hidden">
-          <motion.div
-            animate={{
-              background: [
-                'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
-                'radial-gradient(circle at 80% 50%, rgba(147, 51, 234, 0.1) 0%, transparent 50%)',
-                'radial-gradient(circle at 50% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%)',
-                'radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)'
-              ]
-            }}
-            transition={{ duration: 8, repeat: Infinity }}
-            className="absolute inset-0"
-          />
-        </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br ${currentSceneData.background} p-4 sm:p-8`}
+      style={{ pointerEvents: 'auto' }}
+    >
+      {/* 背景動畫 */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{
+            background: [
+              'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+              'radial-gradient(circle at 80% 50%, rgba(147, 51, 234, 0.1) 0%, transparent 50%)',
+              'radial-gradient(circle at 50% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%)',
+              'radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)'
+            ]
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute inset-0"
+        />
+      </div>
 
-        {/* 主要內容 */}
-        <div className="relative z-10 w-full max-w-md mx-auto text-center">
-          {/* 圖標 */}
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ duration: 0.8, type: "spring" }}
-            className="mb-6"
-          >
-            <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 ${currentSceneData.iconColor}`}>
-              <IconComponent className="text-2xl sm:text-3xl" />
-            </div>
-          </motion.div>
-
-          {/* 標題 */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="mb-4"
-          >
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-              {currentSceneData.title}
-            </h2>
-            <p className="text-sm sm:text-base text-slate-300">
-              {currentSceneData.subtitle}
-            </p>
-          </motion.div>
-
-          {/* 文字內容 */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-            className="mb-8"
-          >
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-4 sm:p-6 min-h-[120px] flex items-center justify-center">
-              <p className="text-base sm:text-lg text-white leading-relaxed">
-                {displayText}
-                {isTyping && (
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                    className="ml-1"
-                  >
-                    |
-                  </motion.span>
-                )}
-              </p>
-            </div>
-          </motion.div>
-
-          {/* 進度指示器 */}
-          <div className="flex justify-center space-x-2 mb-6">
-            {scenes.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentScene
-                    ? 'bg-white scale-125'
-                    : index < currentScene
-                    ? 'bg-slate-400'
-                    : 'bg-slate-600'
-                }`}
-              />
-            ))}
+      {/* 主要內容 */}
+      <div className="relative z-10 w-full max-w-md mx-auto text-center">
+        {/* 圖標 */}
+        <motion.div
+          key={`icon-${currentScene}`}
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.8, type: "spring" }}
+          className="mb-6"
+        >
+          <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 ${currentSceneData.iconColor}`}>
+            <IconComponent className="text-2xl sm:text-3xl" />
           </div>
+        </motion.div>
 
-          {/* 按鈕 */}
-          <AnimatePresence>
-            {showButtons && (
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -20, opacity: 0 }}
-                className="flex flex-col sm:flex-row gap-3 justify-center"
-              >
-                {currentScene === scenes.length - 1 ? (
-                  <button
-                    onClick={onStart}
-                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-6 py-3 rounded-full font-bold text-sm sm:text-base hover:scale-105 transition-transform shadow-lg"
-                  >
-                    <FaPlay className="text-sm" />
-                    開始遊戲
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setCurrentScene(prev => prev + 1)}
-                    className="inline-flex items-center justify-center gap-2 bg-slate-700/50 backdrop-blur-sm text-white px-4 py-2 rounded-full font-medium text-sm hover:bg-slate-600/50 transition-colors border border-slate-600/50"
-                  >
-                    <FaForward className="text-xs" />
-                    下一步
-                  </button>
-                )}
+        {/* 標題 */}
+        <motion.div
+          key={`title-${currentScene}`}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+          className="mb-4"
+        >
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+            {currentSceneData.title}
+          </h2>
+          <p className="text-sm sm:text-base text-slate-300">
+            {currentSceneData.subtitle}
+          </p>
+        </motion.div>
 
-                <button
-                  onClick={onSkip}
-                  className="inline-flex items-center justify-center gap-2 bg-slate-800/50 backdrop-blur-sm text-slate-300 px-4 py-2 rounded-full font-medium text-sm hover:bg-slate-700/50 transition-colors border border-slate-700/50"
+        {/* 文字內容 */}
+        <motion.div
+          key={`text-${currentScene}`}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.6 }}
+          className="mb-8"
+        >
+          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-4 sm:p-6 min-h-[120px] flex items-center justify-center">
+            <p className="text-base sm:text-lg text-white leading-relaxed">
+              {displayText}
+              {isTyping && (
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                  className="ml-1"
                 >
-                  跳過介紹
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  |
+                </motion.span>
+              )}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* 進度指示器 */}
+        <div className="flex justify-center space-x-2 mb-6">
+          {scenes.map((_, index) => (
+            <div
+              key={index}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentScene
+                  ? 'bg-white scale-125'
+                  : index < currentScene
+                  ? 'bg-slate-400'
+                  : 'bg-slate-600'
+              }`}
+            />
+          ))}
         </div>
-      </motion.div>
-    </AnimatePresence>
+
+        {/* 按鈕區域 - 總是顯示 */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {/* 主要按鈕 */}
+          {currentScene === scenes.length - 1 ? (
+            <button
+              onClick={handleStart}
+              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-6 py-3 rounded-full font-bold text-sm sm:text-base hover:scale-105 transition-transform shadow-lg"
+            >
+              <FaPlay className="text-sm" />
+              開始遊戲
+            </button>
+          ) : (
+            <button
+              onClick={handleNextScene}
+              disabled={isTyping}
+              className="inline-flex items-center justify-center gap-2 bg-slate-700/50 backdrop-blur-sm text-white px-4 py-2 rounded-full font-medium text-sm hover:bg-slate-600/50 transition-colors border border-slate-600/50 disabled:opacity-50"
+            >
+              <FaForward className="text-xs" />
+              {isTyping ? '打字中...' : '下一步'}
+            </button>
+          )}
+
+          {/* 跳過按鈕 */}
+          <button
+            onClick={handleSkip}
+            className="inline-flex items-center justify-center gap-2 bg-slate-800/50 backdrop-blur-sm text-slate-300 px-4 py-2 rounded-full font-medium text-sm hover:bg-slate-700/50 transition-colors border border-slate-700/50"
+          >
+            跳過介紹
+          </button>
+        </div>
+
+        {/* Debug 信息 */}
+        <div className="mt-4 text-xs text-slate-500">
+          場景 {currentScene + 1} / {scenes.length} | {isTyping ? '打字中' : '完成'}
+        </div>
+      </div>
+    </motion.div>
   );
 }

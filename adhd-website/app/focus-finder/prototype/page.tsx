@@ -1228,6 +1228,11 @@ export default function FocusFinderPrototype() {
       intervalRef.current = null;
     }
 
+    // 停止所有音效（延遲一點讓死亡音效播放完）
+    setTimeout(() => {
+      audioManager.stopAll();
+    }, 1000);
+
     // 不要立即退出全螢幕，讓死亡動畫在全螢幕中播放
 
     // 3秒後顯示結算畫面
@@ -1621,14 +1626,17 @@ export default function FocusFinderPrototype() {
       const isCurrentlyFullscreen = !!document.fullscreenElement;
       console.log('[FULLSCREEN] Fullscreen change detected:', isCurrentlyFullscreen);
 
-      // 如果遊戲正在運行但全螢幕被意外退出，嘗試重新進入
-      if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen) {
+      // 只有在遊戲正在運行且不是在結算畫面時才重新進入全螢幕
+      if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation) {
         console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter');
         setTimeout(async () => {
           try {
-            const docElement = document.documentElement as any;
-            if (docElement.requestFullscreen) {
-              await docElement.requestFullscreen();
+            // 再次檢查狀態，確保仍在遊戲中
+            if (sessionState === 'running') {
+              const docElement = document.documentElement as any;
+              if (docElement.requestFullscreen) {
+                await docElement.requestFullscreen();
+              }
             }
           } catch (error) {
             console.warn('[FULLSCREEN] Failed to re-enter fullscreen:', error);
@@ -1709,6 +1717,11 @@ export default function FocusFinderPrototype() {
           window.clearInterval(intervalRef.current!);
           intervalRef.current = null;
           setSessionState('failed');
+          // 停止所有音效
+          const audioManager = getAudioManager();
+          setTimeout(() => {
+            audioManager.stopAll();
+          }, 1000);
           // 不要立即退出全螢幕，讓結算畫面在全螢幕中顯示
           return GAME_TIME_LIMIT;
         }
@@ -1955,6 +1968,10 @@ export default function FocusFinderPrototype() {
           window.clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
+        // 停止所有音效（延遲讓勝利音效播放完）
+        setTimeout(() => {
+          audioMgr.stopAll();
+        }, 2000);
         return prev;
       }
 

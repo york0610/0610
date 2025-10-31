@@ -80,10 +80,10 @@ export class ObjectDetector {
   private isReady = false;
   private useMediaPipe = false;
 
-  // 改善的偵測參數
-  private readonly CONFIDENCE_THRESHOLD = 0.25; // 降低閾值以提高召回率
+  // 恢復較高的偵測參數以提高準確度
+  private readonly CONFIDENCE_THRESHOLD = 0.4; // 提高閾值以提高準確度
   private readonly NMS_THRESHOLD = 0.45; // 非極大值抑制閾值
-  private readonly MAX_DETECTIONS = 20; // 最大偵測數量
+  private readonly MAX_DETECTIONS = 15; // 減少最大偵測數量，專注於高品質偵測
 
   async initialize() {
     if (this.isReady) return;

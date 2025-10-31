@@ -27,6 +27,7 @@ import RabbitHoleEffect from '../../components/RabbitHoleEffect';
 import WorkingMemoryFailure from '../../components/WorkingMemoryFailure';
 import AudioSettings from '../../components/AudioSettings';
 import DeathAnimation from '../../components/DeathAnimation';
+import GameResultsScreen from '../../components/GameResultsScreen';
 
 type PermissionState = 'idle' | 'requesting' | 'granted' | 'denied';
 type SessionState = 'idle' | 'running' | 'completed' | 'failed';
@@ -2429,108 +2430,23 @@ export default function FocusFinderPrototype() {
               </div>
             </div>
           </div>
-        {sessionState === 'completed' && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950/95 text-center p-6 z-50"
-          >
-            <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', delay: 0.2 }}
-                    >
-                      <FaCheck className="text-6xl text-emerald-300" />
-                    </motion.div>
-                    <h3 className="text-2xl font-bold text-white">🎉 任務完成！</h3>
-                    <div className="max-w-md space-y-3">
-                      <div className="rounded-2xl bg-slate-800/50 p-4 border border-emerald-500/30">
-                        <p className="text-lg font-semibold text-emerald-300">完成時間：{formatSeconds(adjustedTime)}</p>
-                        <p className="text-sm text-slate-400 mt-1">找到 {randomTaskSequence.length - skippedTasks}/{randomTaskSequence.length} 個物品</p>
-                      </div>
-                      {skippedTasks > 0 && (
-                        <div className="rounded-2xl bg-slate-800/50 p-4 border border-red-500/30">
-                          <p className="text-sm text-red-300">跳過的任務：{skippedTasks} 個</p>
-                          <p className="text-sm text-slate-400 mt-1">（找不到物體或超時）</p>
-                        </div>
-                      )}
-                      {distractionSettings.enabled && (
-                        <div className="rounded-2xl bg-slate-800/50 p-4 border border-amber-500/30">
-                          <p className="text-sm text-amber-300">處理了 {distractions.length} 次干擾事件</p>
-                          <p className="text-sm text-slate-400 mt-1">時間懲罰：{totalDistractionCost.toFixed(1)}秒</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-3 sm:mt-4">
-                      <button
-                        type="button"
-                        onClick={startSession}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold text-white shadow-lg transition hover:scale-105"
-                      >
-                        <FaRedo /> 再次挑戰
-                      </button>
-                      <button
-                        type="button"
-                        onClick={resetSession}
-                        className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-600 px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold text-slate-200 transition hover:border-slate-400"
-                      >
-                        重設體驗
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-                
-                {sessionState === 'failed' && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950/95 text-center p-6 z-50"
-                  >
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', delay: 0.2 }}
-                    >
-                      <FaExclamationTriangle className="text-6xl text-red-400" />
-                    </motion.div>
-                    <h3 className="text-2xl font-bold text-white">⏰ 時間到！</h3>
-                    <div className="max-w-md space-y-3">
-                      <p className="text-slate-300">
-                        你在 {GAME_TIME_LIMIT} 秒內完成了 {totalCompleted}/{randomTaskSequence.length} 個任務。
-                      </p>
-                      {skippedTasks > 0 && (
-                        <p className="text-red-300 text-sm">
-                          跳過了 {skippedTasks} 個任務（找不到物體或超時）
-                        </p>
-                      )}
-                      <p className="text-amber-300 text-sm">
-                        這就是 ADHD 患者每天面對的挑戰：時間壓力、注意力分散、不斷的干擾...
-                      </p>
-                      {distractionSettings.enabled && (
-                        <div className="rounded-2xl bg-slate-800/50 p-4 border border-red-500/30">
-                          <p className="text-sm text-red-300">受到 {distractions.length} 次干擾影響</p>
-                          <p className="text-sm text-slate-400 mt-1">這就是 ADHD 患者的日常挑戰</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
-                      <button
-                        type="button"
-                        onClick={startSession}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:scale-105"
-                      >
-                        <FaRedo /> 重新挑戰
-                      </button>
-                      <button
-                        type="button"
-                        onClick={resetSession}
-                        className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-600 px-6 py-3 text-sm font-bold text-slate-200 transition hover:border-slate-400"
-                      >
-                        重設體驗
-                      </button>
-                    </div>
-                  </motion.div>
-        )}
+        {/* 新的結算畫面 */}
+        <GameResultsScreen
+          isVisible={sessionState === 'completed' || sessionState === 'failed'}
+          isSuccess={sessionState === 'completed'}
+          stats={{
+            totalCompleted,
+            totalTasks: randomTaskSequence.length,
+            skippedTasks,
+            adjustedTime,
+            totalDistractions: distractions.length,
+            totalDistractionCost,
+            playerScore,
+            focusLevel
+          }}
+          onRestart={startSession}
+          onReset={resetSession}
+        />
         
         {/* 側邊欄僅在非全螢幕時顯示 */}
         {!isFullscreen && sessionState !== 'running' && (

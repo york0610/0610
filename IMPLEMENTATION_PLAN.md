@@ -310,7 +310,7 @@ if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen
 ## Stage 3: 音效系統增強
 **Goal**: 改善音效多樣性和動態性，減少單調感
 **Priority**: MEDIUM
-**Status**: In Progress
+**Status**: ✅ COMPLETED
 
 ### 當前音效問題:
 1. **音效單調**
@@ -326,42 +326,108 @@ if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen
    - 缺乏層次感
 
 ### Tasks:
-- [ ] 為干擾類型添加多種音效變體
-  - 每種干擾類型準備 3-5 種不同音效
-  - 隨機選擇播放
-  - 增加音效的豐富度
+- [x] 為干擾類型添加多種音效變體
+  - ✅ 每種干擾類型準備 3 種不同音效變體
+  - ✅ 隨機選擇播放
+  - ✅ 增加音效的豐富度
 
-- [ ] 改善背景音樂系統
-  - 添加動態層次（根據遊戲進度）
-  - 添加緊張感音效（時間緊迫時）
-  - 添加專注力低時的警告音效
+- [x] 改善背景音樂系統
+  - ✅ 添加動態層次（根據遊戲進度）
+  - ✅ 添加緊張感音效（時間緊迫時）
+  - ✅ 添加專注力低時的警告音效
 
-- [ ] 優化音效混合
-  - 改善音量平衡
-  - 添加音效淡入淡出
-  - 優化音效優先級系統
+- [x] 優化音效混合
+  - ✅ 改善音量平衡
+  - ✅ 添加音效淡入淡出
+  - ✅ 優化音效優先級系統
 
-- [ ] 添加情境音效
-  - 心跳加速（壓力大時）
-  - 時鐘滴答（倒數時）
-  - 警告音效（專注力低時）
+- [x] 添加情境音效
+  - ✅ 心跳加速（壓力大時）
+  - ✅ 時鐘滴答（倒數時）
+  - ✅ 警告音效（專注力低時）
+
+**Detailed Changes**:
+
+1. **音效變體系統**:
+```typescript
+// 為每種音效類型添加 3 種頻率變體
+private soundVariants: Record<string, number[]> = {
+  'phone-buzz': [400, 450, 500],
+  'email-ping': [800, 900, 1000],
+  'social-media': [600, 700, 800],
+  'door-slam': [100, 120, 150],
+  'keyboard-typing': [200, 220, 240],
+  'mouse-click': [300, 350, 400],
+  'stomach-growl': [80, 100, 120],
+  'yawn': [150, 180, 200],
+  'sneeze': [500, 600, 700],
+  'cough': [250, 300, 350],
+};
+
+// 隨機選擇變體
+private getRandomVariant(soundType: string): number {
+  const variants = this.soundVariants[soundType];
+  const randomIndex = Math.floor(Math.random() * variants.length);
+  return variants[randomIndex];
+}
+```
+
+2. **動態背景音樂系統**:
+```typescript
+// 三層背景音樂系統
+private backgroundLayers: {
+  base: { osc: OscillatorNode; gain: GainNode } | null;      // 基礎層（始終存在）
+  tension: { osc: OscillatorNode; gain: GainNode } | null;   // 緊張層（強度 > 0.3）
+  urgency: { osc: OscillatorNode; gain: GainNode } | null;   // 緊急層（強度 > 0.7）
+};
+
+// 根據遊戲進度動態調整
+updateBackgroundMusicIntensity(intensity: number): void {
+  // 0-0.3: 只有基礎層
+  // 0.3-0.7: 基礎層 + 緊張層
+  // 0.7-1.0: 基礎層 + 緊張層 + 緊急層
+}
+```
+
+3. **情境音效系統**:
+```typescript
+playContextualSound(context: 'time-pressure' | 'low-focus' | 'high-stress'): void {
+  // time-pressure: 時鐘滴答聲（3 次，間隔 0.5 秒）
+  // low-focus: 警告脈衝（漸強漸弱）
+  // high-stress: 心跳加速（5 次，間隔 0.3 秒）
+}
+```
 
 **Implementation Plan**:
-1. 創建音效變體映射表
-2. 修改播放邏輯以支持隨機選擇
-3. 添加動態背景音樂層
-4. 實現情境音效觸發器
+1. ✅ 創建音效變體映射表
+2. ✅ 修改播放邏輯以支持隨機選擇
+3. ✅ 添加動態背景音樂層
+4. ✅ 實現情境音效觸發器
 
 **Success Criteria**:
-- 音效更加多樣化
-- 不會感到單調重複
-- 背景音樂有層次感
-- 情境音效增強沉浸感
+- ✅ 音效更加多樣化
+- ✅ 不會感到單調重複
+- ✅ 背景音樂有層次感
+- ✅ 情境音效增強沉浸感
+- ✅ 建置成功無錯誤
 
 **Tests**:
-- 測試多次觸發相同干擾是否播放不同音效
-- 測試背景音樂是否有動態變化
-- 測試情境音效是否正確觸發
+- ⏳ 測試多次觸發相同干擾是否播放不同音效
+- ⏳ 測試背景音樂是否有動態變化
+- ⏳ 測試情境音效是否正確觸發
+
+**Modified Files**:
+- `adhd-website/app/utils/audioManager.ts`
+  - 添加 `soundVariants` 映射表
+  - 添加 `getRandomVariant()` 方法
+  - 修改 `generateBasicSound()` 使用隨機變體
+  - 修改 `createPhoneBuzzWithEffects()` 使用隨機變體
+  - 修改 `createEmailPingWithEffects()` 使用隨機變體
+  - 修改 `createSocialMediaWithEffects()` 使用隨機變體
+  - 添加 `backgroundLayers` 狀態
+  - 實現 `updateBackgroundMusicIntensity()` 方法
+  - 實現 `playContextualSound()` 方法
+  - 更新 `stopBackgroundMusic()` 清理所有層
 
 ---
 

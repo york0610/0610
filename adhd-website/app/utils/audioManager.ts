@@ -96,6 +96,8 @@ export interface IAudioManager {
   // 背景音樂控制
   startBackgroundMusic(): void;
   stopBackgroundMusic(): void;
+  updateBackgroundMusicIntensity(intensity: number): void; // 0-1，根據遊戲進度調整
+  playContextualSound(context: 'time-pressure' | 'low-focus' | 'high-stress'): void;
 
   // 原有方法
   playNotification(): void;
@@ -169,6 +171,32 @@ export class AudioManager implements IAudioManager {
   private backgroundMusic: OscillatorNode | null = null;
   private backgroundGain: GainNode | null = null;
   private isBackgroundPlaying = false;
+
+  // 動態背景音樂層
+  private backgroundLayers: {
+    base: { osc: OscillatorNode; gain: GainNode } | null;
+    tension: { osc: OscillatorNode; gain: GainNode } | null;
+    urgency: { osc: OscillatorNode; gain: GainNode } | null;
+  } = {
+    base: null,
+    tension: null,
+    urgency: null,
+  };
+  private currentIntensity = 0;
+
+  // 音效變體映射 - 為每種音效類型提供多個變體
+  private soundVariants: Record<string, number[]> = {
+    'phone-buzz': [400, 450, 500], // 不同頻率的震動音
+    'email-ping': [800, 900, 1000], // 不同音高的提示音
+    'social-media': [600, 700, 800], // 社交媒體通知音
+    'door-slam': [100, 120, 150], // 不同強度的關門聲
+    'keyboard-typing': [200, 220, 240], // 不同節奏的打字聲
+    'mouse-click': [300, 350, 400], // 不同的點擊聲
+    'stomach-growl': [80, 100, 120], // 不同的肚子叫聲
+    'yawn': [150, 180, 200], // 不同的哈欠聲
+    'sneeze': [500, 600, 700], // 不同的噴嚏聲
+    'cough': [250, 300, 350], // 不同的咳嗽聲
+  };
   private audioFiles: Record<string, string> = {
     // 基礎音效 - 使用現有的音檔
     notification: '/sounds/2021-preview.mp3',
@@ -254,6 +282,18 @@ export class AudioManager implements IAudioManager {
     } catch (error) {
       console.error('Failed to initialize AudioContext:', error);
     }
+  }
+
+  /**
+   * 隨機選擇音效變體
+   */
+  private getRandomVariant(soundType: string): number {
+    const variants = this.soundVariants[soundType];
+    if (!variants || variants.length === 0) {
+      return 440; // 默認頻率
+    }
+    const randomIndex = Math.floor(Math.random() * variants.length);
+    return variants[randomIndex];
   }
 
   private async initializeTuna(): Promise<void> {
@@ -776,7 +816,7 @@ export class AudioManager implements IAudioManager {
   }
 
   /**
-   * 生成基礎音效（備用方案）
+   * 生成基礎音效（備用方案）- 使用隨機變體增加多樣性
    */
   private generateBasicSound(type: AudioType, startTime: number, config: AudioConfig): void {
     if (!this.audioContext) return;
@@ -784,19 +824,47 @@ export class AudioManager implements IAudioManager {
     const osc = this.audioContext.createOscillator();
     const gain = this.audioContext.createGain();
 
-    // 根據音效類型設置基礎參數
+    // 根據音效類型設置基礎參數，使用隨機變體
     switch (type) {
       case 'phone-buzz':
-        osc.frequency.setValueAtTime(400, startTime);
+        osc.frequency.setValueAtTime(this.getRandomVariant('phone-buzz'), startTime);
         osc.type = 'square';
         break;
       case 'email-ping':
-        osc.frequency.setValueAtTime(800, startTime);
+        osc.frequency.setValueAtTime(this.getRandomVariant('email-ping'), startTime);
         osc.type = 'sine';
         break;
       case 'social-media':
-        osc.frequency.setValueAtTime(600, startTime);
+        osc.frequency.setValueAtTime(this.getRandomVariant('social-media'), startTime);
         osc.type = 'triangle';
+        break;
+      case 'door-slam':
+        osc.frequency.setValueAtTime(this.getRandomVariant('door-slam'), startTime);
+        osc.type = 'sawtooth';
+        break;
+      case 'keyboard-typing':
+        osc.frequency.setValueAtTime(this.getRandomVariant('keyboard-typing'), startTime);
+        osc.type = 'square';
+        break;
+      case 'mouse-click':
+        osc.frequency.setValueAtTime(this.getRandomVariant('mouse-click'), startTime);
+        osc.type = 'sine';
+        break;
+      case 'stomach-growl':
+        osc.frequency.setValueAtTime(this.getRandomVariant('stomach-growl'), startTime);
+        osc.type = 'sawtooth';
+        break;
+      case 'yawn':
+        osc.frequency.setValueAtTime(this.getRandomVariant('yawn'), startTime);
+        osc.type = 'sine';
+        break;
+      case 'sneeze':
+        osc.frequency.setValueAtTime(this.getRandomVariant('sneeze'), startTime);
+        osc.type = 'square';
+        break;
+      case 'cough':
+        osc.frequency.setValueAtTime(this.getRandomVariant('cough'), startTime);
+        osc.type = 'sawtooth';
         break;
       case 'overwhelm':
         osc.frequency.setValueAtTime(200, startTime);
@@ -820,7 +888,7 @@ export class AudioManager implements IAudioManager {
   }
 
   /**
-   * 創建帶效果的手機震動音效
+   * 創建帶效果的手機震動音效 - 使用隨機變體
    */
   private createPhoneBuzzWithEffects(startTime: number, config: AudioConfig): void {
     if (!this.audioContext) return;
@@ -828,7 +896,8 @@ export class AudioManager implements IAudioManager {
     const osc = this.audioContext.createOscillator();
     const gain = this.audioContext.createGain();
 
-    osc.frequency.setValueAtTime(400, startTime);
+    // 使用隨機變體增加多樣性
+    osc.frequency.setValueAtTime(this.getRandomVariant('phone-buzz'), startTime);
     osc.type = 'square';
     gain.gain.setValueAtTime(0.3 * this.masterVolume, startTime);
 
@@ -843,7 +912,7 @@ export class AudioManager implements IAudioManager {
   }
 
   /**
-   * 創建帶效果的郵件提示音
+   * 創建帶效果的郵件提示音 - 使用隨機變體
    */
   private createEmailPingWithEffects(startTime: number, config: AudioConfig): void {
     if (!this.audioContext) return;
@@ -851,7 +920,8 @@ export class AudioManager implements IAudioManager {
     const osc = this.audioContext.createOscillator();
     const gain = this.audioContext.createGain();
 
-    osc.frequency.setValueAtTime(800, startTime);
+    // 使用隨機變體增加多樣性
+    osc.frequency.setValueAtTime(this.getRandomVariant('email-ping'), startTime);
     osc.type = 'sine';
     gain.gain.setValueAtTime(0.2 * this.masterVolume, startTime);
 
@@ -866,7 +936,7 @@ export class AudioManager implements IAudioManager {
   }
 
   /**
-   * 創建帶效果的社交媒體通知音
+   * 創建帶效果的社交媒體通知音 - 使用隨機變體
    */
   private createSocialMediaWithEffects(startTime: number, config: AudioConfig): void {
     if (!this.audioContext) return;
@@ -874,7 +944,8 @@ export class AudioManager implements IAudioManager {
     const osc = this.audioContext.createOscillator();
     const gain = this.audioContext.createGain();
 
-    osc.frequency.setValueAtTime(600, startTime);
+    // 使用隨機變體增加多樣性
+    osc.frequency.setValueAtTime(this.getRandomVariant('social-media'), startTime);
     osc.type = 'triangle';
     gain.gain.setValueAtTime(0.25 * this.masterVolume, startTime);
 
@@ -1186,6 +1257,176 @@ export class AudioManager implements IAudioManager {
   }
 
   /**
+   * 更新背景音樂強度 - 根據遊戲進度動態調整
+   * @param intensity 0-1，0 = 平靜，1 = 極度緊張
+   */
+  updateBackgroundMusicIntensity(intensity: number): void {
+    if (!this.audioContext || !this.isBackgroundPlaying) return;
+
+    this.currentIntensity = Math.max(0, Math.min(1, intensity));
+    const now = this.audioContext.currentTime;
+
+    try {
+      // 調整基礎層音量（始終存在）
+      if (this.backgroundGain) {
+        const baseVolume = 0.02 * this.masterVolume * (1 - this.currentIntensity * 0.3);
+        this.backgroundGain.gain.linearRampToValueAtTime(baseVolume, now + 0.5);
+      }
+
+      // 根據強度添加或移除緊張層
+      if (this.currentIntensity > 0.3 && !this.backgroundLayers.tension) {
+        // 添加緊張層（中頻脈衝）
+        const tensionOsc = this.audioContext.createOscillator();
+        const tensionGain = this.audioContext.createGain();
+
+        tensionOsc.frequency.setValueAtTime(120, now);
+        tensionOsc.type = 'triangle';
+        tensionGain.gain.setValueAtTime(0, now);
+        tensionGain.gain.linearRampToValueAtTime(
+          0.015 * this.masterVolume * (this.currentIntensity - 0.3),
+          now + 1
+        );
+
+        tensionOsc.connect(tensionGain);
+        tensionGain.connect(this.audioContext.destination);
+        tensionOsc.start(now);
+
+        this.backgroundLayers.tension = { osc: tensionOsc, gain: tensionGain };
+        console.log('[AUDIO] Added tension layer');
+      } else if (this.currentIntensity <= 0.3 && this.backgroundLayers.tension) {
+        // 移除緊張層
+        const { osc, gain } = this.backgroundLayers.tension;
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        setTimeout(() => {
+          osc.stop();
+          osc.disconnect();
+          gain.disconnect();
+        }, 500);
+        this.backgroundLayers.tension = null;
+        console.log('[AUDIO] Removed tension layer');
+      } else if (this.backgroundLayers.tension) {
+        // 調整緊張層音量
+        this.backgroundLayers.tension.gain.gain.linearRampToValueAtTime(
+          0.015 * this.masterVolume * (this.currentIntensity - 0.3),
+          now + 0.5
+        );
+      }
+
+      // 根據強度添加或移除緊急層
+      if (this.currentIntensity > 0.7 && !this.backgroundLayers.urgency) {
+        // 添加緊急層（高頻警告音）
+        const urgencyOsc = this.audioContext.createOscillator();
+        const urgencyGain = this.audioContext.createGain();
+
+        urgencyOsc.frequency.setValueAtTime(240, now);
+        urgencyOsc.type = 'sine';
+        urgencyGain.gain.setValueAtTime(0, now);
+        urgencyGain.gain.linearRampToValueAtTime(
+          0.01 * this.masterVolume * (this.currentIntensity - 0.7),
+          now + 1
+        );
+
+        urgencyOsc.connect(urgencyGain);
+        urgencyGain.connect(this.audioContext.destination);
+        urgencyOsc.start(now);
+
+        this.backgroundLayers.urgency = { osc: urgencyOsc, gain: urgencyGain };
+        console.log('[AUDIO] Added urgency layer');
+      } else if (this.currentIntensity <= 0.7 && this.backgroundLayers.urgency) {
+        // 移除緊急層
+        const { osc, gain } = this.backgroundLayers.urgency;
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        setTimeout(() => {
+          osc.stop();
+          osc.disconnect();
+          gain.disconnect();
+        }, 500);
+        this.backgroundLayers.urgency = null;
+        console.log('[AUDIO] Removed urgency layer');
+      } else if (this.backgroundLayers.urgency) {
+        // 調整緊急層音量
+        this.backgroundLayers.urgency.gain.gain.linearRampToValueAtTime(
+          0.01 * this.masterVolume * (this.currentIntensity - 0.7),
+          now + 0.5
+        );
+      }
+    } catch (error) {
+      console.error('[AUDIO] Failed to update background music intensity:', error);
+    }
+  }
+
+  /**
+   * 播放情境音效 - 根據遊戲狀態
+   */
+  playContextualSound(context: 'time-pressure' | 'low-focus' | 'high-stress'): void {
+    if (!this.audioContext || this.isMuted) return;
+
+    this.ensureAudioContextRunning();
+    const now = this.audioContext.currentTime;
+
+    try {
+      switch (context) {
+        case 'time-pressure':
+          // 時鐘滴答聲
+          for (let i = 0; i < 3; i++) {
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+
+            osc.frequency.setValueAtTime(800, now + i * 0.5);
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.15 * this.masterVolume, now + i * 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.5 + 0.1);
+
+            osc.connect(gain);
+            gain.connect(this.audioContext.destination);
+            osc.start(now + i * 0.5);
+            osc.stop(now + i * 0.5 + 0.1);
+          }
+          break;
+
+        case 'low-focus':
+          // 警告脈衝
+          const pulseOsc = this.audioContext.createOscillator();
+          const pulseGain = this.audioContext.createGain();
+
+          pulseOsc.frequency.setValueAtTime(300, now);
+          pulseOsc.type = 'sine';
+          pulseGain.gain.setValueAtTime(0.1 * this.masterVolume, now);
+          pulseGain.gain.linearRampToValueAtTime(0.2 * this.masterVolume, now + 0.5);
+          pulseGain.gain.linearRampToValueAtTime(0.01, now + 1);
+
+          pulseOsc.connect(pulseGain);
+          pulseGain.connect(this.audioContext.destination);
+          pulseOsc.start(now);
+          pulseOsc.stop(now + 1);
+          break;
+
+        case 'high-stress':
+          // 心跳加速
+          for (let i = 0; i < 5; i++) {
+            const heartOsc = this.audioContext.createOscillator();
+            const heartGain = this.audioContext.createGain();
+
+            heartOsc.frequency.setValueAtTime(60, now + i * 0.3);
+            heartOsc.type = 'sine';
+            heartGain.gain.setValueAtTime(0.2 * this.masterVolume, now + i * 0.3);
+            heartGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.3 + 0.15);
+
+            heartOsc.connect(heartGain);
+            heartGain.connect(this.audioContext.destination);
+            heartOsc.start(now + i * 0.3);
+            heartOsc.stop(now + i * 0.3 + 0.15);
+          }
+          break;
+      }
+
+      console.log(`[AUDIO] Played contextual sound: ${context}`);
+    } catch (error) {
+      console.error(`[AUDIO] Failed to play contextual sound ${context}:`, error);
+    }
+  }
+
+  /**
    * 停止背景音樂
    */
   stopBackgroundMusic(): void {
@@ -1202,6 +1443,16 @@ export class AudioManager implements IAudioManager {
         this.backgroundGain.disconnect();
         this.backgroundGain = null;
       }
+
+      // 停止所有背景音樂層
+      Object.values(this.backgroundLayers).forEach(layer => {
+        if (layer) {
+          layer.osc.stop();
+          layer.osc.disconnect();
+          layer.gain.disconnect();
+        }
+      });
+      this.backgroundLayers = { base: null, tension: null, urgency: null };
 
       this.isBackgroundPlaying = false;
       console.log('[AUDIO] Background music stopped');

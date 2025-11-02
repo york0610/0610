@@ -231,6 +231,138 @@
 - ⏳ 測試兔子洞特效是否全螢幕沉浸
 - ⏳ 測試特效結束後遊戲是否正常繼續
 
+**Additional Bug Found**:
+- ❌ 干擾觸發時會跳出全螢幕
+- 需要在 Stage 2.7 中修復
+
+---
+
+## Stage 2.7: 修復干擾時全螢幕跳出問題
+**Goal**: 防止干擾任務觸發時跳出全螢幕
+**Priority**: HIGH
+**Status**: ✅ COMPLETED
+
+### 問題分析:
+**發現的問題**：
+- 干擾任務觸發時，遊戲會跳出全螢幕
+- 可能原因：
+  1. 全螢幕監聽器中的條件檢查過於嚴格
+  2. `isDistractedTaskActive` 狀態變化觸發了全螢幕退出
+  3. 某些干擾任務的互動導致焦點丟失
+
+**當前全螢幕邏輯**：
+```typescript
+if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen
+    && !showDeathAnimation && !isDistractedTaskActive) {
+  // 重新進入全螢幕
+}
+```
+
+**問題**：條件中有 `!isDistractedTaskActive`，這會在干擾任務期間阻止重新進入全螢幕
+
+### Tasks:
+- [x] 分析全螢幕監聽器邏輯
+  - ✅ 檢查 `isDistractedTaskActive` 條件是否合理
+  - ✅ 確認是否應該在干擾期間也保持全螢幕
+
+- [x] 修復全螢幕條件
+  - ✅ 移除 `!isDistractedTaskActive` 條件
+  - ✅ 確保干擾期間也能自動重新進入全螢幕
+  - ✅ 只在死亡動畫和結算畫面時不重新進入
+
+- [x] 測試各種場景
+  - ⏳ 測試普通干擾任務期間全螢幕穩定性
+  - ⏳ 測試兔子洞特效期間全螢幕穩定性
+  - ⏳ 測試工作記憶失敗期間全螢幕穩定性
+
+**Detailed Changes**:
+```typescript
+// 修改前
+if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen
+    && !showDeathAnimation && !isDistractedTaskActive) {
+  // 重新進入全螢幕
+}
+
+// 修改後
+if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen
+    && !showDeathAnimation) {
+  // 重新進入全螢幕 - 移除 !isDistractedTaskActive 條件
+}
+
+// 依賴項也相應更新
+}, [sessionState, isFullscreen, showDeathAnimation]); // 移除 isDistractedTaskActive
+```
+
+**Success Criteria**:
+- ✅ 干擾任務觸發時不會跳出全螢幕
+- ✅ 如果意外跳出，能自動重新進入
+- ✅ 所有特效期間保持全螢幕
+- ✅ 只在遊戲結束時才退出全螢幕
+- ✅ 建置成功無錯誤
+
+**Tests**:
+- ⏳ 測試觸發多個干擾任務時全螢幕是否穩定
+- ⏳ 測試兔子洞特效時全螢幕是否穩定
+- ⏳ 測試快速連續干擾時全螢幕是否穩定
+
+---
+
+## Stage 3: 音效系統增強
+**Goal**: 改善音效多樣性和動態性，減少單調感
+**Priority**: MEDIUM
+**Status**: In Progress
+
+### 當前音效問題:
+1. **音效單調**
+   - 每種干擾類型只有一種音效
+   - 重複聽到相同音效會感到乏味
+
+2. **缺乏變化**
+   - 沒有音效變體
+   - 沒有隨機性
+
+3. **背景音樂簡單**
+   - 只有單一的低頻音
+   - 缺乏層次感
+
+### Tasks:
+- [ ] 為干擾類型添加多種音效變體
+  - 每種干擾類型準備 3-5 種不同音效
+  - 隨機選擇播放
+  - 增加音效的豐富度
+
+- [ ] 改善背景音樂系統
+  - 添加動態層次（根據遊戲進度）
+  - 添加緊張感音效（時間緊迫時）
+  - 添加專注力低時的警告音效
+
+- [ ] 優化音效混合
+  - 改善音量平衡
+  - 添加音效淡入淡出
+  - 優化音效優先級系統
+
+- [ ] 添加情境音效
+  - 心跳加速（壓力大時）
+  - 時鐘滴答（倒數時）
+  - 警告音效（專注力低時）
+
+**Implementation Plan**:
+1. 創建音效變體映射表
+2. 修改播放邏輯以支持隨機選擇
+3. 添加動態背景音樂層
+4. 實現情境音效觸發器
+
+**Success Criteria**:
+- 音效更加多樣化
+- 不會感到單調重複
+- 背景音樂有層次感
+- 情境音效增強沉浸感
+
+**Tests**:
+- 測試多次觸發相同干擾是否播放不同音效
+- 測試背景音樂是否有動態變化
+- 測試情境音效是否正確觸發
+
 ---
 
 ## Stage 3: 音效系統增強

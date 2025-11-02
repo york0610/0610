@@ -1781,7 +1781,8 @@ export default function FocusFinderPrototype() {
       console.log('[FULLSCREEN] Fullscreen change detected:', isCurrentlyFullscreen);
 
       // 只有在遊戲正在運行且不是在結算畫面時才重新進入全螢幕
-      if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation && !isDistractedTaskActive) {
+      // 移除 !isDistractedTaskActive 條件，允許干擾期間也保持全螢幕
+      if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation) {
         console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter');
 
         // 限制重新進入嘗試次數，避免無限循環
@@ -1832,7 +1833,7 @@ export default function FocusFinderPrototype() {
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
-  }, [sessionState, isFullscreen, showDeathAnimation, isDistractedTaskActive]);
+  }, [sessionState, isFullscreen, showDeathAnimation]); // 移除 isDistractedTaskActive 依賴
 
   // 跳過介紹直接開始遊戲
   const skipIntroAndStart = useCallback(() => {

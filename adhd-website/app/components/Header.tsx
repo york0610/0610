@@ -2,20 +2,29 @@
 
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { FaBrain, FaBars, FaTimes, FaChevronDown } from 'react-icons/fa';
+import { FaBrain, FaBars, FaTimes, FaChevronDown, FaGamepad } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [resourcesDropdownOpen, setResourcesDropdownOpen] = useState(false);
 
   return (
-    <nav className="bg-white/95 backdrop-blur-sm shadow-sm sticky top-0 z-50">
+    <nav className="bg-slate-950/80 backdrop-blur-md border-b border-slate-800/50 sticky top-0 z-50 shadow-lg shadow-black/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
-              <FaBrain className="text-2xl" />
-              <span>ADHD 世界</span>
+            <Link href="/" className="group flex items-center gap-2 text-xl font-bold transition-all">
+              <motion.div
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 0.6 }}
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30"
+              >
+                <FaBrain className="text-2xl text-cyan-400" />
+              </motion.div>
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                ADHD 世界
+              </span>
             </Link>
           </div>
           

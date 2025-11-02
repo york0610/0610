@@ -3,300 +3,377 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import Header from './components/Header';
-import Footer from './components/Footer';
 import {
   FaArrowRight,
   FaBolt,
   FaBrain,
-  FaBook,
   FaCheckCircle,
   FaChild,
-  FaClipboardList,
   FaClock,
   FaExclamationTriangle,
   FaEye,
   FaGamepad,
-  FaHeart,
   FaPlay,
-  FaVideo,
   FaUsers,
-  FaVolumeUp,
-  FaLightbulb,
   FaHeartbeat,
   FaComments,
-  FaClipboard
+  FaClipboard,
+  FaRocket,
+  FaStar,
+  FaFire
 } from 'react-icons/fa';
+import { SplitText, GradientText, FloatingText } from './components/AnimatedText';
+import GlassCard, { FeatureCard, StatCard } from './components/GlassCard';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* 動態背景 */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(139,92,246,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1),transparent_70%)]" />
+
+        {/* 動畫粒子 */}
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-cyan-400/30 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              opacity: [0.3, 0.8, 0.3],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
       {/* 英雄區塊 */}
-      <div className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.15),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(251,146,60,0.12),transparent_50%)]" />
-        </div>
-        
-        <header className="relative mx-auto max-w-7xl px-6 pb-20 pt-28">
+      <div className="relative">
+        <header className="relative mx-auto max-w-7xl px-6 pb-20 pt-32">
           <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-teal-500/20 border border-blue-500/30 px-6 py-3 text-sm font-bold text-blue-300">
+            {/* 標籤 */}
+            <FloatingText delay={0}>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-teal-500/20 border border-cyan-500/30 px-6 py-3 text-sm font-bold text-cyan-300 backdrop-blur-sm shadow-lg"
+              >
                 <FaBrain className="animate-pulse" />
-                認識注意力不足過動症
-              </span>
-            </motion.div>
-            
-            <motion.h1 
-              className="mt-10 bg-gradient-to-r from-blue-200 via-cyan-200 to-teal-200 bg-clip-text text-6xl font-black text-transparent sm:text-7xl lg:text-8xl"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              ADHD 知多少
-            </motion.h1>
-            
-            <motion.p 
-              className="mt-4 text-2xl font-bold text-cyan-300"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              認識注意力不足過動症
-            </motion.p>
-            
-            <motion.p 
-              className="mx-auto mt-8 max-w-3xl text-xl leading-relaxed text-slate-300"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              注意力不足過動症（ADHD）是一種神經發展障礙，影響全球數百萬人。成人症狀常被低估，臨床辨識與就醫率顯著低於實際盛行率。
-              <br /><br />
-              <span className="font-bold text-cyan-300">症狀必須在 12 歲之前出現，持續至少六個月，並在多個生活情境中造成明顯的功能障礙。</span>
-            </motion.p>
+                <span>認識注意力不足過動症</span>
+                <FaStar className="text-yellow-400 animate-pulse" />
+              </motion.div>
+            </FloatingText>
+
+            {/* 主標題 */}
+            <FloatingText delay={0.2}>
+              <h1 className="mt-12 text-6xl font-black sm:text-7xl lg:text-8xl">
+                <GradientText gradient="from-blue-400 via-cyan-400 to-teal-400">
+                  ADHD 知多少
+                </GradientText>
+              </h1>
+            </FloatingText>
+
+            {/* 副標題 */}
+            <FloatingText delay={0.4}>
+              <p className="mt-6 text-2xl font-bold">
+                <GradientText gradient="from-cyan-300 to-blue-300">
+                  探索大腦的奇妙世界
+                </GradientText>
+              </p>
+            </FloatingText>
+
+            {/* 描述 */}
+            <FloatingText delay={0.6}>
+              <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-slate-300">
+                注意力不足過動症（ADHD）是一種<span className="text-cyan-400 font-semibold">神經發展差異</span>，影響全球數百萬人。
+                成人症狀常被低估，臨床辨識與就醫率顯著低於實際盛行率。
+              </p>
+              <p className="mx-auto mt-4 max-w-2xl text-base text-slate-400">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                  <FaExclamationTriangle className="text-cyan-400" />
+                  症狀必須在 12 歲之前出現，持續至少六個月，並在多個生活情境中造成明顯的功能障礙
+                </span>
+              </p>
+            </FloatingText>
+
+            {/* CTA 按鈕 */}
+            <FloatingText delay={0.8}>
+              <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/focus-finder/prototype"
+                  className="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-4 text-lg font-black text-white shadow-2xl transition-all hover:scale-105 hover:shadow-cyan-500/50"
+                >
+                  <FaGamepad className="text-2xl group-hover:rotate-12 transition-transform" />
+                  <span>開始體驗遊戲</span>
+                  <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10" />
+                </Link>
+
+                <Link
+                  href="#learn-more"
+                  className="inline-flex items-center gap-2 rounded-2xl border-2 border-slate-700 bg-slate-800/50 px-8 py-4 text-lg font-bold text-slate-300 backdrop-blur-sm transition-all hover:border-cyan-500/50 hover:bg-slate-800"
+                >
+                  <FaBrain />
+                  <span>了解更多</span>
+                </Link>
+              </div>
+            </FloatingText>
 
             {/* 核心數據 */}
-            <motion.div 
-              className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="rounded-2xl border border-blue-800/30 bg-blue-900/20 p-6">
-                <div className="flex items-center justify-center gap-2 text-3xl font-bold text-blue-400">
-                  <FaUsers />
-                  <span>2–4%</span>
-                </div>
-                <p className="mt-2 text-sm text-slate-400">成人盛行率</p>
-                <p className="mt-1 text-xs text-slate-500">全球估計值</p>
+            <FloatingText delay={1}>
+              <div className="mt-16 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+                <StatCard
+                  value="2–4%"
+                  label="成人盛行率"
+                  sublabel="全球估計值"
+                  icon={<FaUsers />}
+                  color="blue"
+                />
+                <StatCard
+                  value="5–10%"
+                  label="兒童盛行率"
+                  sublabel="全球估計值"
+                  icon={<FaChild />}
+                  color="cyan"
+                />
+                <StatCard
+                  value="低識別"
+                  label="成人診斷率"
+                  sublabel="遠低於實際盛行率"
+                  icon={<FaExclamationTriangle />}
+                  color="orange"
+                />
+                <StatCard
+                  value="↑ 上升"
+                  label="台灣診斷率"
+                  sublabel="2000–2011 年間"
+                  icon={<FaHeartbeat />}
+                  color="pink"
+                />
               </div>
-              <div className="rounded-2xl border border-cyan-800/30 bg-cyan-900/20 p-6">
-                <div className="flex items-center justify-center gap-2 text-3xl font-bold text-cyan-400">
-                  <FaChild />
-                  <span>5–10%</span>
-                </div>
-                <p className="mt-2 text-sm text-slate-400">兒童盛行率</p>
-                <p className="mt-1 text-xs text-slate-500">全球估計值</p>
-              </div>
-              <div className="rounded-2xl border border-teal-800/30 bg-teal-900/20 p-6">
-                <div className="flex items-center justify-center gap-2 text-3xl font-bold text-teal-400">
-                  <FaExclamationTriangle />
-                  <span>低識別</span>
-                </div>
-                <p className="mt-2 text-sm text-slate-400">成人診斷率</p>
-                <p className="mt-1 text-xs text-slate-500">遠低於實際盛行率</p>
-              </div>
-              <div className="rounded-2xl border border-orange-800/30 bg-orange-900/20 p-6">
-                <div className="flex items-center justify-center gap-2 text-3xl font-bold text-orange-400">
-                  <FaHeartbeat />
-                  <span>↑ 上升</span>
-                </div>
-                <p className="mt-2 text-sm text-slate-400">台灣診斷率</p>
-                <p className="mt-1 text-xs text-slate-500">2000–2011 年間</p>
-              </div>
-            </motion.div>
+            </FloatingText>
           </div>
         </header>
       </div>
 
       {/* 睡眠問題重要提示 */}
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        <motion.div
-          className="rounded-3xl border border-amber-800/50 bg-gradient-to-r from-amber-900/30 to-orange-900/30 p-8"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/20">
-              <FaExclamationTriangle className="text-2xl text-amber-400" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-amber-300 mb-3">😴 睡眠問題是 ADHD 的重要共伴護理項目</h3>
-              <p className="text-slate-300 mb-4">
-                睡眠問題在青少年 ADHD 族群中顯著常見，並顯著影響日常與學業功能。建議在評估與介入中常見納入。
+      <div id="learn-more" className="mx-auto max-w-7xl px-6 py-16">
+        <GlassCard gradient className="p-8 border-amber-500/30">
+          <div className="flex flex-col md:flex-row items-start gap-6">
+            <motion.div
+              className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/30 to-orange-500/30"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <span className="text-4xl">😴</span>
+            </motion.div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold mb-3">
+                <GradientText gradient="from-amber-400 to-orange-400">
+                  睡眠問題是 ADHD 的重要共伴護理項目
+                </GradientText>
+              </h3>
+              <p className="text-slate-300 mb-4 leading-relaxed">
+                睡眠問題在青少年 ADHD 族群中顯著常見，並顯著影響日常與學業功能。建議在評估與介入中常規納入。
               </p>
-              <div className="grid gap-2 md:grid-cols-2">
-                <div className="flex gap-2">
+              <div className="grid gap-3 md:grid-cols-2">
+                <motion.div
+                  className="flex gap-3 items-start p-3 rounded-lg bg-amber-500/10 border border-amber-500/20"
+                  whileHover={{ scale: 1.02 }}
+                >
                   <FaCheckCircle className="text-amber-400 flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-slate-300">改善睡眠有助提升日間功能與課業表現</span>
-                </div>
-                <div className="flex gap-2">
+                </motion.div>
+                <motion.div
+                  className="flex gap-3 items-start p-3 rounded-lg bg-amber-500/10 border border-amber-500/20"
+                  whileHover={{ scale: 1.02 }}
+                >
                   <FaCheckCircle className="text-amber-400 flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-slate-300">睡眠不足會加重 ADHD 症狀</span>
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
-        </motion.div>
+        </GlassCard>
       </div>
 
       {/* ADHD 三種類型 */}
       <div className="mx-auto max-w-7xl px-6 py-24">
-        <h2 className="text-center text-4xl font-black text-white mb-12">ADHD 的三種類型</h2>
-        
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-black mb-4">
+            <GradientText>ADHD 的三種類型</GradientText>
+          </h2>
+          <p className="text-slate-400 text-lg">了解不同的表現形式，找到最適合的支持方式</p>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {/* 類型 1：注意力不足型 */}
-          <motion.div 
-            className="rounded-3xl border border-blue-800/30 bg-blue-900/10 p-8"
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/20">
-                <FaEye className="text-3xl text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-white">注意力不足型</h3>
-                <p className="text-blue-300">Predominantly Inattentive</p>
-              </div>
-            </div>
-            <p className="text-slate-300 mb-4">
+          <GlassCard gradient className="p-8 border-blue-500/30">
+            <motion.div
+              className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/30 to-cyan-500/30 mb-6"
+              whileHover={{ rotate: 360, scale: 1.1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <FaEye className="text-4xl text-blue-400" />
+            </motion.div>
+            <h3 className="text-2xl font-bold text-white mb-2">注意力不足型</h3>
+            <p className="text-blue-300 text-sm mb-4">Predominantly Inattentive</p>
+            <p className="text-slate-300 mb-6 leading-relaxed">
               主要表現為注意力方面的困難，症狀較不明顯，常被誤認為懶惰或缺乏動力。
             </p>
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-blue-400 mt-1" />
-                <span className="text-sm text-slate-400">難以持續專注，容易分心</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-blue-400 mt-1" />
-                <span className="text-sm text-slate-400">經常遺失物品，做事缺乏組織性</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-blue-400 mt-1" />
-                <span className="text-sm text-slate-400">難以完成任務細節，常犯粗心錯誤</span>
-              </div>
+            <div className="space-y-3">
+              {[
+                '難以持續專注，容易分心',
+                '經常遺失物品，做事缺乏組織性',
+                '難以完成任務細節，常犯粗心錯誤'
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  className="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-500/10 transition-colors"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <FaCheckCircle className="text-blue-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-slate-300">{item}</span>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
+          </GlassCard>
 
           {/* 類型 2：過動-衝動型 */}
-          <motion.div 
-            className="rounded-3xl border border-purple-800/30 bg-purple-900/10 p-8"
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-500/20">
-                <FaBolt className="text-3xl text-purple-400" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-white">過動-衝動型</h3>
-                <p className="text-purple-300">Predominantly Hyperactive-Impulsive</p>
-              </div>
-            </div>
-            <p className="text-slate-300 mb-4">
+          <GlassCard gradient className="p-8 border-purple-500/30">
+            <motion.div
+              className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 mb-6"
+              whileHover={{ rotate: 360, scale: 1.1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <FaBolt className="text-4xl text-purple-400" />
+            </motion.div>
+            <h3 className="text-2xl font-bold text-white mb-2">過動-衝動型</h3>
+            <p className="text-purple-300 text-sm mb-4">Predominantly Hyperactive-Impulsive</p>
+            <p className="text-slate-300 mb-6 leading-relaxed">
               以過動和衝動行為為主，較容易被察覺，特別是在兒童時期。
             </p>
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-purple-400 mt-1" />
-                <span className="text-sm text-slate-400">坐立不安，話多，難以安靜</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-purple-400 mt-1" />
-                <span className="text-sm text-slate-400">經常打斷他人，難以等待</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-purple-400 mt-1" />
-                <span className="text-sm text-slate-400">衝動行為，難以控制脾氣</span>
-              </div>
+            <div className="space-y-3">
+              {[
+                '坐立不安，話多，難以安靜',
+                '經常打斷他人，難以等待',
+                '衝動行為，難以控制脾氣'
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  className="flex items-start gap-3 p-2 rounded-lg hover:bg-purple-500/10 transition-colors"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <FaCheckCircle className="text-purple-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-slate-300">{item}</span>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
+          </GlassCard>
 
           {/* 類型 3：混合型 */}
-          <motion.div 
-            className="rounded-3xl border border-orange-800/30 bg-orange-900/10 p-8"
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-500/20">
-                <FaBrain className="text-3xl text-orange-400" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-white">混合型</h3>
-                <p className="text-orange-300">Combined Presentation</p>
-              </div>
-            </div>
-            <p className="text-slate-300 mb-4">
+          <GlassCard gradient className="p-8 border-orange-500/30 md:col-span-2 lg:col-span-1">
+            <motion.div
+              className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/30 to-red-500/30 mb-6"
+              whileHover={{ rotate: 360, scale: 1.1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <FaBrain className="text-4xl text-orange-400" />
+            </motion.div>
+            <h3 className="text-2xl font-bold text-white mb-2">混合型</h3>
+            <p className="text-orange-300 text-sm mb-4">Combined Presentation</p>
+            <p className="text-slate-300 mb-6 leading-relaxed">
               同時具有注意力不足和過動-衝動的症狀，是最常見的類型。
             </p>
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-orange-400 mt-1" />
-                <span className="text-sm text-slate-400">結合注意力不足的特徵</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-orange-400 mt-1" />
-                <span className="text-sm text-slate-400">結合過動-衝動的特徵</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <FaCheckCircle className="text-orange-400 mt-1" />
-                <span className="text-sm text-slate-400">症狀表現最為複雜多樣</span>
-              </div>
+            <div className="space-y-3">
+              {[
+                '結合注意力不足的特徵',
+                '結合過動-衝動的特徵',
+                '症狀表現最為複雜多樣'
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  className="flex items-start gap-3 p-2 rounded-lg hover:bg-orange-500/10 transition-colors"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <FaCheckCircle className="text-orange-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-slate-300">{item}</span>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
+          </GlassCard>
         </div>
       </div>
 
       {/* ADHD 的成人症狀 */}
       <div className="mx-auto max-w-7xl px-6 py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl font-black text-white mb-4">成人 ADHD 的常見症狀</h2>
-          <p className="text-xl text-slate-300">許多成人 ADHD 患者直到成年後才被診斷，因為症狀表現方式與兒童不同</p>
-        </motion.div>
-        
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-black mb-4">
+            <GradientText>成人 ADHD 的常見症狀</GradientText>
+          </h2>
+          <p className="text-slate-400 text-lg">許多成人 ADHD 患者直到成年後才被診斷，因為症狀表現方式與兒童不同</p>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[
-            { icon: FaClock, title: '時間管理困難', desc: '難以估計時間，經常遲到或錯過截止日期' },
-            { icon: FaClipboard, title: '組織能力弱', desc: '工作和生活空間混亂，難以制定計劃' },
-            { icon: FaBrain, title: '記憶問題', desc: '短期記憶不佳，容易忘記重要信息' },
-            { icon: FaExclamationTriangle, title: '情緒調節困難', desc: '情緒波動大，容易感到沮喪或過度興奮' },
-            { icon: FaComments, title: '社交困難', desc: '難以傾聽他人，容易打斷或說話過多' },
-            { icon: FaHeartbeat, title: '衝動行為', desc: '做決定前缺乏思考，容易衝動消費' }
-          ].map((item, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 hover:border-cyan-500/50 transition"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <item.icon className="text-2xl text-cyan-400" />
-                <h3 className="text-lg font-bold text-white">{item.title}</h3>
-              </div>
-              <p className="text-slate-400">{item.desc}</p>
-            </motion.div>
-          ))}
+          <FeatureCard
+            icon="⏰"
+            title="時間管理困難"
+            description="難以估計時間，經常遲到或錯過截止日期"
+            color="cyan"
+          />
+
+          <FeatureCard
+            icon="📋"
+            title="組織能力弱"
+            description="工作和生活空間混亂，難以制定計劃"
+            color="blue"
+          />
+
+          <FeatureCard
+            icon="🧠"
+            title="記憶問題"
+            description="短期記憶不佳，容易忘記重要信息"
+            color="purple"
+          />
+
+          <FeatureCard
+            icon="💓"
+            title="情緒調節困難"
+            description="情緒波動大，容易感到沮喪或過度興奮"
+            color="orange"
+          />
+
+          <FeatureCard
+            icon="💬"
+            title="社交困難"
+            description="難以傾聽他人，容易打斷或說話過多"
+            color="teal"
+          />
+
+          <FeatureCard
+            icon="⚡"
+            title="衝動行為"
+            description="做決定前缺乏思考，容易衝動消費"
+            color="pink"
+          />
         </div>
       </div>
 
@@ -309,24 +386,24 @@ export default function HomePage() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl font-black text-white mb-6">🔍 ADHD 的診斷</h2>
+            <div className="flex items-center gap-3 mb-8">
+              <span className="text-5xl">🔍</span>
+              <h2 className="text-3xl font-black">
+                <GradientText gradient="from-blue-400 to-cyan-400">ADHD 的診斷</GradientText>
+              </h2>
+            </div>
             <div className="space-y-4">
-              <div className="rounded-xl border border-blue-500/30 bg-blue-900/20 p-4">
-                <h3 className="font-bold text-blue-300 mb-2">臨床評估</h3>
-                <p className="text-sm text-slate-300">由專業醫生進行詳細的病史採集和症狀評估</p>
-              </div>
-              <div className="rounded-xl border border-cyan-500/30 bg-cyan-900/20 p-4">
-                <h3 className="font-bold text-cyan-300 mb-2">心理測試</h3>
-                <p className="text-sm text-slate-300">使用標準化測試工具（如 ADHD-RS、CAARS）評估症狀嚴重程度</p>
-              </div>
-              <div className="rounded-xl border border-teal-500/30 bg-teal-900/20 p-4">
-                <h3 className="font-bold text-teal-300 mb-2">排除其他疾病</h3>
-                <p className="text-sm text-slate-300">確保症狀不是由其他醫學或心理健康狀況引起</p>
-              </div>
-              <div className="rounded-xl border border-green-500/30 bg-green-900/20 p-4">
-                <h3 className="font-bold text-green-300 mb-2">多角度評估</h3>
-                <p className="text-sm text-slate-300">收集來自家庭、工作或學校的多方面信息</p>
-              </div>
+              {[
+                { title: '臨床評估', desc: '由專業醫生進行詳細的病史採集和症狀評估', color: 'blue' },
+                { title: '心理測試', desc: '使用標準化測試工具（如 ADHD-RS、CAARS）評估症狀嚴重程度', color: 'cyan' },
+                { title: '排除其他疾病', desc: '確保症狀不是由其他醫學或心理健康狀況引起', color: 'teal' },
+                { title: '多角度評估', desc: '收集來自家庭、工作或學校的多方面信息', color: 'blue' }
+              ].map((item, idx) => (
+                <GlassCard key={idx} gradient className={`p-5 border-${item.color}-500/30`}>
+                  <h3 className={`font-bold text-${item.color}-300 mb-2 text-lg`}>{item.title}</h3>
+                  <p className="text-slate-300 leading-relaxed">{item.desc}</p>
+                </GlassCard>
+              ))}
             </div>
           </motion.div>
 
@@ -336,24 +413,24 @@ export default function HomePage() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl font-black text-white mb-6">💊 ADHD 的治療方法</h2>
+            <div className="flex items-center gap-3 mb-8">
+              <span className="text-5xl">💊</span>
+              <h2 className="text-3xl font-black">
+                <GradientText gradient="from-purple-400 to-pink-400">ADHD 的治療方法</GradientText>
+              </h2>
+            </div>
             <div className="space-y-4">
-              <div className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-4">
-                <h3 className="font-bold text-purple-300 mb-2">藥物治療</h3>
-                <p className="text-sm text-slate-300">刺激類或非刺激類藥物可幫助改善注意力和衝動控制</p>
-              </div>
-              <div className="rounded-xl border border-pink-500/30 bg-pink-900/20 p-4">
-                <h3 className="font-bold text-pink-300 mb-2">行為療法</h3>
-                <p className="text-sm text-slate-300">認知行為療法（CBT）幫助改善組織能力和情緒管理</p>
-              </div>
-              <div className="rounded-xl border border-orange-500/30 bg-orange-900/20 p-4">
-                <h3 className="font-bold text-orange-300 mb-2">生活方式調整</h3>
-                <p className="text-sm text-slate-300">規律作息、運動、冥想和時間管理技巧</p>
-              </div>
-              <div className="rounded-xl border border-yellow-500/30 bg-yellow-900/20 p-4">
-                <h3 className="font-bold text-yellow-300 mb-2">教育和支持</h3>
-                <p className="text-sm text-slate-300">了解 ADHD、加入支持小組、獲得工作或學校的適應措施</p>
-              </div>
+              {[
+                { title: '藥物治療', desc: '刺激類或非刺激類藥物可幫助改善注意力和衝動控制', color: 'purple' },
+                { title: '行為療法', desc: '認知行為療法（CBT）幫助改善組織能力和情緒管理', color: 'pink' },
+                { title: '生活方式調整', desc: '規律作息、運動、冥想和時間管理技巧', color: 'orange' },
+                { title: '教育和支持', desc: '了解 ADHD、加入支持小組、獲得工作或學校的適應措施', color: 'purple' }
+              ].map((item, idx) => (
+                <GlassCard key={idx} gradient className={`p-5 border-${item.color}-500/30`}>
+                  <h3 className={`font-bold text-${item.color}-300 mb-2 text-lg`}>{item.title}</h3>
+                  <p className="text-slate-300 leading-relaxed">{item.desc}</p>
+                </GlassCard>
+              ))}
             </div>
           </motion.div>
         </div>
@@ -361,102 +438,142 @@ export default function HomePage() {
 
       {/* ADHD 的影響 */}
       <div className="mx-auto max-w-7xl px-6 py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="rounded-3xl border border-red-800/30 bg-gradient-to-r from-red-900/20 to-orange-900/20 p-8"
-        >
-          <h2 className="text-3xl font-black text-white mb-6">⚠️ ADHD 的長期影響</h2>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="text-xl font-bold text-red-300 mb-3">如果不進行治療</h3>
-              <ul className="space-y-2">
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-red-400">•</span>
-                  <span>學業成績下降或無法完成教育</span>
-                </li>
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-red-400">•</span>
-                  <span>工作表現不佳，頻繁換工作</span>
-                </li>
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-red-400">•</span>
-                  <span>人際關係困難和社交孤立</span>
-                </li>
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-red-400">•</span>
-                  <span>心理健康問題（焦慮、抑鬱）</span>
-                </li>
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-red-400">•</span>
-                  <span>物質濫用風險增加</span>
-                </li>
+        <GlassCard gradient className="p-10 border-red-500/30">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-black mb-4">
+              <GradientText gradient="from-red-400 via-orange-400 to-yellow-400">
+                ⚠️ ADHD 的長期影響
+              </GradientText>
+            </h2>
+            <p className="text-slate-400">了解治療的重要性</p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* 不治療的後果 */}
+            <div className="rounded-2xl border border-red-500/30 bg-red-900/10 p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-3xl">❌</span>
+                <h3 className="text-2xl font-bold text-red-300">如果不進行治療</h3>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  '學業成績下降或無法完成教育',
+                  '工作表現不佳，頻繁換工作',
+                  '人際關係困難和社交孤立',
+                  '心理健康問題（焦慮、抑鬱）',
+                  '物質濫用風險增加'
+                ].map((item, idx) => (
+                  <motion.li
+                    key={idx}
+                    className="flex gap-3 items-start"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <span className="text-red-400 text-xl flex-shrink-0">•</span>
+                    <span className="text-slate-300">{item}</span>
+                  </motion.li>
+                ))}
               </ul>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-green-300 mb-3">通過適當治療和支持</h3>
-              <ul className="space-y-2">
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-green-400">✓</span>
-                  <span>改善學業和工作表現</span>
-                </li>
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-green-400">✓</span>
-                  <span>建立更好的人際關係</span>
-                </li>
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-green-400">✓</span>
-                  <span>提升自尊和自信</span>
-                </li>
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-green-400">✓</span>
-                  <span>減少心理健康問題</span>
-                </li>
-                <li className="flex gap-2 text-slate-300">
-                  <span className="text-green-400">✓</span>
-                  <span>提高生活質量和滿意度</span>
-                </li>
+
+            {/* 治療的好處 */}
+            <div className="rounded-2xl border border-green-500/30 bg-green-900/10 p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-3xl">✅</span>
+                <h3 className="text-2xl font-bold text-green-300">通過適當治療和支持</h3>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  '改善學業和工作表現',
+                  '建立更好的人際關係',
+                  '提升自尊和自信',
+                  '減少心理健康問題',
+                  '提高生活質量和滿意度'
+                ].map((item, idx) => (
+                  <motion.li
+                    key={idx}
+                    className="flex gap-3 items-start"
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <span className="text-green-400 text-xl flex-shrink-0">✓</span>
+                    <span className="text-slate-300">{item}</span>
+                  </motion.li>
+                ))}
               </ul>
             </div>
           </div>
-        </motion.div>
+        </GlassCard>
       </div>
 
       {/* 重要提醒 */}
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <motion.div
-          className="rounded-3xl border border-cyan-800/50 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 p-8"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h3 className="text-2xl font-bold text-cyan-300 mb-4">💡 重要提醒</h3>
-          <p className="text-slate-300 mb-4">
-            ADHD 是一種神經發展差異，不是性格缺陷或智力問題。許多成功的人士都有 ADHD，他們通過了解自己、尋求幫助和制定適應策略而蓬勃發展。
-          </p>
-          <p className="text-slate-300">
-            如果你懷疑自己或親友可能患有 ADHD，請諮詢醫療專業人士進行評估。早期診斷和干預可以顯著改善生活質量。
-          </p>
-        </motion.div>
+        <GlassCard gradient className="p-8 border-cyan-500/30">
+          <div className="flex flex-col md:flex-row items-start gap-6">
+            <motion.div
+              className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <span className="text-4xl">💡</span>
+            </motion.div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold mb-4">
+                <GradientText gradient="from-cyan-400 to-blue-400">重要提醒</GradientText>
+              </h3>
+              <p className="text-slate-300 mb-4 leading-relaxed">
+                ADHD 是一種<span className="text-cyan-400 font-semibold">神經發展差異</span>，不是性格缺陷或智力問題。
+                許多成功的人士都有 ADHD，他們通過了解自己、尋求幫助和制定適應策略而蓬勃發展。
+              </p>
+              <p className="text-slate-300 leading-relaxed">
+                如果你懷疑自己或親友可能患有 ADHD，請<span className="text-cyan-400 font-semibold">諮詢醫療專業人士</span>進行評估。
+                早期診斷和干預可以顯著改善生活質量。
+              </p>
+            </div>
+          </div>
+        </GlassCard>
       </div>
 
       {/* 開始體驗 CTA */}
       <div className="mx-auto max-w-4xl px-6 py-24 text-center">
-        <h2 className="text-4xl font-black text-white mb-6">準備好體驗了嗎？</h2>
-        <p className="text-xl text-slate-300 mb-8">
-          通過互動遊戲，親身體驗 ADHD 患者在日常生活中面臨的挑戰。
-          <br />
-          這不是遊戲，這是一場 60 秒的同理心之旅。
-        </p>
-        <Link
-          href="/focus-finder/prototype"
-          className="inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-12 py-6 text-xl font-black text-white shadow-2xl transition-all hover:scale-105"
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
         >
-          <FaPlay className="text-2xl" />
-          開始體驗
-          <FaArrowRight />
-        </Link>
+          <h2 className="text-4xl md:text-5xl font-black mb-6">
+            <GradientText>準備好體驗了嗎？</GradientText>
+          </h2>
+          <p className="text-xl text-slate-300 mb-10 leading-relaxed">
+            通過互動遊戲，親身體驗 ADHD 患者在日常生活中面臨的挑戰。
+            <br />
+            <span className="text-cyan-400 font-semibold">這不是遊戲，這是一場 90 秒的同理心之旅。</span>
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/focus-finder/prototype"
+              className="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-12 py-6 text-xl font-black text-white shadow-2xl transition-all hover:scale-105 hover:shadow-cyan-500/50"
+            >
+              <FaRocket className="text-2xl group-hover:translate-y-[-4px] transition-transform" />
+              <span>開始體驗</span>
+              <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10" />
+            </Link>
+
+            <Link
+              href="/assessment"
+              className="inline-flex items-center gap-2 rounded-2xl border-2 border-slate-700 bg-slate-800/50 px-8 py-6 text-lg font-bold text-slate-300 backdrop-blur-sm transition-all hover:border-cyan-500/50 hover:bg-slate-800"
+            >
+              <FaClipboard />
+              <span>進行評估</span>
+            </Link>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

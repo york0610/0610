@@ -862,11 +862,11 @@ const DISTRACTION_CONFIG: Record<DistractionConfigType, { minDelay: number; maxD
   psychological: { minDelay: 12, maxDelay: 22, duration: 3000, cost: 1, title: '🤔 突然想到其他事', objectToFind: 'tv' },
 };
 
-// 遊戲時間限制（秒）- 更長的遊戲體驗
-const GAME_TIME_LIMIT = 90; // 90 秒時間限制，適應更多任務
+// 遊戲時間限制（秒）- 無限挑戰模式
+const GAME_TIME_LIMIT = 90; // 90 秒時間限制，盡可能完成更多任務
 
-// 單個任務的超時時間（秒）- 提高難度
-const TASK_TIMEOUT = 15; // 15 秒內找不到物體就自動跳過，增加時間壓力
+// 單個任務的超時時間（秒）- 極限挑戰
+const TASK_TIMEOUT = 10; // 10 秒內找不到物體就自動跳過，極限時間壓力
 
 // 遊戲故事背景
 const GAME_STORY = `
@@ -1346,12 +1346,9 @@ export default function FocusFinderPrototype() {
     setTimeout(() => setErrorMessage(''), 3000);
 
     // 繼續下一個任務（不扣專注力分數，因為已經扣了玩家分數）
+    // 無限循環模式：任務序列循環使用
     setCurrentTaskIndex((prev) => {
-      const nextIndex = prev + 1;
-      if (nextIndex >= randomTaskSequence.length) {
-        setSessionState('completed');
-        return prev;
-      }
+      const nextIndex = (prev + 1) % randomTaskSequence.length;
       return nextIndex;
     });
   }, [currentTaskIndex, randomTaskSequence]);
@@ -1519,36 +1516,36 @@ export default function FocusFinderPrototype() {
         const gameProgress = currentTaskIndex / randomTaskSequence.length;
         const focusRatio = focusLevel / 100;
 
-        // 計算各類型任務的權重
-        let specialWeight = 0.35; // 基礎 35%
-        let environmentWeight = 0.25;
-        let biologicalWeight = 0.15;
+        // 計算各類型任務的權重 - 大幅提高特效型干擾（兔子洞）
+        let specialWeight = 0.50; // 基礎 50%（從 35% 大幅提高）
+        let environmentWeight = 0.15; // 降低
+        let biologicalWeight = 0.10; // 降低
         let psychologicalWeight = 0.15;
         let socialWeight = 0.10;
 
-        // 遊戲後期增加心理壓力和社交干擾
+        // 遊戲後期進一步增加特殊任務（兔子洞效應）
         if (gameProgress > 0.6) {
-          specialWeight += 0.15;
+          specialWeight += 0.20; // 從 0.15 提高到 0.20
           psychologicalWeight += 0.10;
           socialWeight += 0.10;
-          environmentWeight -= 0.15;
+          environmentWeight -= 0.20; // 進一步降低
           biologicalWeight -= 0.10;
         }
 
-        // 專注力低時增加生理和環境干擾
+        // 專注力低時仍然增加生理和環境干擾，但保持特殊任務
         if (focusRatio < 0.5) {
-          biologicalWeight += 0.15;
-          environmentWeight += 0.10;
-          specialWeight -= 0.10;
-          psychologicalWeight -= 0.10;
+          biologicalWeight += 0.10; // 從 0.15 降低
+          environmentWeight += 0.05; // 從 0.10 降低
+          specialWeight -= 0.05; // 從 -0.10 減少懲罰
+          psychologicalWeight -= 0.05; // 從 -0.10 減少懲罰
           socialWeight -= 0.05;
         }
 
-        // 專注力高時增加特殊任務和社交干擾
+        // 專注力高時大幅增加特殊任務（兔子洞陷阱）
         if (focusRatio > 0.8) {
-          specialWeight += 0.10;
+          specialWeight += 0.15; // 從 0.10 提高
           socialWeight += 0.15;
-          environmentWeight -= 0.10;
+          environmentWeight -= 0.15; // 從 -0.10 提高
           biologicalWeight -= 0.10;
           psychologicalWeight -= 0.05;
         }
@@ -1887,7 +1884,8 @@ export default function FocusFinderPrototype() {
         if (newTime >= GAME_TIME_LIMIT) {
           window.clearInterval(intervalRef.current!);
           intervalRef.current = null;
-          setSessionState('failed');
+          // 無限挑戰模式：時間到就結束，顯示完成畫面
+          setSessionState('completed');
           // 停止所有音效
           const audioManager = getAudioManager();
           setTimeout(() => {
@@ -2048,16 +2046,8 @@ export default function FocusFinderPrototype() {
     });
 
     setCurrentTaskIndex((prev) => {
-      const nextIndex = prev + 1;
-      if (nextIndex >= randomTaskSequence.length) {
-        setSessionState('completed');
-        // 不要立即退出全螢幕，讓結算畫面在全螢幕中顯示
-        if (intervalRef.current) {
-          window.clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-        return prev;
-      }
+      // 無限循環模式：任務序列循環使用
+      const nextIndex = (prev + 1) % randomTaskSequence.length;
 
       setLogs((prevLogs) => [
         ...prevLogs,
@@ -2129,22 +2119,8 @@ export default function FocusFinderPrototype() {
     });
 
     setCurrentTaskIndex((prev) => {
-      const nextIndex = prev + 1;
-      if (nextIndex >= randomTaskSequence.length) {
-        const audioMgr = getAudioManager();
-        audioMgr.playVictory(); // 添加勝利音
-        setSessionState('completed');
-        // 不要立即退出全螢幕，讓結算畫面在全螢幕中顯示
-        if (intervalRef.current) {
-          window.clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-        // 停止所有音效（延遲讓勝利音效播放完）
-        setTimeout(() => {
-          audioMgr.stopAll();
-        }, 2000);
-        return prev;
-      }
+      // 無限循環模式：任務序列循環使用
+      const nextIndex = (prev + 1) % randomTaskSequence.length;
 
       setLogs((prevLogs) => [
         ...prevLogs,
@@ -2530,21 +2506,23 @@ export default function FocusFinderPrototype() {
                       </span>
                     </div>
                   </div>
-                  {/* 任務進度條 */}
+                  {/* 任務完成計數器 - 無限挑戰模式 */}
                   {sessionState === 'running' && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs">任務進度</span>
-                        <div className="flex-1 h-2 bg-slate-800/50 rounded-full overflow-hidden">
+                        <span className="text-xs">已完成任務</span>
+                        <div className="flex-1 flex items-center justify-center">
                           <motion.div
-                            className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${randomTaskSequence.length > 0 ? (totalCompleted / randomTaskSequence.length) * 100 : 0}%` }}
-                            transition={{ duration: 0.5 }}
-                          />
+                            key={totalCompleted}
+                            initial={{ scale: 1.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent"
+                          >
+                            {totalCompleted}
+                          </motion.div>
                         </div>
-                        <span className="text-xs w-12 text-right">
-                          {totalCompleted}/{randomTaskSequence.length}
+                        <span className="text-xs text-slate-400">
+                          個
                         </span>
                       </div>
 
@@ -2795,7 +2773,7 @@ export default function FocusFinderPrototype() {
                   <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
                     <p className="text-xs uppercase tracking-widest text-slate-400">完成任務</p>
                     <p className="mt-1 text-3xl font-bold text-emerald-400">
-                      {totalCompleted}/{randomTaskSequence.length}
+                      {totalCompleted} 個
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">

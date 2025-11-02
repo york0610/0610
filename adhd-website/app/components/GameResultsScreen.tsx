@@ -34,50 +34,62 @@ export default function GameResultsScreen({
   const [showParticles, setShowParticles] = useState(false);
   const [currentStatIndex, setCurrentStatIndex] = useState(0);
 
-  // 計算成就和評級
+  // 計算成就和評級 - 無限挑戰模式
   const completionRate = stats.totalTasks > 0 ? (stats.totalCompleted / stats.totalTasks) * 100 : 0;
   const efficiency = stats.adjustedTime > 0 ? (stats.totalCompleted / stats.adjustedTime) * 60 : 0; // 每分鐘完成任務數
-  
+
+  // 新的評級系統：基於完成任務數量和效率
   const getRating = () => {
-    if (completionRate >= 90 && efficiency >= 2) return { level: 'S', color: 'text-yellow-400', bg: 'bg-yellow-500/20' };
-    if (completionRate >= 80 && efficiency >= 1.5) return { level: 'A', color: 'text-emerald-400', bg: 'bg-emerald-500/20' };
-    if (completionRate >= 70 && efficiency >= 1) return { level: 'B', color: 'text-blue-400', bg: 'bg-blue-500/20' };
-    if (completionRate >= 50) return { level: 'C', color: 'text-purple-400', bg: 'bg-purple-500/20' };
+    const tasksCompleted = stats.totalCompleted;
+
+    // S級：完成12個以上任務，效率極高
+    if (tasksCompleted >= 12 && efficiency >= 8) return { level: 'S', color: 'text-yellow-400', bg: 'bg-yellow-500/20' };
+
+    // A級：完成10-11個任務，效率高
+    if (tasksCompleted >= 10 && efficiency >= 6.5) return { level: 'A', color: 'text-emerald-400', bg: 'bg-emerald-500/20' };
+
+    // B級：完成8-9個任務，效率中等
+    if (tasksCompleted >= 8 && efficiency >= 5) return { level: 'B', color: 'text-blue-400', bg: 'bg-blue-500/20' };
+
+    // C級：完成6-7個任務
+    if (tasksCompleted >= 6) return { level: 'C', color: 'text-purple-400', bg: 'bg-purple-500/20' };
+
+    // D級：完成5個以下任務
     return { level: 'D', color: 'text-red-400', bg: 'bg-red-500/20' };
   };
 
   const rating = getRating();
 
   const achievements = [
-    { 
-      id: 'perfectionist', 
-      name: '完美主義者', 
-      description: '完成所有任務', 
-      achieved: stats.totalCompleted === stats.totalTasks,
+    {
+      id: 'master',
+      name: '極限挑戰者',
+      description: '完成12個以上任務',
+      achieved: stats.totalCompleted >= 12,
       icon: FaTrophy,
       color: 'text-yellow-400'
     },
-    { 
-      id: 'speedster', 
-      name: '閃電俠', 
-      description: '平均每分鐘完成2個任務', 
-      achieved: efficiency >= 2,
+    {
+      id: 'speedster',
+      name: '閃電俠',
+      description: '平均每分鐘完成8個任務',
+      achieved: efficiency >= 8,
       icon: FaFire,
       color: 'text-orange-400'
     },
-    { 
-      id: 'focused', 
-      name: '專注大師', 
-      description: '保持高專注力', 
+    {
+      id: 'focused',
+      name: '專注大師',
+      description: '保持高專注力',
       achieved: stats.focusLevel >= 80,
       icon: FaBrain,
       color: 'text-purple-400'
     },
-    { 
-      id: 'resilient', 
-      name: '抗干擾戰士', 
-      description: '處理5次以上干擾', 
-      achieved: stats.totalDistractions >= 5,
+    {
+      id: 'resilient',
+      name: '抗干擾戰士',
+      description: '處理10次以上干擾',
+      achieved: stats.totalDistractions >= 10,
       icon: FaHeart,
       color: 'text-pink-400'
     }
@@ -86,7 +98,7 @@ export default function GameResultsScreen({
   const achievedCount = achievements.filter(a => a.achieved).length;
 
   const detailedStats = [
-    { label: '完成率', value: `${completionRate.toFixed(1)}%`, icon: FaBullseye, color: 'text-emerald-400' },
+    { label: '完成任務', value: `${stats.totalCompleted} 個`, icon: FaBullseye, color: 'text-emerald-400' },
     { label: '效率', value: `${efficiency.toFixed(1)}/分鐘`, icon: FaClock, color: 'text-blue-400' },
     { label: '最終分數', value: `${stats.playerScore}`, icon: FaStar, color: 'text-yellow-400' },
     { label: '專注力', value: `${stats.focusLevel}%`, icon: FaBrain, color: 'text-purple-400' },

@@ -1596,12 +1596,20 @@ export default function FocusFinderPrototype() {
       // 檢查是否是特殊任務
       if (interruptionTask.special === 'rabbit-hole') {
         console.log('[DEBUG] Triggering rabbit hole effect');
-        audioManager.playRabbitHoleEnter();
+        // 停止所有其他音效，只播放兔子洞音效
+        audioManager.stopAll();
+        setTimeout(() => {
+          audioManager.playRabbitHoleEnter();
+        }, 100);
         setShowRabbitHole(true);
         return;
       } else if (interruptionTask.special === 'memory-failure') {
         console.log('[DEBUG] Triggering working memory failure');
-        audioManager.playWorkingMemoryFail();
+        // 停止所有其他音效，只播放記憶失敗音效
+        audioManager.stopAll();
+        setTimeout(() => {
+          audioManager.playWorkingMemoryFail();
+        }, 100);
         setForgottenTask(currentTask?.title || '未知任務');
         setShowWorkingMemoryFailure(true);
         return;
@@ -1954,10 +1962,12 @@ export default function FocusFinderPrototype() {
     }
 
     // 解除干擾任務鎖定
+    console.log('[DEBUG] Setting isDistractedTaskActive to false');
     setIsDistractedTaskActive(false);
 
     // 標記干擾任務為已完成
     if (currentDistraction) {
+      console.log('[DEBUG] Clearing currentDistraction:', currentDistraction.id);
       setDistractions(prev =>
         prev.map(d =>
           d.id === currentDistraction.id
@@ -1970,7 +1980,7 @@ export default function FocusFinderPrototype() {
 
     // 恢複一些專注力（減少恢復量以提高難度）
     setFocusLevel(prev => Math.min(100, prev + 10));
-    console.log('[DEBUG] Interruption task completed, resuming main task');
+    console.log('[DEBUG] Interruption task completed, main task should now be visible');
   }, [currentDistraction]);
 
   // 處理兔子洞逃脫
@@ -1980,10 +1990,12 @@ export default function FocusFinderPrototype() {
     audioManager.playRabbitHoleEscape();
     audioManager.playSuccess();
 
+    console.log('[DEBUG] Hiding rabbit hole effect');
     setShowRabbitHole(false);
 
     // 標記干擾任務為已完成
     if (currentDistraction) {
+      console.log('[DEBUG] Clearing rabbit hole distraction:', currentDistraction.id);
       setDistractions(prev =>
         prev.map(d =>
           d.id === currentDistraction.id
@@ -1994,9 +2006,13 @@ export default function FocusFinderPrototype() {
       setCurrentDistraction(null);
     }
 
+    // 解除干擾任務鎖定 - 重要！讓主任務可以繼續
+    console.log('[DEBUG] Setting isDistractedTaskActive to false after rabbit hole');
+    setIsDistractedTaskActive(false);
+
     // 恢復一些專注力（但比正常完成任務少一些，因為被分心了）
     setFocusLevel(prev => Math.min(100, prev + 5));
-    console.log('[DEBUG] Escaped from rabbit hole, resuming main task');
+    console.log('[DEBUG] Escaped from rabbit hole, main task should now be visible');
   }, [currentDistraction]);
 
   // 處理工作記憶恢復
@@ -2006,11 +2022,13 @@ export default function FocusFinderPrototype() {
     audioManager.playWorkingMemoryRecover();
     audioManager.playSuccess();
 
+    console.log('[DEBUG] Hiding working memory failure effect');
     setShowWorkingMemoryFailure(false);
     setForgottenTask('');
 
     // 標記干擾任務為已完成
     if (currentDistraction) {
+      console.log('[DEBUG] Clearing memory failure distraction:', currentDistraction.id);
       setDistractions(prev =>
         prev.map(d =>
           d.id === currentDistraction.id
@@ -2021,9 +2039,13 @@ export default function FocusFinderPrototype() {
       setCurrentDistraction(null);
     }
 
+    // 解除干擾任務鎖定 - 重要！讓主任務可以繼續
+    console.log('[DEBUG] Setting isDistractedTaskActive to false after memory recovery');
+    setIsDistractedTaskActive(false);
+
     // 恢復一些專注力（但比正常完成任務少，因為記憶中斷很消耗精力）
     setFocusLevel(prev => Math.min(100, prev + 3));
-    console.log('[DEBUG] Working memory recovered, resuming main task');
+    console.log('[DEBUG] Working memory recovered, main task should now be visible');
   }, [currentDistraction]);
 
   const skipCurrentTask = useCallback(() => {
@@ -2558,8 +2580,8 @@ export default function FocusFinderPrototype() {
                   )}
                 </div>
 
-                {/* 干擾任務卡片：強制中斷 */}
-                {sessionState === 'running' && isDistractedTaskActive && currentDistraction && (
+                {/* 干擾任務卡片：強制中斷 - 兔子洞特效期間不顯示 */}
+                {sessionState === 'running' && isDistractedTaskActive && currentDistraction && !showRabbitHole && !showWorkingMemoryFailure && (
                   <motion.div
                     key={currentDistraction.id}
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -2618,9 +2640,9 @@ export default function FocusFinderPrototype() {
                     )}
                   </motion.div>
                 )}
-                
-                {/* 主任務卡片 */}
-                {sessionState === 'running' && currentTask && (
+
+                {/* 主任務卡片 - 特效期間完全隱藏 */}
+                {sessionState === 'running' && currentTask && !showRabbitHole && !showWorkingMemoryFailure && (
                   <motion.div
                     key={currentTask.id}
                     initial={{ opacity: 0, y: 20 }}

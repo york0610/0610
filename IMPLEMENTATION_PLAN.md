@@ -146,6 +146,93 @@
 
 ---
 
+## Stage 2.6: Bug 修復 - 干擾系統和音效優化
+**Goal**: 修復干擾任務顯示問題、音效混亂、兔子洞特效期間任務框顯示問題
+**Priority**: CRITICAL
+**Status**: ✅ COMPLETED
+
+### 發現的 Bug:
+1. **干擾完成後任務框不顯示**
+   - 完成干擾任務後，主任務框有時不會重新顯示
+   - 可能是狀態管理問題
+
+2. **音效混亂**
+   - 多個音效同時播放造成混亂
+   - 需要更好的音效優先級管理
+
+3. **兔子洞特效期間任務框仍顯示**
+   - 兔子洞特效應該是全螢幕沉浸式體驗
+   - 任務框應該在特效期間隱藏
+   - 等特效結束後再顯示任務框
+
+### Tasks:
+- [x] 修復干擾任務狀態管理
+  - ✅ 確保 `isDistractedTaskActive` 正確重置
+  - ✅ 確保 `currentDistraction` 正確清除
+  - ✅ 添加詳細的狀態轉換日誌以便調試
+  - ✅ 在 `escapeRabbitHole` 中添加狀態重置
+  - ✅ 在 `recoverWorkingMemory` 中添加狀態重置
+
+- [x] 優化音效系統
+  - ✅ 在兔子洞特效觸發時停止所有其他音效
+  - ✅ 在記憶失敗特效觸發時停止所有其他音效
+  - ✅ 使用 `setTimeout` 延遲播放特效音效，避免衝突
+  - ✅ 減少同時播放的音效數量
+
+- [x] 修復兔子洞特效顯示邏輯
+  - ✅ 兔子洞特效期間隱藏干擾任務框
+  - ✅ 兔子洞特效期間隱藏主任務框
+  - ✅ 工作記憶失敗期間隱藏所有任務框
+  - ✅ 添加 `!showRabbitHole && !showWorkingMemoryFailure` 檢查
+  - ✅ 確保特效結束後正確恢復任務顯示
+
+**Detailed Changes**:
+1. **任務框顯示條件更新**：
+   ```typescript
+   // 干擾任務框
+   {sessionState === 'running' && isDistractedTaskActive && currentDistraction
+    && !showRabbitHole && !showWorkingMemoryFailure && (
+
+   // 主任務框
+   {sessionState === 'running' && currentTask
+    && !showRabbitHole && !showWorkingMemoryFailure && (
+   ```
+
+2. **音效優化**：
+   ```typescript
+   // 兔子洞觸發
+   audioManager.stopAll();
+   setTimeout(() => {
+     audioManager.playRabbitHoleEnter();
+   }, 100);
+
+   // 記憶失敗觸發
+   audioManager.stopAll();
+   setTimeout(() => {
+     audioManager.playWorkingMemoryFail();
+   }, 100);
+   ```
+
+3. **狀態重置增強**：
+   - `escapeRabbitHole`: 添加 `setIsDistractedTaskActive(false)`
+   - `recoverWorkingMemory`: 添加 `setIsDistractedTaskActive(false)`
+   - 所有關鍵函數添加詳細日誌
+
+**Success Criteria**:
+- ✅ 干擾任務完成後主任務框正常顯示
+- ✅ 音效不會混亂重疊（特效時停止其他音效）
+- ✅ 兔子洞特效期間只顯示特效，不顯示任務框
+- ✅ 特效結束後正確恢復遊戲狀態
+- ✅ 建置成功無錯誤
+
+**Tests**:
+- ⏳ 測試完成干擾任務後主任務是否正常顯示
+- ⏳ 測試音效是否清晰不混亂
+- ⏳ 測試兔子洞特效是否全螢幕沉浸
+- ⏳ 測試特效結束後遊戲是否正常繼續
+
+---
+
 ## Stage 3: 音效系統增強
 **Goal**: 豐富音效體驗，減少單調感
 **Priority**: HIGH

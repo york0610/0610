@@ -865,8 +865,8 @@ const DISTRACTION_CONFIG: Record<DistractionConfigType, { minDelay: number; maxD
 // 遊戲時間限制（秒）- 更長的遊戲體驗
 const GAME_TIME_LIMIT = 90; // 90 秒時間限制，適應更多任務
 
-// 單個任務的超時時間（秒）
-const TASK_TIMEOUT = 20; // 20 秒內找不到物體就自動跳過，給玩家更多時間
+// 單個任務的超時時間（秒）- 提高難度
+const TASK_TIMEOUT = 15; // 15 秒內找不到物體就自動跳過，增加時間壓力
 
 // 遊戲故事背景
 const GAME_STORY = `
@@ -1047,30 +1047,48 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
 
     if (!isActive) return;
 
-    // 重新設計的漸進式干擾系統 - 避免過度干擾
+    // 激進的漸進式干擾系統 - 大幅提高難度
     const scheduleProgressiveDistractions = () => {
       const distractionTypes: DistractionType[] = ['environment', 'biological', 'psychological', 'social'];
-      let currentTime = 10000; // 從10秒開始
 
-      // 為每種類型安排合理的干擾時間
-      distractionTypes.forEach((type, index) => {
-        const baseDelay = currentTime + (index * 8000); // 每種類型間隔8秒
-
-        // 初期干擾（較溫和）
-        setTimeout(() => triggerDistraction(type), baseDelay + Math.random() * 5000);
-
-        // 中期干擾（適中頻率）
-        if (baseDelay + 25000 < 90000) { // 確保不超過遊戲時間
-          setTimeout(() => triggerDistraction(type), baseDelay + 25000 + Math.random() * 8000);
+      // 第一階段：前30秒（溫和期）- 每8-10秒一個干擾
+      let currentTime = 8000; // 從8秒開始（更早開始）
+      for (let i = 0; i < 3; i++) {
+        const type = distractionTypes[i % distractionTypes.length];
+        const delay = currentTime + (i * 8000) + Math.random() * 2000;
+        if (delay < 30000) {
+          setTimeout(() => triggerDistraction(type), delay);
         }
+      }
 
-        // 後期干擾（較頻繁但不失控）
-        if (baseDelay + 50000 < 90000) {
-          setTimeout(() => triggerDistraction(type), baseDelay + 50000 + Math.random() * 10000);
+      // 第二階段：中30秒（適中期）- 每5-7秒一個干擾
+      currentTime = 30000;
+      for (let i = 0; i < 5; i++) {
+        const type = distractionTypes[i % distractionTypes.length];
+        const delay = currentTime + (i * 5000) + Math.random() * 2000;
+        if (delay < 60000) {
+          setTimeout(() => triggerDistraction(type), delay);
         }
-      });
+      }
 
-      console.log('[DISTRACTION] Progressive distraction system initialized - max 12 distractions over 90 seconds');
+      // 第三階段：後30秒（困難期）- 每3-5秒一個干擾
+      currentTime = 60000;
+      for (let i = 0; i < 7; i++) {
+        const type = distractionTypes[i % distractionTypes.length];
+        const delay = currentTime + (i * 3500) + Math.random() * 1500;
+        if (delay < 90000) {
+          setTimeout(() => triggerDistraction(type), delay);
+        }
+      }
+
+      // 額外的隨機干擾（增加不可預測性）
+      for (let i = 0; i < 5; i++) {
+        const type = distractionTypes[Math.floor(Math.random() * distractionTypes.length)];
+        const delay = 15000 + Math.random() * 70000; // 在15-85秒之間隨機觸發
+        setTimeout(() => triggerDistraction(type), delay);
+      }
+
+      console.log('[DISTRACTION] Aggressive distraction system initialized - ~20 distractions over 90 seconds');
     };
 
     scheduleProgressiveDistractions();
@@ -1294,7 +1312,7 @@ export default function FocusFinderPrototype() {
 
   // 處理任務超時
   const handleTaskTimeout = useCallback(() => {
-    const TIMEOUT_PENALTY = 15; // 超時扣15分
+    const TIMEOUT_PENALTY = 20; // 超時扣20分（提高難度）
 
     console.log('[SCORE] Task timeout! Deducting points:', TIMEOUT_PENALTY);
 
@@ -1640,8 +1658,8 @@ export default function FocusFinderPrototype() {
           : d
         )
       );
-      // 恢復部分專注力
-      setFocusLevel(prev => Math.min(100, prev + 15));
+      // 恢復部分專注力（減少恢復量以提高難度）
+      setFocusLevel(prev => Math.min(100, prev + 10));
       setCurrentDistraction(null);
     }
   }, [currentDistraction]);
@@ -1951,9 +1969,9 @@ export default function FocusFinderPrototype() {
       );
       setCurrentDistraction(null);
     }
-    
-    // 恢複一些專注力
-    setFocusLevel(prev => Math.min(100, prev + 15));
+
+    // 恢複一些專注力（減少恢復量以提高難度）
+    setFocusLevel(prev => Math.min(100, prev + 10));
     console.log('[DEBUG] Interruption task completed, resuming main task');
   }, [currentDistraction]);
 
@@ -1979,7 +1997,7 @@ export default function FocusFinderPrototype() {
     }
 
     // 恢復一些專注力（但比正常完成任務少一些，因為被分心了）
-    setFocusLevel(prev => Math.min(100, prev + 10));
+    setFocusLevel(prev => Math.min(100, prev + 5));
     console.log('[DEBUG] Escaped from rabbit hole, resuming main task');
   }, [currentDistraction]);
 
@@ -2006,7 +2024,7 @@ export default function FocusFinderPrototype() {
     }
 
     // 恢復一些專注力（但比正常完成任務少，因為記憶中斷很消耗精力）
-    setFocusLevel(prev => Math.min(100, prev + 5));
+    setFocusLevel(prev => Math.min(100, prev + 3));
     console.log('[DEBUG] Working memory recovered, resuming main task');
   }, [currentDistraction]);
 
@@ -2098,8 +2116,8 @@ export default function FocusFinderPrototype() {
       setTaskTimeoutRef(null);
     }
 
-    // 恢複專注力
-    setFocusLevel(prev => Math.min(100, prev + 25));
+    // 恢複專注力（完成主任務的獎勵）
+    setFocusLevel(prev => Math.min(100, prev + 20));
     
     setLogs((prev) => {
       const updated = [...prev];

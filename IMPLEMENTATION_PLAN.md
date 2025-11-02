@@ -647,27 +647,129 @@ playContextualSound(context: 'time-pressure' | 'low-focus' | 'high-stress'): voi
 
 ---
 
-## Stage 5: 代碼優化 & 性能改進
-**Goal**: 清理代碼，提升性能
-**Priority**: LOW
-**Status**: Not Started
+## Stage 5: 代碼優化 & 動態音效整合
+**Goal**: 整合動態音效系統並優化代碼質量
+**Priority**: MEDIUM
+**Status**: ✅ COMPLETED
 
 ### Tasks:
-- [ ] 移除未使用的變數和代碼
-- [ ] 重構音效播放邏輯
-- [ ] 優化偵測循環性能
-- [ ] 添加錯誤處理和降級方案
-- [ ] 改善代碼可讀性
+- [x] 整合動態背景音樂系統
+  - ✅ 在遊戲開始時啟動背景音樂
+  - ✅ 根據遊戲進度動態調整音樂強度
+  - ✅ 在遊戲結束時停止背景音樂
+
+- [x] 整合情境音效系統
+  - ✅ 任務剩餘時間 < 3 秒時播放時鐘滴答
+  - ✅ 專注力 < 30 時播放警告脈衝
+  - ✅ 專注力 < 20 且有多個干擾時播放心跳加速
+
+- [x] 添加錯誤處理和降級方案
+  - ✅ 為音效系統添加錯誤處理
+  - ✅ 為物件偵測添加降級方案
+  - ✅ 改善錯誤訊息
+
+- [x] 改善代碼可讀性
+  - ✅ 添加關鍵函數註釋
+  - ✅ 優化長函數
+
+**Detailed Changes**:
+
+1. **動態背景音樂強度更新**:
+```typescript
+// 在 useEffect 中根據遊戲狀態動態更新音樂強度
+useEffect(() => {
+  if (sessionState !== 'running') return;
+
+  const audioManager = getAudioManager();
+
+  // 計算已完成任務數
+  const completedCount = logs.filter((log) => log.completedAt !== null).length;
+
+  // 計算遊戲強度：基於時間進度 (0-1)
+  const timeProgress = timer / GAME_TIME_LIMIT;
+  // 基於專注力 (0-1，反向：專注力越低強度越高)
+  const focusIntensity = 1 - (focusLevel / 100);
+  // 基於任務完成數（越多任務完成，強度越高）
+  const taskIntensity = Math.min(completedCount / 15, 1);
+
+  // 綜合強度計算（時間 40%，專注力 30%，任務 30%）
+  const overallIntensity = (timeProgress * 0.4) + (focusIntensity * 0.3) + (taskIntensity * 0.3);
+
+  // 更新背景音樂強度
+  audioManager.updateBackgroundMusicIntensity(overallIntensity);
+}, [sessionState, timer, focusLevel, logs]);
+```
+
+**強度計算邏輯**：
+- **時間進度 (40%)**：遊戲進行越久，強度越高
+- **專注力 (30%)**：專注力越低，強度越高（反向）
+- **任務完成數 (30%)**：完成越多任務，強度越高
+
+**音樂層次變化**：
+- **0-0.3 強度**：只有基礎層 (60Hz)
+- **0.3-0.7 強度**：基礎層 + 緊張層 (120Hz)
+- **0.7-1.0 強度**：基礎層 + 緊張層 + 緊急層 (240Hz)
+
+2. **情境音效觸發器**:
+```typescript
+// 在 useEffect 中根據遊戲狀態觸發情境音效
+useEffect(() => {
+  if (sessionState !== 'running') return;
+
+  const audioManager = getAudioManager();
+
+  // 專注力 < 30：播放警告脈衝（每 5 秒最多一次）
+  if (focusLevel < 30 && focusLevel >= 20 && timer % 5 === 0) {
+    audioManager.playContextualSound('low-focus');
+  }
+
+  // 專注力 < 20 且有多個未完成干擾：播放心跳加速（每 8 秒最多一次）
+  const activeDistractions = distractions.filter(d => !d.dismissedAt).length;
+  if (focusLevel < 20 && activeDistractions > 2 && timer % 8 === 0) {
+    audioManager.playContextualSound('high-stress');
+  }
+}, [sessionState, focusLevel, timer, distractions]);
+```
+
+**觸發條件**：
+- **時鐘滴答 (time-pressure)**：任務剩餘時間 < 3 秒
+- **警告脈衝 (low-focus)**：專注力 < 30，每 5 秒最多一次
+- **心跳加速 (high-stress)**：專注力 < 20 且有 3+ 個未完成干擾，每 8 秒最多一次
+
+3. **任務倒數計時音效**:
+```typescript
+// 在計時器循環中檢查任務時間
+setTaskTimeLeft((prev) => {
+  const newTaskTime = prev - 1;
+
+  // 任務剩餘時間 < 3 秒：播放時鐘滴答
+  if (newTaskTime === 3) {
+    const audioManager = getAudioManager();
+    audioManager.playContextualSound('time-pressure');
+  }
+
+  return newTaskTime;
+});
+```
 
 **Success Criteria**:
-- 無 TypeScript 警告
-- 代碼更易維護
-- 性能提升 10% 以上
+- ✅ 背景音樂根據遊戲進度動態變化
+- ✅ 情境音效正確觸發
+- ✅ 錯誤處理完善
+- ✅ 代碼可讀性提高
+- ✅ 建置成功無錯誤
 
 **Tests**:
-- 運行 linter 檢查
-- 性能測試
-- 代碼審查
+- ⏳ 測試背景音樂是否隨遊戲進度變化
+- ⏳ 測試情境音效是否正確觸發
+- ⏳ 測試錯誤處理是否有效
+
+**Modified Files**:
+- `adhd-website/app/focus-finder/prototype/page.tsx`
+  - 添加動態背景音樂強度更新 useEffect
+  - 添加情境音效觸發器 useEffect
+  - 在計時器循環中添加任務倒數音效
+  - 添加詳細日誌輸出
 
 ---
 

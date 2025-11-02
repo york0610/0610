@@ -1906,6 +1906,19 @@ export default function FocusFinderPrototype() {
         }
         return newTime;
       });
+
+      // 🎯 情境音效觸發器（每秒檢查一次）
+      setTaskTimeLeft((prev) => {
+        const newTaskTime = prev - 1;
+
+        // 任務剩餘時間 < 3 秒：播放時鐘滴答
+        if (newTaskTime === 3) {
+          const audioManager = getAudioManager();
+          audioManager.playContextualSound('time-pressure');
+        }
+
+        return newTaskTime;
+      });
     }, 1000);
   }, []);
 
@@ -2236,6 +2249,51 @@ export default function FocusFinderPrototype() {
       stopStream();
     };
   }, [stopStream]);
+
+  // 🎵 動態背景音樂強度更新
+  useEffect(() => {
+    if (sessionState !== 'running') return;
+
+    const audioManager = getAudioManager();
+
+    // 計算已完成任務數
+    const completedCount = logs.filter((log) => log.completedAt !== null).length;
+
+    // 計算遊戲強度：基於時間進度 (0-1)
+    const timeProgress = timer / GAME_TIME_LIMIT;
+    // 基於專注力 (0-1，反向：專注力越低強度越高)
+    const focusIntensity = 1 - (focusLevel / 100);
+    // 基於任務完成數（越多任務完成，強度越高）
+    const taskIntensity = Math.min(completedCount / 15, 1); // 15 個任務為滿強度
+
+    // 綜合強度計算（時間 40%，專注力 30%，任務 30%）
+    const overallIntensity = (timeProgress * 0.4) + (focusIntensity * 0.3) + (taskIntensity * 0.3);
+
+    // 更新背景音樂強度
+    audioManager.updateBackgroundMusicIntensity(overallIntensity);
+
+    console.log(`[AUDIO] 背景音樂強度更新: ${(overallIntensity * 100).toFixed(1)}% (時間: ${(timeProgress * 100).toFixed(0)}%, 專注力: ${(focusIntensity * 100).toFixed(0)}%, 任務: ${(taskIntensity * 100).toFixed(0)}%)`);
+  }, [sessionState, timer, focusLevel, logs]);
+
+  // 🎯 情境音效觸發器
+  useEffect(() => {
+    if (sessionState !== 'running') return;
+
+    const audioManager = getAudioManager();
+
+    // 專注力 < 30：播放警告脈衝（每 5 秒最多一次）
+    if (focusLevel < 30 && focusLevel >= 20 && timer % 5 === 0) {
+      audioManager.playContextualSound('low-focus');
+      console.log('[AUDIO] 觸發情境音效: 低專注力警告');
+    }
+
+    // 專注力 < 20 且有多個未完成干擾：播放心跳加速（每 8 秒最多一次）
+    const activeDistractions = distractions.filter(d => !d.dismissedAt).length;
+    if (focusLevel < 20 && activeDistractions > 2 && timer % 8 === 0) {
+      audioManager.playContextualSound('high-stress');
+      console.log('[AUDIO] 觸發情境音效: 高壓力心跳');
+    }
+  }, [sessionState, focusLevel, timer, distractions]);
 
   // 平台檢測
   useEffect(() => {

@@ -1204,6 +1204,7 @@ export default function FocusFinderPrototype() {
   const [isDetectionEnabled, setIsDetectionEnabled] = useState(true); // 預設啟用
   const [detectedObject, setDetectedObject] = useState<string | null>(null);
   const [detectionDebug, setDetectionDebug] = useState<string[]>([]);
+  const [allDetectedObjects, setAllDetectedObjects] = useState<Array<{ name: string; confidence: number }>>([]);
 
   const [permissionState, setPermissionState] = useState<PermissionState>('idle');
   const [sessionState, setSessionState] = useState<SessionState>('idle');
@@ -2279,6 +2280,19 @@ export default function FocusFinderPrototype() {
             const currentTask = randomTaskSequence[currentTaskIndex];
             const currentDist = currentDistraction;
 
+            // 更新所有偵測到的物件列表（用於 UI 顯示）
+            if (result.objects.length > 0) {
+              const detectedList = result.objects
+                .slice(0, 5) // 只顯示前 5 個
+                .map(obj => ({
+                  name: obj.class,
+                  confidence: Math.round(obj.score * 100)
+                }));
+              setAllDetectedObjects(detectedList);
+            } else {
+              setAllDetectedObjects([]);
+            }
+
             // 優先檢查干擾任務
             if (isDistractedTaskActive && currentDist?.objectToFind) {
               if (detector.checkForGameObject(result, currentDist.objectToFind)) {
@@ -2497,6 +2511,19 @@ export default function FocusFinderPrototype() {
                   <div className="flex justify-between items-center">
                     <div className="flex gap-2">
                       <span className="rounded-full bg-slate-900/80 backdrop-blur px-3 py-1.5">{currentTask?.emoji} {currentTask?.title}</span>
+
+                      {/* 專注力狀態指示器 */}
+                      {sessionState === 'running' && (
+                        <span className={`rounded-full px-3 py-1.5 backdrop-blur flex items-center gap-1 ${
+                          focusLevel >= 70
+                            ? 'bg-emerald-900/80 text-emerald-200'
+                            : focusLevel >= 40
+                            ? 'bg-yellow-900/80 text-yellow-200'
+                            : 'bg-red-900/80 text-red-200 animate-pulse'
+                        }`}>
+                          {focusLevel >= 70 ? '🎯' : focusLevel >= 40 ? '⚠️' : '🚨'} {focusLevel}%
+                        </span>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       {/* 分數顯示 */}
@@ -2514,6 +2541,8 @@ export default function FocusFinderPrototype() {
                       <span className={`rounded-full px-3 py-1.5 backdrop-blur ${
                         taskTimeLeft <= 5
                           ? 'bg-red-900/80 text-red-200 animate-pulse'
+                          : taskTimeLeft <= 7
+                          ? 'bg-orange-900/80 text-orange-200'
                           : 'bg-slate-900/80'
                       }`}>
                         ⏳ {taskTimeLeft}s
@@ -2523,6 +2552,8 @@ export default function FocusFinderPrototype() {
                       <span className={`rounded-full px-3 py-1.5 backdrop-blur ${
                         timer > GAME_TIME_LIMIT * 0.8
                           ? 'bg-red-900/80 text-red-200 animate-pulse'
+                          : timer > GAME_TIME_LIMIT * 0.6
+                          ? 'bg-orange-900/80 text-orange-200'
                           : 'bg-slate-900/80'
                       }`}>
                         ⏱️ {formatSeconds(Math.max(0, GAME_TIME_LIMIT - timer))}
@@ -2576,6 +2607,28 @@ export default function FocusFinderPrototype() {
                             🔍 尋找: <span className="font-bold text-slate-200">{currentTask.title}</span>
                           </span>
                         </div>
+                      )}
+
+                      {/* 物件偵測面板 - 顯示所有偵測到的物件 */}
+                      {allDetectedObjects.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-slate-800/50 backdrop-blur rounded-lg px-3 py-2"
+                        >
+                          <div className="text-xs text-slate-400 mb-1">偵測中的物件:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {allDetectedObjects.map((obj, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center gap-1 bg-slate-700/50 rounded px-2 py-0.5 text-xs"
+                              >
+                                <span className="text-slate-300">{obj.name}</span>
+                                <span className="text-cyan-400 font-mono">{obj.confidence}%</span>
+                              </span>
+                            ))}
+                          </div>
+                        </motion.div>
                       )}
                     </div>
                   )}
@@ -2647,14 +2700,43 @@ export default function FocusFinderPrototype() {
                   <motion.div
                     key={currentTask.id}
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ 
-                      opacity: isDistractedTaskActive ? 0.3 : 1, 
+                    animate={{
+                      opacity: isDistractedTaskActive ? 0.3 : 1,
                       y: 0,
                       scale: isDistractedTaskActive ? 0.95 : 1
                     }}
                     className="fixed left-1/2 top-1/2 flex w-[min(95vw,500px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border-2 border-cyan-400/60 bg-gradient-to-br from-slate-950/95 to-slate-900/95 p-3 sm:p-6 text-xs sm:text-sm text-slate-100 shadow-[0_0_40px_rgba(34,211,238,0.4)] backdrop-blur-xl max-h-[70vh] overflow-y-auto z-40"
                     style={{ pointerEvents: isDistractedTaskActive ? 'none' : 'auto' }}
                   >
+                    {/* 任務進度指示器 */}
+                    <div className="flex items-center justify-between gap-2 bg-slate-800/50 rounded-lg px-3 py-2 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-cyan-400 font-bold text-sm">{totalCompleted}</span>
+                        <span className="text-slate-400 text-xs">個任務完成</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const efficiency = timer > 0 ? (totalCompleted / (timer / 60)) : 0;
+                          const predictedRank =
+                            totalCompleted >= 12 && efficiency >= 8 ? 'S' :
+                            totalCompleted >= 10 && efficiency >= 6.5 ? 'A' :
+                            totalCompleted >= 8 && efficiency >= 5 ? 'B' :
+                            totalCompleted >= 6 ? 'C' : 'D';
+                          const rankColor =
+                            predictedRank === 'S' ? 'text-yellow-400' :
+                            predictedRank === 'A' ? 'text-emerald-400' :
+                            predictedRank === 'B' ? 'text-cyan-400' :
+                            predictedRank === 'C' ? 'text-orange-400' : 'text-red-400';
+                          return (
+                            <>
+                              <span className="text-slate-400 text-xs">預測評級:</span>
+                              <span className={`font-bold text-sm ${rankColor}`}>{predictedRank}</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                       <span className="text-xl sm:text-2xl flex-shrink-0">{currentTask.emoji}</span>
                       <div className="flex-1 min-w-0">

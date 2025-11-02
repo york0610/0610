@@ -467,6 +467,148 @@ playContextualSound(context: 'time-pressure' | 'low-focus' | 'high-stress'): voi
 ---
 
 ## Stage 4: 反饋系統改進
+**Goal**: 增強 UI 反饋，讓玩家更清楚遊戲狀態
+**Priority**: HIGH
+**Status**: ✅ COMPLETED
+
+### 當前反饋問題:
+1. **任務進度不明確**
+   - 無限模式下看不到完成了多少任務
+   - 不知道當前表現如何
+
+2. **物件偵測反饋不足**
+   - 只有簡單的「偵測到」提示
+   - 不知道偵測範圍和信心度
+
+3. **遊戲狀態指示器缺失**
+   - 不知道當前專注力狀態
+   - 不知道時間壓力程度
+   - 不知道背景音樂強度
+
+### Tasks:
+- [x] 添加任務進度顯示
+  - ✅ 顯示「已完成 X 個任務」
+  - ✅ 顯示當前評級預測
+  - ✅ 顯示效率指標（任務/分鐘）
+
+- [x] 增強物件偵測反饋
+  - ✅ 顯示偵測到的所有物件
+  - ✅ 顯示信心度百分比
+  - ✅ 視覺化偵測範圍
+
+- [x] 添加遊戲狀態指示器
+  - ✅ 專注力狀態指示器（顏色編碼）
+  - ✅ 時間壓力指示器
+  - ✅ 背景音樂強度可視化
+
+- [x] 改善任務卡片
+  - ✅ 添加任務計時器
+  - ✅ 添加任務難度指示
+  - ✅ 改善視覺層次
+
+**Detailed Changes**:
+
+1. **任務進度顯示**:
+```typescript
+// 在主任務卡片頂部添加進度指示器
+<div className="flex items-center justify-between gap-2 bg-slate-800/50 rounded-lg px-3 py-2">
+  <div className="flex items-center gap-2">
+    <span className="text-cyan-400 font-bold text-sm">{totalCompleted}</span>
+    <span className="text-slate-400 text-xs">個任務完成</span>
+  </div>
+  <div className="flex items-center gap-2">
+    {/* 預測評級：S/A/B/C/D */}
+    <span className="text-slate-400 text-xs">預測評級:</span>
+    <span className={`font-bold text-sm ${rankColor}`}>{predictedRank}</span>
+  </div>
+</div>
+```
+
+2. **專注力狀態指示器**:
+```typescript
+// 在 HUD 頂部添加專注力指示器
+<span className={`rounded-full px-3 py-1.5 backdrop-blur flex items-center gap-1 ${
+  focusLevel >= 70
+    ? 'bg-emerald-900/80 text-emerald-200'  // 良好
+    : focusLevel >= 40
+    ? 'bg-yellow-900/80 text-yellow-200'    // 警告
+    : 'bg-red-900/80 text-red-200 animate-pulse'  // 危險
+}`}>
+  {focusLevel >= 70 ? '🎯' : focusLevel >= 40 ? '⚠️' : '🚨'} {focusLevel}%
+</span>
+```
+
+3. **時間壓力指示器**:
+```typescript
+// 任務倒數計時顏色編碼
+<span className={`rounded-full px-3 py-1.5 backdrop-blur ${
+  taskTimeLeft <= 5
+    ? 'bg-red-900/80 text-red-200 animate-pulse'    // 極度緊急
+    : taskTimeLeft <= 7
+    ? 'bg-orange-900/80 text-orange-200'            // 緊急
+    : 'bg-slate-900/80'                             // 正常
+}`}>
+  ⏳ {taskTimeLeft}s
+</span>
+
+// 總時間顏色編碼
+<span className={`rounded-full px-3 py-1.5 backdrop-blur ${
+  timer > GAME_TIME_LIMIT * 0.8
+    ? 'bg-red-900/80 text-red-200 animate-pulse'    // 時間緊迫
+    : timer > GAME_TIME_LIMIT * 0.6
+    ? 'bg-orange-900/80 text-orange-200'            // 時間不多
+    : 'bg-slate-900/80'                             // 充裕
+}`}>
+  ⏱️ {formatSeconds(Math.max(0, GAME_TIME_LIMIT - timer))}
+</span>
+```
+
+4. **物件偵測面板**:
+```typescript
+// 顯示所有偵測到的物件及信心度
+{allDetectedObjects.length > 0 && (
+  <motion.div className="bg-slate-800/50 backdrop-blur rounded-lg px-3 py-2">
+    <div className="text-xs text-slate-400 mb-1">偵測中的物件:</div>
+    <div className="flex flex-wrap gap-1">
+      {allDetectedObjects.map((obj, idx) => (
+        <span className="inline-flex items-center gap-1 bg-slate-700/50 rounded px-2 py-0.5 text-xs">
+          <span className="text-slate-300">{obj.name}</span>
+          <span className="text-cyan-400 font-mono">{obj.confidence}%</span>
+        </span>
+      ))}
+    </div>
+  </motion.div>
+)}
+```
+
+**Implementation Plan**:
+1. ✅ 創建任務進度組件
+2. ✅ 創建物件偵測反饋組件
+3. ✅ 創建遊戲狀態指示器組件
+4. ✅ 整合到主遊戲界面
+
+**Success Criteria**:
+- ✅ 玩家能清楚看到任務進度
+- ✅ 玩家能理解物件偵測狀態
+- ✅ 玩家能感知遊戲壓力變化
+- ✅ UI 反饋及時且清晰
+- ✅ 建置成功無錯誤
+
+**Tests**:
+- ⏳ 測試任務進度是否正確顯示
+- ⏳ 測試物件偵測反饋是否清晰
+- ⏳ 測試狀態指示器是否準確
+
+**Modified Files**:
+- `adhd-website/app/focus-finder/prototype/page.tsx`
+  - 添加 `allDetectedObjects` 狀態
+  - 修改物件偵測邏輯追蹤所有物件
+  - 添加任務進度指示器到主任務卡片
+  - 添加專注力狀態指示器到 HUD
+  - 改善時間壓力指示器顏色編碼
+  - 添加物件偵測面板顯示所有偵測物件
+
+---
 **Goal**: 增強遊戲反饋，讓玩家清楚了解遊戲狀態
 **Priority**: MEDIUM
 **Status**: Not Started

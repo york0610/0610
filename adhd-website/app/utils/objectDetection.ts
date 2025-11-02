@@ -86,9 +86,9 @@ export class ObjectDetector {
   private useMediaPipe = false;
 
   // 優化偵測參數以平衡準確度和召回率
-  private readonly CONFIDENCE_THRESHOLD = 0.35; // 降低閾值以提高召回率
-  private readonly NMS_THRESHOLD = 0.45; // 非極大值抑制閾值
-  private readonly MAX_DETECTIONS = 20; // 增加最大偵測數量以捕捉更多物件
+  private readonly CONFIDENCE_THRESHOLD = 0.30; // 進一步降低閾值以提高召回率（從 0.35 降到 0.30）
+  private readonly NMS_THRESHOLD = 0.40; // 降低 NMS 閾值以減少重複偵測（從 0.45 降到 0.40）
+  private readonly MAX_DETECTIONS = 25; // 增加最大偵測數量（從 20 增加到 25）
 
   async initialize() {
     if (this.isReady) return;

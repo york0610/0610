@@ -1283,6 +1283,19 @@ export default function FocusFinderPrototype() {
 
   const currentTask = randomTaskSequence[currentTaskIndex] ?? null;
 
+  // 調試：檢查任務序列和當前索引
+  useEffect(() => {
+    if (sessionState === 'running') {
+      if (!currentTask) {
+        console.error('[DEBUG] currentTask is null!', {
+          currentTaskIndex,
+          sequenceLength: randomTaskSequence.length,
+          sequence: randomTaskSequence.map(t => t?.id || 'undefined')
+        });
+      }
+    }
+  }, [currentTask, currentTaskIndex, randomTaskSequence, sessionState]);
+
   // 特效觸發函數
   const triggerParticleEffect = useCallback((
     type: 'success' | 'error' | 'distraction' | 'focus' | 'detection',
@@ -2402,26 +2415,28 @@ export default function FocusFinderPrototype() {
   return (
     <ScreenShake isActive={screenShake} intensity={8} duration={800}>
       <div className={`${isFullscreen && sessionState === 'running' ? 'fixed inset-0 z-50 overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100`}>
-      {/* 新的專注力條 - 只在遊戲運行時顯示 */}
-      <PulseEffect
-        isActive={focusLevel <= 30}
-        color="#ef4444"
-        intensity={0.3}
-      >
-        <FocusBar
-          focusLevel={focusLevel}
-          isVisible={sessionState === 'running'}
-          onCriticalLevel={() => {
-            // 當專注力過低時的回調
-            const audioManager = getAudioManager();
-            audioManager.playError();
-            triggerParticleEffect('error');
-            if (navigator.vibrate) {
-              navigator.vibrate([300, 100, 300, 100, 300]);
-            }
-          }}
-        />
-      </PulseEffect>
+      {/* 新的專注力條 - 只在遊戲運行時顯示，設置較低的 z-index */}
+      <div className="relative z-10">
+        <PulseEffect
+          isActive={focusLevel <= 30}
+          color="#ef4444"
+          intensity={0.3}
+        >
+          <FocusBar
+            focusLevel={focusLevel}
+            isVisible={sessionState === 'running'}
+            onCriticalLevel={() => {
+              // 當專注力過低時的回調
+              const audioManager = getAudioManager();
+              audioManager.playError();
+              triggerParticleEffect('error');
+              if (navigator.vibrate) {
+                navigator.vibrate([300, 100, 300, 100, 300]);
+              }
+            }}
+          />
+        </PulseEffect>
+      </div>
 
       {/* 兔子洞特效 */}
       <RabbitHoleEffect

@@ -163,8 +163,9 @@ export class AudioManager implements IAudioManager {
   private masterVolume = 1.0;
   private isMuted = false;
   private activeSources: AudioBufferSourceNode[] = [];
-  private readonly MAX_CONCURRENT_SOUNDS = 5; // 限制同時播放的音效數量
+  private readonly MAX_CONCURRENT_SOUNDS = 3; // 降低同時播放的音效數量從 5 到 3
   private currentlyPlayingCount = 0;
+  private lastCleanupTime = 0;
 
   // Tuna.js 音效處理器
   private tuna: any = null;
@@ -513,6 +514,9 @@ export class AudioManager implements IAudioManager {
   async play(type: AudioType): Promise<void> {
     if (this.isMuted) return;
 
+    // 清理過期的音效源
+    this.cleanupExpiredSources();
+
     // 限制同時播放的音效數量，避免音效堆疊
     if (this.currentlyPlayingCount >= this.MAX_CONCURRENT_SOUNDS) {
       console.log(`[AUDIO] Skipping ${type} - too many concurrent sounds (${this.currentlyPlayingCount}/${this.MAX_CONCURRENT_SOUNDS})`);
@@ -756,6 +760,9 @@ export class AudioManager implements IAudioManager {
    */
   private playGeneratedSound(type: AudioType): void {
     if (this.isMuted) return;
+
+    // 清理過期的音效源
+    this.cleanupExpiredSources();
 
     // 限制同時播放的音效數量
     if (this.currentlyPlayingCount >= this.MAX_CONCURRENT_SOUNDS) {
@@ -1495,12 +1502,41 @@ export class AudioManager implements IAudioManager {
       }
     });
 
-    // 清空陣列
+    // 清空陣列並重置計數
     this.oscillators = [];
     this.gainNodes = [];
     this.activeSources = [];
+    this.currentlyPlayingCount = 0; // 重置計數
 
-    console.log('[Audio] 所有音效已停止');
+    console.log('[Audio] 所有音效已停止，計數已重置');
+  }
+
+  /**
+   * 清理過期的音效源（防止計數不準確）
+   */
+  private cleanupExpiredSources() {
+    const now = Date.now();
+    // 每 2 秒清理一次
+    if (now - this.lastCleanupTime < 2000) return;
+
+    this.lastCleanupTime = now;
+
+    // 移除已經結束的音源
+    this.activeSources = this.activeSources.filter(source => {
+      try {
+        // 檢查音源是否還在播放
+        return source.context.state === 'running';
+      } catch (e) {
+        return false;
+      }
+    });
+
+    // 更新計數
+    this.currentlyPlayingCount = this.activeSources.length;
+
+    if (this.currentlyPlayingCount > 0) {
+      console.log(`[AUDIO] Cleanup: ${this.currentlyPlayingCount} active sources`);
+    }
   }
 
   // ===== 程序化音效生成方法 =====

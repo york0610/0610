@@ -1748,34 +1748,56 @@ export default function FocusFinderPrototype() {
     setShowGameIntro(true);
   }, []);
 
-  // 全螢幕事件監聽器 - 防止意外退出
+  // 增強的全螢幕事件監聽器 - 更積極地防止意外退出
   useEffect(() => {
+    let reenterAttempts = 0;
+    const MAX_REENTER_ATTEMPTS = 3;
+
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!document.fullscreenElement;
       console.log('[FULLSCREEN] Fullscreen change detected:', isCurrentlyFullscreen);
 
       // 只有在遊戲正在運行且不是在結算畫面時才重新進入全螢幕
-      if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation) {
+      if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation && !isDistractedTaskActive) {
         console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter');
-        setTimeout(async () => {
-          try {
-            // 再次檢查狀態，確保仍在遊戲中
-            if (sessionState === 'running') {
-              const docElement = document.documentElement as any;
-              if (docElement.requestFullscreen) {
-                await docElement.requestFullscreen();
+
+        // 限制重新進入嘗試次數，避免無限循環
+        if (reenterAttempts < MAX_REENTER_ATTEMPTS) {
+          reenterAttempts++;
+
+          setTimeout(async () => {
+            try {
+              // 再次檢查狀態，確保仍在遊戲中
+              if (sessionState === 'running' && !document.fullscreenElement) {
+                const docElement = document.documentElement as any;
+                if (docElement.requestFullscreen) {
+                  await docElement.requestFullscreen();
+                  console.log('[FULLSCREEN] Successfully re-entered fullscreen');
+                  reenterAttempts = 0; // 重置計數器
+                } else if (docElement.webkitRequestFullscreen) {
+                  await docElement.webkitRequestFullscreen();
+                  reenterAttempts = 0;
+                } else if (docElement.mozRequestFullScreen) {
+                  await docElement.mozRequestFullScreen();
+                  reenterAttempts = 0;
+                } else if (docElement.msRequestFullscreen) {
+                  await docElement.msRequestFullscreen();
+                  reenterAttempts = 0;
+                }
               }
+            } catch (error) {
+              console.warn('[FULLSCREEN] Failed to re-enter fullscreen (attempt ' + reenterAttempts + '):', error);
             }
-          } catch (error) {
-            console.warn('[FULLSCREEN] Failed to re-enter fullscreen:', error);
-          }
-        }, 100);
+          }, 200); // 增加延遲以確保事件處理完成
+        } else {
+          console.warn('[FULLSCREEN] Max re-enter attempts reached, giving up');
+        }
       }
 
       setIsFullscreen(isCurrentlyFullscreen);
     };
 
-    // 監聽全螢幕變化事件
+    // 監聽全螢幕變化事件（所有瀏覽器）
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
@@ -1787,7 +1809,7 @@ export default function FocusFinderPrototype() {
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
-  }, [sessionState, isFullscreen]);
+  }, [sessionState, isFullscreen, showDeathAnimation, isDistractedTaskActive]);
 
   // 跳過介紹直接開始遊戲
   const skipIntroAndStart = useCallback(() => {
@@ -2507,6 +2529,35 @@ export default function FocusFinderPrototype() {
                           {totalCompleted}/{randomTaskSequence.length}
                         </span>
                       </div>
+
+                      {/* 物件偵測狀態指示器 */}
+                      {detectedObject && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-center gap-2 bg-emerald-900/50 backdrop-blur rounded-lg px-3 py-1.5"
+                        >
+                          <motion.span
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 0.5, repeat: Infinity }}
+                            className="text-emerald-400"
+                          >
+                            👁️
+                          </motion.span>
+                          <span className="text-xs text-emerald-200">
+                            偵測到: <span className="font-bold">{detectedObject}</span>
+                          </span>
+                        </motion.div>
+                      )}
+
+                      {/* 偵測提示 */}
+                      {!detectedObject && currentTask && (
+                        <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur rounded-lg px-3 py-1.5">
+                          <span className="text-slate-400 text-xs">
+                            🔍 尋找: <span className="font-bold text-slate-200">{currentTask.title}</span>
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

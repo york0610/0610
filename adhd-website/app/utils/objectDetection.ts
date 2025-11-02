@@ -15,48 +15,53 @@ export interface DetectionResult {
 
 // 遊戲物體映射 - 改善的物體識別映射表
 const GAME_OBJECTS: Record<string, string[]> = {
-  'cell phone': ['cell phone', 'phone', 'mobile phone', 'smartphone'],
-  'cup': ['cup', 'mug', 'wine glass', 'glass'],
+  'cell phone': ['cell phone', 'phone', 'mobile phone', 'smartphone', 'remote'], // 手機可能被識別為遙控器
+  'cup': ['cup', 'mug', 'wine glass', 'glass', 'bowl'], // 杯子可能被識別為碗
   'book': ['book', 'books'],
   'keyboard': ['keyboard', 'computer keyboard'],
-  'bottle': ['bottle', 'water bottle', 'wine bottle'],
-  'laptop': ['laptop', 'computer'],
-  'mouse': ['mouse', 'computer mouse'],
-  'monitor': ['monitor', 'tv', 'screen', 'television'],
-  'chair': ['chair', 'bench', 'couch'],
-  'desk': ['dining table', 'table', 'desk'], // 桌子主要識別為 dining table
-  'sky': ['sky', 'cloud'],
-  'door': ['door'],
-  'window': ['window'],
-  'tv': ['tv', 'television', 'monitor'],
-  'bed': ['bed', 'couch'], // 床可能被識別為沙發
-  'clock': ['clock'],
-  'scissors': ['scissors'],
-  'remote': ['remote'],
-  'microwave': ['microwave', 'oven'],
-  'toaster': ['toaster'],
-  'refrigerator': ['refrigerator'],
-  'sink': ['sink'],
-  'toilet': ['toilet'],
-  'backpack': ['backpack', 'handbag', 'suitcase'],
-  'umbrella': ['umbrella'],
-  'tie': ['tie'],
-  'banana': ['banana'],
-  'apple': ['apple'],
-  'orange': ['orange'],
-  'sandwich': ['sandwich'],
-  'pizza': ['pizza'],
-  'cake': ['cake'],
-  'donut': ['donut'],
-  'bowl': ['bowl'],
-  'fork': ['fork'],
-  'knife': ['knife'],
-  'spoon': ['spoon'],
-  'vase': ['vase'],
-  'potted plant': ['potted plant'],
-  'teddy bear': ['teddy bear'],
-  'hair drier': ['hair drier'],
-  'toothbrush': ['toothbrush'],
+  'bottle': ['bottle', 'water bottle', 'wine bottle', 'cup'], // 瓶子可能被識別為杯子
+  'laptop': ['laptop', 'computer', 'monitor', 'tv'], // 筆電可能被識別為螢幕
+  'mouse': ['mouse', 'computer mouse', 'remote'], // 滑鼠可能被識別為遙控器
+  'monitor': ['monitor', 'tv', 'screen', 'television', 'laptop'],
+  'chair': ['chair', 'bench', 'couch', 'bed'], // 椅子可能被識別為沙發或床
+  'desk': ['dining table', 'table', 'desk', 'bed'], // 桌子主要識別為 dining table
+  'sky': ['sky', 'cloud', 'ceiling'], // 天空可能需要看窗外，或被識別為天花板
+  'door': ['door', 'refrigerator'], // 門可能被識別為冰箱
+  'window': ['window', 'door', 'tv', 'monitor'], // 窗戶可能被識別為門或螢幕
+  'tv': ['tv', 'television', 'monitor', 'laptop'],
+  'bed': ['bed', 'couch', 'chair'], // 床可能被識別為沙發
+  'clock': ['clock', 'cell phone'], // 時鐘可能被識別為手機
+  'scissors': ['scissors', 'knife', 'fork'],
+  'remote': ['remote', 'cell phone', 'mouse'],
+  'microwave': ['microwave', 'oven', 'refrigerator'],
+  'toaster': ['toaster', 'microwave'],
+  'refrigerator': ['refrigerator', 'door', 'microwave'],
+  'sink': ['sink', 'toilet', 'bowl'],
+  'toilet': ['toilet', 'sink'],
+  'backpack': ['backpack', 'handbag', 'suitcase', 'chair'], // 背包可能被識別為椅子上的物品
+  'umbrella': ['umbrella', 'bottle'],
+  'tie': ['tie', 'belt'],
+  'banana': ['banana', 'remote'], // 香蕉可能被識別為遙控器（經典案例）
+  'apple': ['apple', 'orange', 'ball'],
+  'orange': ['orange', 'apple', 'ball'],
+  'sandwich': ['sandwich', 'book'],
+  'pizza': ['pizza', 'cake', 'plate'],
+  'cake': ['cake', 'pizza', 'plate'],
+  'donut': ['donut', 'cup', 'bowl'],
+  'bowl': ['bowl', 'cup', 'sink'],
+  'fork': ['fork', 'knife', 'spoon', 'scissors'],
+  'knife': ['knife', 'fork', 'spoon', 'scissors'],
+  'spoon': ['spoon', 'fork', 'knife'],
+  'vase': ['vase', 'bottle', 'cup'],
+  'potted plant': ['potted plant', 'vase'],
+  'teddy bear': ['teddy bear', 'cat', 'dog'],
+  'hair drier': ['hair drier', 'remote', 'cell phone'],
+  'toothbrush': ['toothbrush', 'fork', 'spoon'],
+  // 新增：缺失的物件映射
+  'keys': ['scissors', 'fork', 'knife', 'remote', 'cell phone'], // 鑰匙可能被識別為小型金屬物品
+  'mirror': ['tv', 'monitor', 'window', 'laptop'], // 鏡子可能被識別為螢幕或窗戶
+  'person': ['person'], // 人物偵測
+  'rabbit-hole': ['cell phone', 'laptop', 'tv', 'monitor'], // 兔子洞效應：任何螢幕設備
 };
 
 // COCO 數據集中的物體類別
@@ -80,10 +85,10 @@ export class ObjectDetector {
   private isReady = false;
   private useMediaPipe = false;
 
-  // 恢復較高的偵測參數以提高準確度
-  private readonly CONFIDENCE_THRESHOLD = 0.4; // 提高閾值以提高準確度
+  // 優化偵測參數以平衡準確度和召回率
+  private readonly CONFIDENCE_THRESHOLD = 0.35; // 降低閾值以提高召回率
   private readonly NMS_THRESHOLD = 0.45; // 非極大值抑制閾值
-  private readonly MAX_DETECTIONS = 15; // 減少最大偵測數量，專注於高品質偵測
+  private readonly MAX_DETECTIONS = 20; // 增加最大偵測數量以捕捉更多物件
 
   async initialize() {
     if (this.isReady) return;

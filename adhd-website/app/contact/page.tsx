@@ -87,8 +87,8 @@ export default function ContactPage() {
                     <FaComments className="text-2xl text-blue-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">合作與轉介</p>
-                    <p className="text-slate-300">臨床轉介、講座、內容授權、研究合作</p>
+                    <p className="font-semibold text-white">合作</p>
+                    <p className="text-slate-300">講座、內容授權、研究合作</p>
                     <p className="text-xs text-slate-500 mt-1">來信說明需求，統一回覆</p>
                   </div>
                 </div>
@@ -98,7 +98,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-white">隱私與保密</p>
-                    <p className="text-slate-300">來信資訊僅用於回覆與服務流程</p>
+                    <p className="text-slate-300">來信資訊僅用於回覆與網頁問題</p>
                     <p className="text-xs text-slate-500 mt-1">詳見隱私政策</p>
                   </div>
                 </div>

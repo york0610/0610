@@ -107,65 +107,74 @@ export default function AssessmentPage() {
   const interpretation = getInterpretation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(139,92,246,0.15),transparent_50%)]" />
+      </div>
+
       <div className="container mx-auto max-w-4xl px-4 py-12">
-        {/* 返回按鈕 */}
+        {/* Back Button */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 mb-8 text-blue-600 hover:text-blue-700 font-medium"
+          className="inline-flex items-center gap-2 mb-8 text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
         >
           <FaArrowLeft /> 返回首頁
         </Link>
 
         {!showResults ? (
           <>
-            {/* 標題 */}
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold text-gray-800 mb-4">ASRS v1.1 ADHD 自評量表</h1>
-              <p className="text-gray-600 text-lg">
+            {/* Title */}
+            <div className="mb-8 text-center">
+              <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                ASRS v1.1 ADHD 自評量表
+              </h1>
+              <p className="text-slate-300 text-lg max-w-2xl mx-auto">
                 這是聯合國世界衛生組織（WHO）推薦的 ADHD 篩查工具。請根據過去 6 個月的情況回答以下問題。
               </p>
             </div>
 
-            {/* 進度指示 */}
-            <div className="mb-8 bg-white rounded-lg p-6 shadow-sm">
+            {/* Progress Indicator */}
+            <div className="mb-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl">
               <div className="flex justify-between items-center mb-4">
-                <span className="text-sm font-medium text-gray-600">
+                <span className="text-sm font-medium text-slate-300">
                   已完成: {Object.keys(responses).length} / 18
                 </span>
-                <span className="text-sm font-medium text-blue-600">
+                <span className="text-sm font-medium text-cyan-400">
                   {Math.round((Object.keys(responses).length / 18) * 100)}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-slate-700/50 rounded-full h-3">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-500 h-3 rounded-full transition-all duration-300"
                   style={{ width: `${(Object.keys(responses).length / 18) * 100}%` }}
                 />
               </div>
             </div>
 
-            {/* 問卷 */}
+            {/* Questions */}
             <div className="space-y-6">
               {ASRS_QUESTIONS.map((question) => (
-                <div key={question.id} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div key={question.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl hover:border-white/20 transition-all">
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
-                      <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 text-blue-600 font-semibold text-sm">
+                      <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-cyan-400 font-bold text-sm">
                         {question.id}
                       </span>
                     </div>
                     <div className="flex-grow">
-                      <p className="text-gray-800 font-medium mb-4">{question.text}</p>
+                      <p className="text-white font-medium mb-4">{question.text}</p>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                         {RESPONSE_OPTIONS.map((option) => (
                           <button
                             key={option.value}
                             onClick={() => handleResponse(question.id, option.value as ResponseScore)}
-                            className={`p-2 rounded-lg text-sm font-medium transition-all ${
+                            className={`p-3 rounded-xl text-sm font-medium transition-all ${
                               responses[question.id] === option.value
-                                ? 'bg-blue-600 text-white shadow-md'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg scale-105'
+                                : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border border-slate-700'
                             }`}
                           >
                             {option.label}
@@ -178,12 +187,12 @@ export default function AssessmentPage() {
               ))}
             </div>
 
-            {/* 提交按鈕 */}
+            {/* Submit Button */}
             <div className="mt-12 flex gap-4">
               <button
                 onClick={() => setShowResults(true)}
                 disabled={!isComplete}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-4 rounded-2xl font-bold hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-lg"
               >
                 {isComplete ? '查看結果' : '請完成所有問題'}
               </button>
@@ -191,74 +200,76 @@ export default function AssessmentPage() {
           </>
         ) : (
           <>
-            {/* 結果頁面 */}
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold text-gray-800 mb-4">您的評估結果</h1>
+            {/* Results Page */}
+            <div className="mb-8 text-center">
+              <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                您的評估結果
+              </h1>
             </div>
 
-            {/* 風險等級 */}
-            <div className={`${interpretation.bgColor} ${interpretation.borderColor} border-2 rounded-lg p-8 mb-8`}>
+            {/* Risk Level */}
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 mb-8 shadow-xl">
               <div className="flex items-center gap-4 mb-4">
-                <FaExclamationTriangle className={`text-3xl ${interpretation.color}`} />
-                <h2 className={`text-3xl font-bold ${interpretation.color}`}>
+                <FaExclamationTriangle className={`text-4xl ${interpretation.color === 'text-red-600' ? 'text-red-400' : interpretation.color === 'text-amber-600' ? 'text-amber-400' : 'text-green-400'}`} />
+                <h2 className={`text-4xl font-bold ${interpretation.color === 'text-red-600' ? 'text-red-400' : interpretation.color === 'text-amber-600' ? 'text-amber-400' : 'text-green-400'}`}>
                   {interpretation.level}
                 </h2>
               </div>
-              <p className="text-gray-700 text-lg">{interpretation.description}</p>
+              <p className="text-slate-300 text-lg leading-relaxed">{interpretation.description}</p>
             </div>
 
-            {/* 詳細分數 */}
+            {/* Detailed Scores */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <p className="text-gray-600 text-sm font-medium mb-2">注意力不集中症狀</p>
-                <p className="text-4xl font-bold text-blue-600">{scores.inattentionScore}</p>
-                <p className="text-gray-500 text-sm mt-2">滿分: 36</p>
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl">
+                <p className="text-slate-400 text-sm font-medium mb-2">注意力不集中症狀</p>
+                <p className="text-5xl font-bold text-blue-400">{scores.inattentionScore}</p>
+                <p className="text-slate-500 text-sm mt-2">滿分: 36</p>
               </div>
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <p className="text-gray-600 text-sm font-medium mb-2">過動/衝動症狀</p>
-                <p className="text-4xl font-bold text-purple-600">{scores.hyperactivityScore}</p>
-                <p className="text-gray-500 text-sm mt-2">滿分: 36</p>
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl">
+                <p className="text-slate-400 text-sm font-medium mb-2">過動/衝動症狀</p>
+                <p className="text-5xl font-bold text-purple-400">{scores.hyperactivityScore}</p>
+                <p className="text-slate-500 text-sm mt-2">滿分: 36</p>
               </div>
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <p className="text-gray-600 text-sm font-medium mb-2">總分</p>
-                <p className="text-4xl font-bold text-green-600">{scores.totalScore}</p>
-                <p className="text-gray-500 text-sm mt-2">滿分: 72</p>
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl">
+                <p className="text-slate-400 text-sm font-medium mb-2">總分</p>
+                <p className="text-5xl font-bold text-cyan-400">{scores.totalScore}</p>
+                <p className="text-slate-500 text-sm mt-2">滿分: 72</p>
               </div>
             </div>
 
-            {/* 建議 */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-              <h3 className="text-lg font-semibold text-blue-900 mb-4">建議</h3>
-              <ul className="space-y-3 text-gray-700">
+            {/* Recommendations */}
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 mb-8 shadow-xl">
+              <h3 className="text-2xl font-bold text-white mb-6">建議</h3>
+              <ul className="space-y-4 text-slate-300">
                 <li className="flex items-start gap-3">
-                  <FaCheckCircle className="text-green-600 mt-1 flex-shrink-0" />
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0 text-xl" />
                   <span>本量表僅供參考，不能作為診斷依據</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <FaCheckCircle className="text-green-600 mt-1 flex-shrink-0" />
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0 text-xl" />
                   <span>如有疑慮，請諮詢醫療專業人士進行正式評估</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <FaCheckCircle className="text-green-600 mt-1 flex-shrink-0" />
+                  <FaCheckCircle className="text-cyan-400 mt-1 flex-shrink-0 text-xl" />
                   <span>ADHD 是可以治療和管理的，早期干預效果更好</span>
                 </li>
               </ul>
             </div>
 
-            {/* 按鈕 */}
+            {/* Buttons */}
             <div className="flex gap-4">
               <button
                 onClick={() => {
                   setResponses({});
                   setShowResults(false);
                 }}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-4 rounded-2xl font-bold hover:scale-105 transition-all shadow-lg"
               >
                 重新測試
               </button>
               <Link
                 href="/"
-                className="flex-1 bg-gray-600 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors text-center"
+                className="flex-1 bg-slate-700 text-white py-4 rounded-2xl font-bold hover:bg-slate-600 transition-colors text-center shadow-lg"
               >
                 返回首頁
               </Link>

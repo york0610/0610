@@ -1400,31 +1400,16 @@ export default function FocusFinderPrototype() {
   }, []);
 
   // 任務計時器 - 每個任務的倒數計時
+  // 注意：這個計時器已被移除，因為主計時器（startGameSession）中已經處理了任務倒數
+  // 保留這個 useEffect 只是為了在任務超時時觸發扣分
   useEffect(() => {
-    if (sessionState !== 'running' || !currentTask) return;
+    if (sessionState !== 'running' || !currentTask || isDistractedTaskActive) return;
 
-    const taskInterval = setInterval(() => {
-      setTaskTimeLeft(prev => {
-        const newTime = prev - 1;
-
-        // 時間警告音效
-        if (newTime === 5) {
-          const audioManager = getAudioManager();
-          audioManager.playError(); // 警告音
-        }
-
-        // 時間到了，扣分
-        if (newTime <= 0) {
-          handleTaskTimeout();
-          return TASK_TIMEOUT; // 重置為下一個任務
-        }
-
-        return newTime;
-      });
-    }, 1000);
-
-    return () => clearInterval(taskInterval);
-  }, [sessionState, currentTask, handleTaskTimeout]);
+    // 監聽任務時間，當時間到 0 時觸發超時
+    if (taskTimeLeft <= 0) {
+      handleTaskTimeout();
+    }
+  }, [sessionState, currentTask, taskTimeLeft, handleTaskTimeout, isDistractedTaskActive]);
 
   // 重置任務計時器當任務改變時
   useEffect(() => {
@@ -1785,51 +1770,71 @@ export default function FocusFinderPrototype() {
     setShowGameIntro(true);
   }, []);
 
-  // 增強的全螢幕事件監聽器 - 更積極地防止意外退出
+  // 增強的全螢幕事件監聽器 - 防止意外退出（包括干擾期間）
   useEffect(() => {
     let reenterAttempts = 0;
-    const MAX_REENTER_ATTEMPTS = 3;
+    const MAX_REENTER_ATTEMPTS = 5; // 增加嘗試次數
+    let reenterTimeout: NodeJS.Timeout | null = null;
 
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!document.fullscreenElement;
-      console.log('[FULLSCREEN] Fullscreen change detected:', isCurrentlyFullscreen);
+      console.log('[FULLSCREEN] Fullscreen change detected:', isCurrentlyFullscreen, 'sessionState:', sessionState);
 
       // 只有在遊戲正在運行且不是在結算畫面時才重新進入全螢幕
-      // 移除 !isDistractedTaskActive 條件，允許干擾期間也保持全螢幕
+      // 包括干擾任務期間也要保持全螢幕
       if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation) {
-        console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter');
+        console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter (attempt', reenterAttempts + 1, ')');
 
         // 限制重新進入嘗試次數，避免無限循環
         if (reenterAttempts < MAX_REENTER_ATTEMPTS) {
           reenterAttempts++;
 
-          setTimeout(async () => {
+          // 清除之前的超時
+          if (reenterTimeout) {
+            clearTimeout(reenterTimeout);
+          }
+
+          reenterTimeout = setTimeout(async () => {
             try {
               // 再次檢查狀態，確保仍在遊戲中
-              if (sessionState === 'running' && !document.fullscreenElement) {
+              if (sessionState === 'running' && !document.fullscreenElement && !showDeathAnimation) {
                 const docElement = document.documentElement as any;
+
+                // 嘗試所有可能的全螢幕 API
                 if (docElement.requestFullscreen) {
                   await docElement.requestFullscreen();
-                  console.log('[FULLSCREEN] Successfully re-entered fullscreen');
+                  console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (standard API)');
                   reenterAttempts = 0; // 重置計數器
                 } else if (docElement.webkitRequestFullscreen) {
                   await docElement.webkitRequestFullscreen();
+                  console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (webkit)');
                   reenterAttempts = 0;
                 } else if (docElement.mozRequestFullScreen) {
                   await docElement.mozRequestFullScreen();
+                  console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (moz)');
                   reenterAttempts = 0;
                 } else if (docElement.msRequestFullscreen) {
                   await docElement.msRequestFullscreen();
+                  console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (ms)');
                   reenterAttempts = 0;
                 }
+              } else {
+                console.log('[FULLSCREEN] Skipping re-enter: sessionState =', sessionState, 'fullscreen =', !!document.fullscreenElement);
               }
             } catch (error) {
-              console.warn('[FULLSCREEN] Failed to re-enter fullscreen (attempt ' + reenterAttempts + '):', error);
+              console.warn('[FULLSCREEN] ❌ Failed to re-enter fullscreen (attempt ' + reenterAttempts + '):', error);
+              // 如果失敗，再試一次（增加延遲）
+              if (reenterAttempts < MAX_REENTER_ATTEMPTS) {
+                console.log('[FULLSCREEN] Will retry in 500ms...');
+              }
             }
-          }, 200); // 增加延遲以確保事件處理完成
+          }, 300); // 增加延遲到 300ms 以確保事件處理完成
         } else {
-          console.warn('[FULLSCREEN] Max re-enter attempts reached, giving up');
+          console.warn('[FULLSCREEN] ⚠️ Max re-enter attempts reached, giving up');
+          reenterAttempts = 0; // 重置計數器以便下次可以再試
         }
+      } else if (!isCurrentlyFullscreen && sessionState !== 'running') {
+        console.log('[FULLSCREEN] Not re-entering: game not running');
       }
 
       setIsFullscreen(isCurrentlyFullscreen);
@@ -1842,12 +1847,17 @@ export default function FocusFinderPrototype() {
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     return () => {
+      // 清理超時
+      if (reenterTimeout) {
+        clearTimeout(reenterTimeout);
+      }
+
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
-  }, [sessionState, isFullscreen, showDeathAnimation]); // 移除 isDistractedTaskActive 依賴
+  }, [sessionState, isFullscreen, showDeathAnimation]); // 不依賴 isDistractedTaskActive
 
   // 跳過介紹直接開始遊戲
   const skipIntroAndStart = useCallback(() => {
@@ -1920,14 +1930,25 @@ export default function FocusFinderPrototype() {
         return newTime;
       });
 
-      // 🎯 情境音效觸發器（每秒檢查一次）
+      // 🎯 任務倒數計時器（只在沒有干擾任務時倒數）
       setTaskTimeLeft((prev) => {
+        // 如果有干擾任務進行中，暫停主任務倒數
+        if (isDistractedTaskActive) {
+          return prev; // 保持當前時間不變
+        }
+
         const newTaskTime = prev - 1;
 
         // 任務剩餘時間 < 3 秒：播放時鐘滴答
         if (newTaskTime === 3) {
           const audioManager = getAudioManager();
           audioManager.playContextualSound('time-pressure');
+        }
+
+        // 時間警告音效
+        if (newTaskTime === 5) {
+          const audioManager = getAudioManager();
+          audioManager.playError(); // 警告音
         }
 
         return newTaskTime;
@@ -2364,17 +2385,19 @@ export default function FocusFinderPrototype() {
               setAllDetectedObjects([]);
             }
 
-            // 優先檢查干擾任務
+            // 優先檢查干擾任務（干擾期間只檢查干擾任務，不檢查主任務）
             if (isDistractedTaskActive && currentDist?.objectToFind) {
+              // 干擾任務進行中，只檢查干擾任務物體
               if (detector.checkForGameObject(result, currentDist.objectToFind)) {
                 setDetectedObject(currentDist.objectToFind);
                 console.log(`[DEBUG] 偵測到干擾任務物體: ${currentDist.objectToFind}`);
                 // 自動完成干擾任務
                 setTimeout(() => completeInterruptionTask(), 500);
               }
+              // 不檢查主任務，避免在干擾期間誤觸發主任務完成
             }
-            // 檢查主任務
-            else if (currentTask && result.objects.length > 0) {
+            // 只有在沒有干擾任務時才檢查主任務
+            else if (!isDistractedTaskActive && currentTask && result.objects.length > 0) {
               if (detector.checkForGameObject(result, currentTask.id)) {
                 setDetectedObject(currentTask.id);
                 console.log(`[DEBUG] 偵測到任務物體: ${currentTask.id}`);

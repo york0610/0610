@@ -96,44 +96,37 @@ export class ObjectDetector {
 
     this.isLoading = true;
     try {
-      // 嘗試加載 MediaPipe
-      try {
-        // 動態導入 MediaPipe
-        const vision = await import('@mediapipe/tasks-vision' as any);
-        const MPObjectDetector = vision.ObjectDetector;
-        
-        if (!MPObjectDetector) {
-          throw new Error('MediaPipe ObjectDetector not found');
-        }
-        
-        this.model = await MPObjectDetector.createFromOptions(
-          undefined,
-          {
-            baseOptions: {
-              modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite'
-            },
-            scoreThreshold: this.CONFIDENCE_THRESHOLD,
-            maxResults: this.MAX_DETECTIONS,
-            runningMode: 'VIDEO'
-          }
-        );
-        this.useMediaPipe = true;
-        this.isReady = true;
-        console.log('MediaPipe 物體偵測模型已加載');
-      } catch (mpError) {
-        console.warn('MediaPipe 加載失敗，回退到 COCO-SSD:', mpError);
-        // 回退到 COCO-SSD
-        const tf = await import('@tensorflow/tfjs');
-        const cocoSsd = await import('@tensorflow-models/coco-ssd');
-        this.model = await cocoSsd.load();
-        this.useMediaPipe = false;
-        this.isReady = true;
-        console.log('COCO-SSD 物體偵測模型已加載');
+      // 強制使用 MediaPipe（不再回退到 COCO-SSD）
+      console.log('[DETECTION] 正在加載 MediaPipe EfficientDet Lite0 模型...');
+
+      // 動態導入 MediaPipe
+      const vision = await import('@mediapipe/tasks-vision' as any);
+      const MPObjectDetector = vision.ObjectDetector;
+
+      if (!MPObjectDetector) {
+        throw new Error('MediaPipe ObjectDetector not found');
       }
+
+      this.model = await MPObjectDetector.createFromOptions(
+        undefined,
+        {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite'
+          },
+          scoreThreshold: this.CONFIDENCE_THRESHOLD,
+          maxResults: this.MAX_DETECTIONS,
+          runningMode: 'VIDEO'
+        }
+      );
+      this.useMediaPipe = true;
+      this.isReady = true;
+      this.isLoading = false;
+      console.log('[DETECTION] ✅ MediaPipe 物體偵測模型已成功加載');
     } catch (error) {
-      console.error('物體偵測模型加載失敗:', error);
+      console.error('[DETECTION] ❌ MediaPipe 模型加載失敗:', error);
       this.isLoading = false;
       this.isReady = false;
+      throw new Error('MediaPipe 模型加載失敗，請檢查網路連接或瀏覽器支持');
     }
   }
 

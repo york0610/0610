@@ -99,16 +99,24 @@ export class ObjectDetector {
       // 強制使用 MediaPipe（不再回退到 COCO-SSD）
       console.log('[DETECTION] 正在加載 MediaPipe EfficientDet Lite0 模型...');
 
-      // 動態導入 MediaPipe
-      const vision = await import('@mediapipe/tasks-vision' as any);
-      const MPObjectDetector = vision.ObjectDetector;
+      // ✅ 修復：動態導入 MediaPipe 並正確初始化
+      const vision = await import('@mediapipe/tasks-vision');
+      const { ObjectDetector, FilesetResolver } = vision;
 
-      if (!MPObjectDetector) {
-        throw new Error('MediaPipe ObjectDetector not found');
+      if (!ObjectDetector || !FilesetResolver) {
+        throw new Error('MediaPipe ObjectDetector or FilesetResolver not found');
       }
 
-      this.model = await MPObjectDetector.createFromOptions(
-        undefined,
+      // ✅ 修復：先初始化 FilesetResolver（必需步驟）
+      console.log('[DETECTION] 正在初始化 FilesetResolver...');
+      const filesetResolver = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+      );
+      console.log('[DETECTION] ✅ FilesetResolver 初始化成功');
+
+      // ✅ 修復：使用正確的參數順序創建 ObjectDetector
+      this.model = await ObjectDetector.createFromOptions(
+        filesetResolver,
         {
           baseOptions: {
             modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite'

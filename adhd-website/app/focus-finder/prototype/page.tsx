@@ -2611,8 +2611,13 @@ export default function FocusFinderPrototype() {
                   style={{ pointerEvents: 'auto' }}
                 >
                   <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+                    animate={{ scale: 1.1 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      ease: "easeInOut"
+                    }}
                   >
                     <FaCamera className="text-6xl text-cyan-400" />
                   </motion.div>

@@ -1768,9 +1768,11 @@ export default function FocusFinderPrototype() {
       setErrorMessage(null);
       console.log('[DEBUG] Requesting camera access...');
 
+      // ✅ 修復：使用更寬鬆的約束條件，避免 OverconstrainedError
+      // 優先使用後置鏡頭，但如果不可用則回退到任何可用鏡頭
       const constraints = {
         video: {
-          facingMode: { exact: 'environment' }, // 強制使用後置鏡頭
+          facingMode: 'environment', // ✅ 移除 exact，允許回退
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
@@ -1778,7 +1780,23 @@ export default function FocusFinderPrototype() {
       };
       console.log('[DEBUG] Constraints:', JSON.stringify(constraints));
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        console.log('[DEBUG] ✅ Camera stream obtained with environment camera');
+      } catch (error) {
+        // ✅ 如果後置鏡頭失敗，嘗試使用任何可用鏡頭
+        console.warn('[DEBUG] ⚠️ Environment camera failed, trying any available camera:', error);
+        const fallbackConstraints = {
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        };
+        stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        console.log('[DEBUG] ✅ Camera stream obtained with fallback camera');
+      }
       console.log('[DEBUG] Camera stream obtained:', stream);
       console.log('[DEBUG] Stream active:', stream.active);
       console.log('[DEBUG] Video tracks:', stream.getVideoTracks().length);
@@ -2612,9 +2630,8 @@ export default function FocusFinderPrototype() {
                     )}
                     <div className="flex flex-col gap-3 pt-4">
                       <button
-                        onClick={(e) => {
+                        onClick={() => {
                           console.log('[DEBUG] Camera button clicked!');
-                          console.log('[DEBUG] Event:', e);
                           console.log('[DEBUG] Current permissionState:', permissionState);
                           handleRequestCamera();
                         }}

@@ -167,8 +167,7 @@ export class AudioManager implements IAudioManager {
   private currentlyPlayingCount = 0;
   private lastCleanupTime = 0;
 
-  // Tuna.js 音效處理器
-  private tuna: any = null;
+  // 背景音樂
   private backgroundMusic: OscillatorNode | null = null;
   private backgroundGain: GainNode | null = null;
   private isBackgroundPlaying = false;
@@ -276,9 +275,6 @@ export class AudioManager implements IAudioManager {
         this.audioContext = new AudioContextClass();
         this.isInitialized = true;
         console.log('AudioContext initialized:', this.audioContext.state);
-
-        // 異步初始化 Tuna.js
-        this.initializeTuna();
       }
     } catch (error) {
       console.error('Failed to initialize AudioContext:', error);
@@ -297,19 +293,7 @@ export class AudioManager implements IAudioManager {
     return variants[randomIndex];
   }
 
-  private async initializeTuna(): Promise<void> {
-    try {
-      // 動態導入 Tuna.js
-      const Tuna = await import('tunajs');
-      if (this.audioContext) {
-        this.tuna = new (Tuna as any).default(this.audioContext);
-        console.log('[AUDIO] Tuna.js initialized successfully');
-      }
-    } catch (error) {
-      console.warn('[AUDIO] Failed to initialize Tuna.js:', error);
-      // 繼續運行，但沒有 Tuna.js 效果
-    }
-  }
+
 
   async preloadAudio(type: AudioType): Promise<void> {
     if (!this.audioContext) {
@@ -756,7 +740,7 @@ export class AudioManager implements IAudioManager {
   }
 
   /**
-   * 程序化生成音效 - 為沒有音檔的音效類型生成聲音（增強版，帶 Tuna.js 效果）
+   * 程序化生成音效 - 為沒有音檔的音效類型生成聲音
    */
   private playGeneratedSound(type: AudioType): void {
     if (this.isMuted) return;
@@ -780,8 +764,8 @@ export class AudioManager implements IAudioManager {
     this.currentlyPlayingCount++;
 
     try {
-      // 創建基礎音效並應用 Tuna.js 效果
-      this.createEnhancedGeneratedSound(type, now, config);
+      // 創建基礎音效
+      this.createGeneratedSound(type, now, config);
     } catch (error) {
       console.error(`[AUDIO] Failed to play generated sound ${type}:`, error);
       this.currentlyPlayingCount = Math.max(0, this.currentlyPlayingCount - 1);
@@ -789,9 +773,9 @@ export class AudioManager implements IAudioManager {
   }
 
   /**
-   * 創建增強的程序化音效（帶 Tuna.js 效果）
+   * 創建程序化音效
    */
-  private createEnhancedGeneratedSound(type: AudioType, startTime: number, config: AudioConfig): void {
+  private createGeneratedSound(type: AudioType, startTime: number, config: AudioConfig): void {
     if (!this.audioContext) return;
 
     try {
@@ -1227,31 +1211,9 @@ export class AudioManager implements IAudioManager {
       this.backgroundGain.gain.setValueAtTime(0, this.audioContext.currentTime);
       this.backgroundGain.gain.linearRampToValueAtTime(0.02 * this.masterVolume, this.audioContext.currentTime + 2);
 
-      // 添加 Tuna.js 效果（如果可用）
-      let outputNode: AudioNode = this.backgroundGain;
-      if (this.tuna) {
-        try {
-          // 添加低通濾波器創造溫暖的環境音
-          const filter = new this.tuna.Filter({
-            frequency: 200,
-            Q: 1,
-            gain: 0,
-            filterType: 'lowpass',
-            bypass: 0
-          });
-
-          this.backgroundMusic.connect(filter.input);
-          filter.connect(this.backgroundGain);
-          outputNode = this.backgroundGain;
-        } catch (error) {
-          console.warn('[AUDIO] Failed to apply Tuna effects to background music:', error);
-          this.backgroundMusic.connect(this.backgroundGain);
-        }
-      } else {
-        this.backgroundMusic.connect(this.backgroundGain);
-      }
-
-      outputNode.connect(this.audioContext.destination);
+      // 連接音頻節點
+      this.backgroundMusic.connect(this.backgroundGain);
+      this.backgroundGain.connect(this.audioContext.destination);
 
       // 開始播放
       this.backgroundMusic.start();

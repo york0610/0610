@@ -1309,26 +1309,35 @@ export default function FocusFinderPrototype() {
     return task;
   }, [randomTaskSequence, currentTaskIndex]);
 
-  // 調試：檢查任務序列和當前索引
+  // ✅ 增強調試：檢查任務序列和當前索引
   useEffect(() => {
     if (sessionState === 'running') {
       if (!currentTask) {
         console.error('[DEBUG] ❌ currentTask is null!', {
           currentTaskIndex,
           sequenceLength: randomTaskSequence.length,
-          sequence: randomTaskSequence.map(t => t?.id || 'undefined')
+          sequence: randomTaskSequence.map(t => t?.id || 'undefined'),
+          taskTimeLeft,
+          isDistractedTaskActive
         });
 
         // ✅ 修復：如果任務為 null，嘗試恢復
         if (randomTaskSequence.length > 0) {
-          console.log('[DEBUG] Attempting to recover by resetting task index to 0');
+          console.log('[DEBUG] 🔄 Attempting to recover by resetting task index to 0');
           setCurrentTaskIndex(0);
+          setTaskTimeLeft(TASK_TIMEOUT); // 重置任務時間
         }
       } else {
-        console.log('[DEBUG] ✅ Current task:', currentTask.id, currentTask.title);
+        console.log('[DEBUG] ✅ Current task:', {
+          id: currentTask.id,
+          title: currentTask.title,
+          index: currentTaskIndex,
+          timeLeft: taskTimeLeft,
+          isDistracted: isDistractedTaskActive
+        });
       }
     }
-  }, [currentTask, currentTaskIndex, randomTaskSequence, sessionState]);
+  }, [currentTask, currentTaskIndex, randomTaskSequence, sessionState, taskTimeLeft, isDistractedTaskActive]);
 
   // 特效觸發函數
   const triggerParticleEffect = useCallback((
@@ -1356,6 +1365,38 @@ export default function FocusFinderPrototype() {
     setTimeout(() => {
       setDetectionSuccess(prev => ({ ...prev, visible: false }));
     }, 2000);
+  }, []);
+
+  // 處理玩家死亡（移到前面以避免依賴順序問題）
+  const handlePlayerDeath = useCallback((reason: string) => {
+    console.log('[DEATH] Player died:', reason);
+
+    const audioManager = getAudioManager();
+    audioManager.playError();
+    audioManager.playOverwhelm(); // 播放壓倒性音效
+
+    setDeathReason(reason);
+    setShowDeathAnimation(true);
+    setSessionState('failed');
+
+    // 停止所有計時器
+    if (intervalRef.current) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // 停止所有音效（延遲一點讓死亡音效播放完）
+    setTimeout(() => {
+      audioManager.stopAll();
+    }, 1000);
+
+    // 不要立即退出全螢幕，讓死亡動畫在全螢幕中播放
+
+    // 3秒後顯示結算畫面
+    setTimeout(() => {
+      setShowDeathAnimation(false);
+      // 這裡會顯示結算畫面
+    }, 3000);
   }, []);
 
   // 處理任務超時
@@ -1393,45 +1434,29 @@ export default function FocusFinderPrototype() {
     setErrorMessage(`⏰ 任務超時！扣除 ${TIMEOUT_PENALTY} 分`);
     setTimeout(() => setErrorMessage(''), 3000);
 
-    // 繼續下一個任務（不扣專注力分數，因為已經扣了玩家分數）
+    // ✅ 修復：繼續下一個任務（不扣專注力分數，因為已經扣了玩家分數）
     // 無限循環模式：任務序列循環使用
+    console.log('[DEBUG] ⏰ Timeout - switching to next task');
     setCurrentTaskIndex((prev) => {
       const nextIndex = (prev + 1) % randomTaskSequence.length;
+      console.log('[DEBUG] ⏰ Next task index after timeout:', nextIndex);
+
+      // 重置任務開始時間
+      setTaskStartTime(Date.now());
+
+      // ✅ 修復：設置新任務的超時計時器
+      setTimeout(() => {
+        const timeout = setTimeout(() => {
+          console.log('[DEBUG] Task timeout - will trigger handleTaskTimeout again');
+          handleTaskTimeout();
+        }, TASK_TIMEOUT * 1000);
+        setTaskTimeoutRef(timeout);
+        console.log('[DEBUG] Set new task timeout after handleTaskTimeout');
+      }, 0);
+
       return nextIndex;
     });
-  }, [currentTaskIndex, randomTaskSequence]);
-
-  // 處理玩家死亡
-  const handlePlayerDeath = useCallback((reason: string) => {
-    console.log('[DEATH] Player died:', reason);
-
-    const audioManager = getAudioManager();
-    audioManager.playError();
-    audioManager.playOverwhelm(); // 播放壓倒性音效
-
-    setDeathReason(reason);
-    setShowDeathAnimation(true);
-    setSessionState('failed');
-
-    // 停止所有計時器
-    if (intervalRef.current) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    // 停止所有音效（延遲一點讓死亡音效播放完）
-    setTimeout(() => {
-      audioManager.stopAll();
-    }, 1000);
-
-    // 不要立即退出全螢幕，讓死亡動畫在全螢幕中播放
-
-    // 3秒後顯示結算畫面
-    setTimeout(() => {
-      setShowDeathAnimation(false);
-      // 這裡會顯示結算畫面
-    }, 3000);
-  }, []);
+  }, [randomTaskSequence, handlePlayerDeath, triggerParticleEffect, triggerScreenShake]);
 
   // 任務計時器 - 每個任務的倒數計時
   // 注意：這個計時器已被移除，因為主計時器（startGameSession）中已經處理了任務倒數
@@ -1804,20 +1829,20 @@ export default function FocusFinderPrototype() {
     setShowGameIntro(true);
   }, []);
 
-  // 增強的全螢幕事件監聽器 - 防止意外退出（包括干擾期間）
+  // ✅ 增強的全螢幕事件監聽器 - 防止意外退出（包括扣分、錯誤偵測、干擾期間）
   useEffect(() => {
     const reenterAttemptsRef = { current: 0 }; // ✅ 修復：使用 ref 避免閉包問題
-    const MAX_REENTER_ATTEMPTS = 5;
+    const MAX_REENTER_ATTEMPTS = 10; // ✅ 增加嘗試次數到 10 次
     const reenterTimeoutsRef: NodeJS.Timeout[] = []; // ✅ 修復：追蹤所有超時
 
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!document.fullscreenElement;
-      console.log('[FULLSCREEN] Fullscreen change detected:', isCurrentlyFullscreen, 'sessionState:', sessionState);
+      console.log('[FULLSCREEN] 🔄 Fullscreen change detected:', isCurrentlyFullscreen, 'sessionState:', sessionState);
 
-      // 只有在遊戲正在運行且不是在結算畫面時才重新進入全螢幕
-      // 包括干擾任務期間也要保持全螢幕
+      // ✅ 修復：只有在遊戲正在運行且不是在結算畫面時才重新進入全螢幕
+      // 包括干擾任務期間、扣分時、錯誤偵測時也要保持全螢幕
       if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation) {
-        console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter (attempt', reenterAttemptsRef.current + 1, ')');
+        console.log('[FULLSCREEN] ⚠️ Game is running but fullscreen was lost, attempting to re-enter (attempt', reenterAttemptsRef.current + 1, ')');
 
         // 限制重新進入嘗試次數，避免無限循環
         if (reenterAttemptsRef.current < MAX_REENTER_ATTEMPTS) {
@@ -1825,8 +1850,9 @@ export default function FocusFinderPrototype() {
 
           const timeout = setTimeout(async () => {
             try {
-              // 再次檢查狀態，確保仍在遊戲中
+              // ✅ 修復：再次檢查狀態，確保仍在遊戲中
               if (sessionState === 'running' && !document.fullscreenElement && !showDeathAnimation) {
+                console.log('[FULLSCREEN] 🔄 Attempting to re-enter fullscreen...');
                 const docElement = document.documentElement as any;
 
                 // 嘗試所有可能的全螢幕 API
@@ -2420,12 +2446,15 @@ export default function FocusFinderPrototype() {
               setAllDetectedObjects([]);
             }
 
-            // 優先檢查干擾任務（干擾期間只檢查干擾任務，不檢查主任務）
+            // ✅ 優先檢查干擾任務（干擾期間只檢查干擾任務，不檢查主任務）
             if (isDistractedTaskActive && currentDist?.objectToFind) {
               // 干擾任務進行中，只檢查干擾任務物體
               if (detector.checkForGameObject(result, currentDist.objectToFind)) {
                 setDetectedObject(currentDist.objectToFind);
-                console.log(`[DEBUG] 偵測到干擾任務物體: ${currentDist.objectToFind}`);
+                console.log(`[DETECTION] ✅ 偵測到干擾任務物體: ${currentDist.objectToFind}`, {
+                  confidence: result.objects.find(obj => obj.class === currentDist.objectToFind)?.score,
+                  totalObjects: result.objects.length
+                });
                 // 自動完成干擾任務
                 setTimeout(() => completeInterruptionTask(), 500);
               }
@@ -2435,9 +2464,22 @@ export default function FocusFinderPrototype() {
             else if (!isDistractedTaskActive && currentTask && result.objects.length > 0) {
               if (detector.checkForGameObject(result, currentTask.id)) {
                 setDetectedObject(currentTask.id);
-                console.log(`[DEBUG] 偵測到任務物體: ${currentTask.id}`);
+                console.log(`[DETECTION] ✅ 偵測到任務物體: ${currentTask.id}`, {
+                  taskTitle: currentTask.title,
+                  confidence: result.objects.find(obj => obj.class === currentTask.id)?.score,
+                  totalObjects: result.objects.length,
+                  taskTimeLeft
+                });
                 // 自動完成任務
                 setTimeout(() => completeTask(), 500);
+              } else {
+                // ✅ 添加調試：記錄未匹配的物體
+                if (result.objects.length > 0) {
+                  console.log(`[DETECTION] ⚠️ 偵測到物體但不匹配任務:`, {
+                    targetObject: currentTask.id,
+                    detectedObjects: result.objects.map(obj => `${obj.class} (${Math.round(obj.score * 100)}%)`).join(', ')
+                  });
+                }
               }
             }
           } catch (detectionError) {
@@ -2473,8 +2515,8 @@ export default function FocusFinderPrototype() {
   return (
     <ScreenShake isActive={screenShake} intensity={8} duration={800}>
       <div className={`${isFullscreen && sessionState === 'running' ? 'fixed inset-0 z-50 overflow-hidden' : 'min-h-screen'} bg-slate-950 text-slate-100`}>
-      {/* 新的專注力條 - 只在遊戲運行時顯示，設置較低的 z-index */}
-      <div className="relative z-10">
+      {/* ✅ 修復：專注力條設置最高 z-index，確保始終可見且不被遮擋 */}
+      <div className="relative z-[60]">
         <PulseEffect
           isActive={focusLevel <= 30}
           color="#ef4444"

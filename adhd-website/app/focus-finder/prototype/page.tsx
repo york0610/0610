@@ -1227,7 +1227,7 @@ export default function FocusFinderPrototype() {
   const [fullscreenLocked, setFullscreenLocked] = useState(false); // 防止意外退出全螢幕
   const [taskStartTime, setTaskStartTime] = useState<number | null>(null);
   const [skippedTasks, setSkippedTasks] = useState(0);
-  const [taskTimeoutRef, setTaskTimeoutRef] = useState<NodeJS.Timeout | null>(null);
+  const taskTimeoutRef = useRef<NodeJS.Timeout | null>(null); // ✅ 修復：使用 useRef 而不是 useState
   const [showStoryModal, setShowStoryModal] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [activeModal, setActiveModal] = useState(false);
@@ -1367,8 +1367,15 @@ export default function FocusFinderPrototype() {
     }, 2000);
   }, []);
 
-  // 處理玩家死亡（移到前面以避免依賴順序問題）
+  // ✅ STAGE 2 修復：處理玩家死亡（移到前面以避免依賴順序問題）
   const handlePlayerDeath = useCallback((reason: string) => {
+    // ✅ 防止重複觸發
+    if (isGameEndingRef.current) {
+      console.log('[DEATH] Already ending game, ignoring duplicate death trigger');
+      return;
+    }
+    isGameEndingRef.current = true;
+
     console.log('[DEATH] Player died:', reason);
 
     const audioManager = getAudioManager();
@@ -1379,13 +1386,26 @@ export default function FocusFinderPrototype() {
     setShowDeathAnimation(true);
     setSessionState('failed');
 
-    // 停止所有計時器
+    // ✅ 停止所有計時器
+    console.log('[DEATH] Clearing all timers...');
     if (intervalRef.current) {
       window.clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    if (detectionIntervalRef.current) {
+      window.clearInterval(detectionIntervalRef.current);
+      detectionIntervalRef.current = null;
+    }
+    if (taskTimeoutRef.current) {
+      clearTimeout(taskTimeoutRef.current);
+      taskTimeoutRef.current = null;
+    }
+    // 清理全螢幕重新進入計時器
+    fullscreenReenterTimeoutsRef.current.forEach(clearTimeout);
+    fullscreenReenterTimeoutsRef.current = [];
+    // 注意：干擾計時器由 useDistractions hook 自動清理
 
-    // 停止所有音效（延遲一點讓死亡音效播放完）
+    // ✅ 停止所有音效（延遲一點讓死亡音效播放完）
     setTimeout(() => {
       audioManager.stopAll();
     }, 1000);
@@ -1399,8 +1419,14 @@ export default function FocusFinderPrototype() {
     }, 3000);
   }, []);
 
-  // 處理任務超時
+  // ✅ STAGE 3 修復：處理任務超時
   const handleTaskTimeout = useCallback(() => {
+    // ✅ 如果遊戲已經結束，不處理超時
+    if (isGameEndingRef.current) {
+      console.log('[TIMEOUT] Game is ending, ignoring timeout');
+      return;
+    }
+
     const TIMEOUT_PENALTY = 20; // 超時扣20分（提高難度）
 
     console.log('[SCORE] Task timeout! Deducting points:', TIMEOUT_PENALTY);
@@ -1438,19 +1464,31 @@ export default function FocusFinderPrototype() {
     // 無限循環模式：任務序列循環使用
     console.log('[DEBUG] ⏰ Timeout - switching to next task');
     setCurrentTaskIndex((prev) => {
+      // ✅ 安全檢查：確保 randomTaskSequence 不為空
+      if (!randomTaskSequence || randomTaskSequence.length === 0) {
+        console.error('[TIMEOUT] randomTaskSequence is empty!');
+        return prev;
+      }
+
       const nextIndex = (prev + 1) % randomTaskSequence.length;
       console.log('[DEBUG] ⏰ Next task index after timeout:', nextIndex);
 
       // 重置任務開始時間
       setTaskStartTime(Date.now());
 
-      // ✅ 修復：設置新任務的超時計時器
+      // ✅ 修復：設置新任務的超時計時器（使用 setTimeout 避免閉包問題）
       setTimeout(() => {
-        const timeout = setTimeout(() => {
+        // 清理舊的超時計時器
+        if (taskTimeoutRef.current) {
+          clearTimeout(taskTimeoutRef.current);
+        }
+
+        // 設置新的超時計時器
+        taskTimeoutRef.current = setTimeout(() => {
           console.log('[DEBUG] Task timeout - will trigger handleTaskTimeout again');
           handleTaskTimeout();
         }, TASK_TIMEOUT * 1000);
-        setTaskTimeoutRef(timeout);
+
         console.log('[DEBUG] Set new task timeout after handleTaskTimeout');
       }, 0);
 
@@ -1847,29 +1885,52 @@ export default function FocusFinderPrototype() {
     setShowGameIntro(true);
   }, []);
 
+  // ✅ STAGE 1 修復：全螢幕穩定性 - 使用 ref 避免觸發 re-render
+  const isFullscreenRef = useRef(isFullscreen);
+  const lastFullscreenChangeRef = useRef(0);
+  const fullscreenReenterAttemptsRef = useRef(0);
+  const fullscreenReenterTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const isGameEndingRef = useRef(false);
+
+  // 同步 ref
+  useEffect(() => {
+    isFullscreenRef.current = isFullscreen;
+  }, [isFullscreen]);
+
   // ✅ 增強的全螢幕事件監聽器 - 防止意外退出（包括扣分、錯誤偵測、干擾期間）
   useEffect(() => {
-    const reenterAttemptsRef = { current: 0 }; // ✅ 修復：使用 ref 避免閉包問題
-    const MAX_REENTER_ATTEMPTS = 10; // ✅ 增加嘗試次數到 10 次
-    const reenterTimeoutsRef: NodeJS.Timeout[] = []; // ✅ 修復：追蹤所有超時
+    const MAX_REENTER_ATTEMPTS = 3; // ✅ 降低到 3 次，避免過度嘗試
+    const DEBOUNCE_TIME = 300; // ✅ 防抖時間 300ms
+    const REENTER_COOLDOWN = 500; // ✅ 重新進入冷卻時間 500ms
 
     const handleFullscreenChange = () => {
+      const now = Date.now();
       const isCurrentlyFullscreen = !!document.fullscreenElement;
-      console.log('[FULLSCREEN] 🔄 Fullscreen change detected:', isCurrentlyFullscreen, 'sessionState:', sessionState);
 
-      // ✅ 修復：只有在遊戲正在運行且不是在結算畫面時才重新進入全螢幕
-      // 包括干擾任務期間、扣分時、錯誤偵測時也要保持全螢幕
-      if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation) {
-        console.log('[FULLSCREEN] ⚠️ Game is running but fullscreen was lost, attempting to re-enter (attempt', reenterAttemptsRef.current + 1, ')');
+      // ✅ 防抖：如果距離上次事件小於 DEBOUNCE_TIME，忽略
+      if (now - lastFullscreenChangeRef.current < DEBOUNCE_TIME) {
+        console.log('[FULLSCREEN] 🔄 Debounced - ignoring rapid fullscreen change');
+        return;
+      }
+      lastFullscreenChangeRef.current = now;
+
+      console.log('[FULLSCREEN] 🔄 Fullscreen change detected:', isCurrentlyFullscreen, 'sessionState:', sessionState, 'isGameEnding:', isGameEndingRef.current);
+
+      // ✅ 只更新 ref，不立即觸發 state 更新（避免不必要的 re-render）
+      isFullscreenRef.current = isCurrentlyFullscreen;
+
+      // ✅ 修復：只有在遊戲正在運行且不是在結算/死亡畫面時才重新進入全螢幕
+      if (sessionState === 'running' && !isCurrentlyFullscreen && !showDeathAnimation && !isGameEndingRef.current) {
+        console.log('[FULLSCREEN] ⚠️ Game is running but fullscreen was lost, attempting to re-enter (attempt', fullscreenReenterAttemptsRef.current + 1, ')');
 
         // 限制重新進入嘗試次數，避免無限循環
-        if (reenterAttemptsRef.current < MAX_REENTER_ATTEMPTS) {
-          reenterAttemptsRef.current++;
+        if (fullscreenReenterAttemptsRef.current < MAX_REENTER_ATTEMPTS) {
+          fullscreenReenterAttemptsRef.current++;
 
           const timeout = setTimeout(async () => {
             try {
-              // ✅ 修復：再次檢查狀態，確保仍在遊戲中
-              if (sessionState === 'running' && !document.fullscreenElement && !showDeathAnimation) {
+              // ✅ 再次檢查狀態，確保仍在遊戲中
+              if (sessionState === 'running' && !document.fullscreenElement && !showDeathAnimation && !isGameEndingRef.current) {
                 console.log('[FULLSCREEN] 🔄 Attempting to re-enter fullscreen...');
                 const docElement = document.documentElement as any;
 
@@ -1877,38 +1938,41 @@ export default function FocusFinderPrototype() {
                 if (docElement.requestFullscreen) {
                   await docElement.requestFullscreen();
                   console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (standard API)');
-                  reenterAttemptsRef.current = 0; // 重置計數器
+                  fullscreenReenterAttemptsRef.current = 0; // 重置計數器
                 } else if (docElement.webkitRequestFullscreen) {
                   await docElement.webkitRequestFullscreen();
                   console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (webkit)');
-                  reenterAttemptsRef.current = 0;
+                  fullscreenReenterAttemptsRef.current = 0;
                 } else if (docElement.mozRequestFullScreen) {
                   await docElement.mozRequestFullScreen();
                   console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (moz)');
-                  reenterAttemptsRef.current = 0;
+                  fullscreenReenterAttemptsRef.current = 0;
                 } else if (docElement.msRequestFullscreen) {
                   await docElement.msRequestFullscreen();
                   console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (ms)');
-                  reenterAttemptsRef.current = 0;
+                  fullscreenReenterAttemptsRef.current = 0;
                 }
               } else {
                 console.log('[FULLSCREEN] Skipping re-enter: sessionState =', sessionState, 'fullscreen =', !!document.fullscreenElement);
               }
             } catch (error) {
-              console.warn('[FULLSCREEN] ❌ Failed to re-enter fullscreen (attempt ' + reenterAttemptsRef.current + '):', error);
+              console.warn('[FULLSCREEN] ❌ Failed to re-enter fullscreen (attempt ' + fullscreenReenterAttemptsRef.current + '):', error);
             }
-          }, 300);
+          }, REENTER_COOLDOWN);
 
-          reenterTimeoutsRef.push(timeout); // ✅ 修復：追蹤超時
+          fullscreenReenterTimeoutsRef.current.push(timeout);
         } else {
           console.warn('[FULLSCREEN] ⚠️ Max re-enter attempts reached, giving up');
-          reenterAttemptsRef.current = 0; // 重置計數器以便下次可以再試
+          // 不重置計數器，避免無限循環
         }
       } else if (!isCurrentlyFullscreen && sessionState !== 'running') {
         console.log('[FULLSCREEN] Not re-entering: game not running');
       }
 
-      setIsFullscreen(isCurrentlyFullscreen);
+      // ✅ 只在真正需要時更新 state（避免不必要的 re-render）
+      if (isFullscreen !== isCurrentlyFullscreen) {
+        setIsFullscreen(isCurrentlyFullscreen);
+      }
     };
 
     // 監聽全螢幕變化事件（所有瀏覽器）
@@ -1918,9 +1982,10 @@ export default function FocusFinderPrototype() {
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     return () => {
-      // ✅ 修復：清理所有超時
-      reenterTimeoutsRef.forEach(clearTimeout);
-      console.log('[FULLSCREEN] Cleaned up', reenterTimeoutsRef.length, 'fullscreen re-enter timeouts');
+      // ✅ 清理所有超時
+      fullscreenReenterTimeoutsRef.current.forEach(clearTimeout);
+      console.log('[FULLSCREEN] Cleaned up', fullscreenReenterTimeoutsRef.current.length, 'fullscreen re-enter timeouts');
+      fullscreenReenterTimeoutsRef.current = [];
 
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -1935,24 +2000,28 @@ export default function FocusFinderPrototype() {
     startGameSession();
   }, []);
 
-  // 實際開始遊戲會話
+  // ✅ STAGE 2 修復：實際開始遊戲會話
   const startGameSession = useCallback(async () => {
     console.log('[DEBUG] Starting session');
     console.log('[DEBUG] videoRef.current:', videoRef.current);
     console.log('[DEBUG] streamRef.current:', streamRef.current);
     console.log('[DEBUG] streamRef.current?.active:', streamRef.current?.active);
+
+    // ✅ 重置遊戲結束標記
+    isGameEndingRef.current = false;
+
     const audioManager = getAudioManager();
     audioManager.playFocus();
 
     // 開始背景音樂
     audioManager.startBackgroundMusic();
-    
+
     // 生成隨機任務序列
     const newTaskSequence = getRandomTaskSequence();
     const storyChapter = getCurrentStoryChapter(newTaskSequence);
     setRandomTaskSequence(newTaskSequence);
     setCurrentStoryChapter(storyChapter);
-    
+
     setSessionState('running');
     setCurrentTaskIndex(0);
     setTimer(0);
@@ -1970,30 +2039,44 @@ export default function FocusFinderPrototype() {
     setTaskTimeLeft(TASK_TIMEOUT);
     setShowDeathAnimation(false);
     setDeathReason('');
-    
+
     // 全螢幕已在 startSession 中處理，這裡只設置狀態
     setIsFullscreen(true);
-    
+
     // 記錄任務開始時間
     setTaskStartTime(Date.now());
-    
-    // 啟動計時器
+
+    // ✅ 啟動計時器
     if (intervalRef.current) {
       window.clearInterval(intervalRef.current);
     }
     intervalRef.current = window.setInterval(() => {
       setTimer((prev) => {
         const newTime = prev + 1;
+        // ✅ 修復：確保時間到達上限時立即結束
         if (newTime >= GAME_TIME_LIMIT) {
-          window.clearInterval(intervalRef.current!);
-          intervalRef.current = null;
-          // 無限挑戰模式：時間到就結束，顯示完成畫面
-          setSessionState('completed');
-          // 停止所有音效
-          const audioManager = getAudioManager();
-          setTimeout(() => {
-            audioManager.stopAll();
-          }, 1000);
+          console.log('[GAME] Time limit reached, ending game');
+
+          // ✅ 防止重複觸發
+          if (!isGameEndingRef.current) {
+            isGameEndingRef.current = true;
+
+            // 清理計時器
+            if (intervalRef.current) {
+              window.clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+
+            // 設置遊戲狀態為完成
+            setSessionState('completed');
+
+            // 停止所有音效
+            const audioManager = getAudioManager();
+            setTimeout(() => {
+              audioManager.stopAll();
+            }, 1000);
+          }
+
           // 不要立即退出全螢幕，讓結算畫面在全螢幕中顯示
           return GAME_TIME_LIMIT;
         }
@@ -2178,9 +2261,9 @@ export default function FocusFinderPrototype() {
     }
 
     // ✅ 修復：先清除舊的超時計時器
-    if (taskTimeoutRef) {
-      clearTimeout(taskTimeoutRef);
-      setTaskTimeoutRef(null);
+    if (taskTimeoutRef.current) {
+      clearTimeout(taskTimeoutRef.current);
+      taskTimeoutRef.current = null;
       console.log('[DEBUG] Cleared previous task timeout');
     }
 
@@ -2218,13 +2301,13 @@ export default function FocusFinderPrototype() {
           audioMgr.playError();
           skipCurrentTask();
         }, TASK_TIMEOUT * 1000);
-        setTaskTimeoutRef(timeout);
+        taskTimeoutRef.current = timeout;
         console.log('[DEBUG] Set new task timeout');
       }, 0);
 
       return nextIndex;
     });
-  }, [taskTimeoutRef, randomTaskSequence]);
+  }, [randomTaskSequence]);
 
   const completeTask = useCallback(() => {
     const audioManager = getAudioManager();
@@ -2248,9 +2331,9 @@ export default function FocusFinderPrototype() {
     }
 
     // 清除超時計時器
-    if (taskTimeoutRef) {
-      clearTimeout(taskTimeoutRef);
-      setTaskTimeoutRef(null);
+    if (taskTimeoutRef.current) {
+      clearTimeout(taskTimeoutRef.current);
+      taskTimeoutRef.current = null;
     }
 
     // 恢複專注力（完成主任務的獎勵）
@@ -2296,7 +2379,7 @@ export default function FocusFinderPrototype() {
           audioMgr.playError();
           skipCurrentTask();
         }, TASK_TIMEOUT * 1000);
-        setTaskTimeoutRef(timeout);
+        taskTimeoutRef.current = timeout;
         console.log('[DEBUG] Set new task timeout after task completion');
       }, 0);
 
@@ -2349,9 +2432,9 @@ export default function FocusFinderPrototype() {
       window.clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    if (taskTimeoutRef) {
-      clearTimeout(taskTimeoutRef);
-      setTaskTimeoutRef(null);
+    if (taskTimeoutRef.current) {
+      clearTimeout(taskTimeoutRef.current);
+      taskTimeoutRef.current = null;
     }
     stopStream();
     setPermissionState('idle');

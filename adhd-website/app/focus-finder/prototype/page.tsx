@@ -2662,8 +2662,13 @@ export default function FocusFinderPrototype() {
                   style={{ pointerEvents: 'auto' }}
                 >
                   <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+                    animate={{ scale: 1.1 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      ease: "easeInOut"
+                    }}
                   >
                     <FaPlay className="text-6xl text-emerald-400" />
                   </motion.div>
@@ -2783,8 +2788,13 @@ export default function FocusFinderPrototype() {
                           className="flex items-center gap-2 bg-emerald-900/50 backdrop-blur rounded-lg px-3 py-1.5"
                         >
                           <motion.span
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 0.5, repeat: Infinity }}
+                            animate={{ scale: 1.2 }}
+                            transition={{
+                              duration: 0.25,
+                              repeat: Infinity,
+                              repeatType: "reverse",
+                              ease: "easeInOut"
+                            }}
                             className="text-emerald-400"
                           >
                             👁️
@@ -2869,7 +2879,16 @@ export default function FocusFinderPrototype() {
                             className="flex-1 flex gap-2 bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-2"
                           >
                             <div className="flex items-center gap-2 text-emerald-300 flex-1 min-w-0">
-                              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }} className="flex-shrink-0">
+                              <motion.div
+                                animate={{ scale: 1.2 }}
+                                transition={{
+                                  duration: 0.25,
+                                  repeat: Infinity,
+                                  repeatType: "reverse",
+                                  ease: "easeInOut"
+                                }}
+                                className="flex-shrink-0"
+                              >
                                 <FaCheck className="text-sm" />
                               </motion.div>
                               <span className="font-semibold text-xs truncate">✓ 完成</span>
@@ -2954,7 +2973,16 @@ export default function FocusFinderPrototype() {
                         className="flex gap-2 pt-2 sm:pt-3 bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-2 flex-shrink-0"
                       >
                         <div className="flex items-center gap-2 text-emerald-300 flex-1 min-w-0">
-                          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }} className="flex-shrink-0">
+                          <motion.div
+                            animate={{ scale: 1.2 }}
+                            transition={{
+                              duration: 0.25,
+                              repeat: Infinity,
+                              repeatType: "reverse",
+                              ease: "easeInOut"
+                            }}
+                            className="flex-shrink-0"
+                          >
                             <FaCheck className="text-sm sm:text-base" />
                           </motion.div>
                           <span className="font-semibold text-xs truncate">✓ 完成中...</span>

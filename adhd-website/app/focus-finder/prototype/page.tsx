@@ -1057,7 +1057,8 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
         const type = distractionTypes[i % distractionTypes.length];
         const delay = currentTime + (i * 8000) + Math.random() * 2000;
         if (delay < 30000) {
-          setTimeout(() => triggerDistraction(type), delay);
+          const timer = setTimeout(() => triggerDistraction(type), delay);
+          timersRef.current.push(timer); // ✅ 修復：追蹤計時器
         }
       }
 
@@ -1067,7 +1068,8 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
         const type = distractionTypes[i % distractionTypes.length];
         const delay = currentTime + (i * 5000) + Math.random() * 2000;
         if (delay < 60000) {
-          setTimeout(() => triggerDistraction(type), delay);
+          const timer = setTimeout(() => triggerDistraction(type), delay);
+          timersRef.current.push(timer); // ✅ 修復：追蹤計時器
         }
       }
 
@@ -1077,7 +1079,8 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
         const type = distractionTypes[i % distractionTypes.length];
         const delay = currentTime + (i * 3500) + Math.random() * 1500;
         if (delay < 90000) {
-          setTimeout(() => triggerDistraction(type), delay);
+          const timer = setTimeout(() => triggerDistraction(type), delay);
+          timersRef.current.push(timer); // ✅ 修復：追蹤計時器
         }
       }
 
@@ -1085,10 +1088,11 @@ const useDistractions = (isActive: boolean, onDistractionTriggered: (type: Distr
       for (let i = 0; i < 5; i++) {
         const type = distractionTypes[Math.floor(Math.random() * distractionTypes.length)];
         const delay = 15000 + Math.random() * 70000; // 在15-85秒之間隨機觸發
-        setTimeout(() => triggerDistraction(type), delay);
+        const timer = setTimeout(() => triggerDistraction(type), delay);
+        timersRef.current.push(timer); // ✅ 修復：追蹤計時器
       }
 
-      console.log('[DISTRACTION] Aggressive distraction system initialized - ~20 distractions over 90 seconds');
+      console.log('[DISTRACTION] ✅ Aggressive distraction system initialized - ~20 distractions over 90 seconds, all timers tracked');
     };
 
     scheduleProgressiveDistractions();
@@ -1281,17 +1285,47 @@ export default function FocusFinderPrototype() {
     hard: 1.5,
   }[distractionSettings.difficulty];
 
-  const currentTask = randomTaskSequence[currentTaskIndex] ?? null;
+  // ✅ 修復：添加安全檢查，防止索引超出範圍
+  const currentTask = useMemo(() => {
+    if (randomTaskSequence.length === 0) {
+      console.warn('[DEBUG] randomTaskSequence is empty');
+      return null;
+    }
+
+    // 確保索引在有效範圍內
+    const safeIndex = currentTaskIndex % randomTaskSequence.length;
+    const task = randomTaskSequence[safeIndex];
+
+    if (!task) {
+      console.error('[DEBUG] Task at index', safeIndex, 'is undefined!', {
+        currentTaskIndex,
+        safeIndex,
+        sequenceLength: randomTaskSequence.length,
+        sequence: randomTaskSequence.map(t => t?.id || 'undefined')
+      });
+      return null;
+    }
+
+    return task;
+  }, [randomTaskSequence, currentTaskIndex]);
 
   // 調試：檢查任務序列和當前索引
   useEffect(() => {
     if (sessionState === 'running') {
       if (!currentTask) {
-        console.error('[DEBUG] currentTask is null!', {
+        console.error('[DEBUG] ❌ currentTask is null!', {
           currentTaskIndex,
           sequenceLength: randomTaskSequence.length,
           sequence: randomTaskSequence.map(t => t?.id || 'undefined')
         });
+
+        // ✅ 修復：如果任務為 null，嘗試恢復
+        if (randomTaskSequence.length > 0) {
+          console.log('[DEBUG] Attempting to recover by resetting task index to 0');
+          setCurrentTaskIndex(0);
+        }
+      } else {
+        console.log('[DEBUG] ✅ Current task:', currentTask.id, currentTask.title);
       }
     }
   }, [currentTask, currentTaskIndex, randomTaskSequence, sessionState]);
@@ -1772,9 +1806,9 @@ export default function FocusFinderPrototype() {
 
   // 增強的全螢幕事件監聽器 - 防止意外退出（包括干擾期間）
   useEffect(() => {
-    let reenterAttempts = 0;
-    const MAX_REENTER_ATTEMPTS = 5; // 增加嘗試次數
-    let reenterTimeout: NodeJS.Timeout | null = null;
+    const reenterAttemptsRef = { current: 0 }; // ✅ 修復：使用 ref 避免閉包問題
+    const MAX_REENTER_ATTEMPTS = 5;
+    const reenterTimeoutsRef: NodeJS.Timeout[] = []; // ✅ 修復：追蹤所有超時
 
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!document.fullscreenElement;
@@ -1783,18 +1817,13 @@ export default function FocusFinderPrototype() {
       // 只有在遊戲正在運行且不是在結算畫面時才重新進入全螢幕
       // 包括干擾任務期間也要保持全螢幕
       if (sessionState === 'running' && !isCurrentlyFullscreen && isFullscreen && !showDeathAnimation) {
-        console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter (attempt', reenterAttempts + 1, ')');
+        console.log('[FULLSCREEN] Game is running but fullscreen was lost, attempting to re-enter (attempt', reenterAttemptsRef.current + 1, ')');
 
         // 限制重新進入嘗試次數，避免無限循環
-        if (reenterAttempts < MAX_REENTER_ATTEMPTS) {
-          reenterAttempts++;
+        if (reenterAttemptsRef.current < MAX_REENTER_ATTEMPTS) {
+          reenterAttemptsRef.current++;
 
-          // 清除之前的超時
-          if (reenterTimeout) {
-            clearTimeout(reenterTimeout);
-          }
-
-          reenterTimeout = setTimeout(async () => {
+          const timeout = setTimeout(async () => {
             try {
               // 再次檢查狀態，確保仍在遊戲中
               if (sessionState === 'running' && !document.fullscreenElement && !showDeathAnimation) {
@@ -1804,34 +1833,32 @@ export default function FocusFinderPrototype() {
                 if (docElement.requestFullscreen) {
                   await docElement.requestFullscreen();
                   console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (standard API)');
-                  reenterAttempts = 0; // 重置計數器
+                  reenterAttemptsRef.current = 0; // 重置計數器
                 } else if (docElement.webkitRequestFullscreen) {
                   await docElement.webkitRequestFullscreen();
                   console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (webkit)');
-                  reenterAttempts = 0;
+                  reenterAttemptsRef.current = 0;
                 } else if (docElement.mozRequestFullScreen) {
                   await docElement.mozRequestFullScreen();
                   console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (moz)');
-                  reenterAttempts = 0;
+                  reenterAttemptsRef.current = 0;
                 } else if (docElement.msRequestFullscreen) {
                   await docElement.msRequestFullscreen();
                   console.log('[FULLSCREEN] ✅ Successfully re-entered fullscreen (ms)');
-                  reenterAttempts = 0;
+                  reenterAttemptsRef.current = 0;
                 }
               } else {
                 console.log('[FULLSCREEN] Skipping re-enter: sessionState =', sessionState, 'fullscreen =', !!document.fullscreenElement);
               }
             } catch (error) {
-              console.warn('[FULLSCREEN] ❌ Failed to re-enter fullscreen (attempt ' + reenterAttempts + '):', error);
-              // 如果失敗，再試一次（增加延遲）
-              if (reenterAttempts < MAX_REENTER_ATTEMPTS) {
-                console.log('[FULLSCREEN] Will retry in 500ms...');
-              }
+              console.warn('[FULLSCREEN] ❌ Failed to re-enter fullscreen (attempt ' + reenterAttemptsRef.current + '):', error);
             }
-          }, 300); // 增加延遲到 300ms 以確保事件處理完成
+          }, 300);
+
+          reenterTimeoutsRef.push(timeout); // ✅ 修復：追蹤超時
         } else {
           console.warn('[FULLSCREEN] ⚠️ Max re-enter attempts reached, giving up');
-          reenterAttempts = 0; // 重置計數器以便下次可以再試
+          reenterAttemptsRef.current = 0; // 重置計數器以便下次可以再試
         }
       } else if (!isCurrentlyFullscreen && sessionState !== 'running') {
         console.log('[FULLSCREEN] Not re-entering: game not running');
@@ -1847,17 +1874,16 @@ export default function FocusFinderPrototype() {
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     return () => {
-      // 清理超時
-      if (reenterTimeout) {
-        clearTimeout(reenterTimeout);
-      }
+      // ✅ 修復：清理所有超時
+      reenterTimeoutsRef.forEach(clearTimeout);
+      console.log('[FULLSCREEN] Cleaned up', reenterTimeoutsRef.length, 'fullscreen re-enter timeouts');
 
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
-  }, [sessionState, isFullscreen, showDeathAnimation]); // 不依賴 isDistractedTaskActive
+  }, [sessionState, isFullscreen, showDeathAnimation]);
 
   // 跳過介紹直接開始遊戲
   const skipIntroAndStart = useCallback(() => {
@@ -2101,12 +2127,19 @@ export default function FocusFinderPrototype() {
     console.log('[DEBUG] Skipping current task');
     setSkippedTasks(prev => prev + 1);
     setFocusLevel(prev => Math.max(0, prev - 15)); // 扣分
-    
+
     // 觸發震動效果
     if (navigator.vibrate) {
       navigator.vibrate([100, 50, 100]); // 震動模式
     }
-    
+
+    // ✅ 修復：先清除舊的超時計時器
+    if (taskTimeoutRef) {
+      clearTimeout(taskTimeoutRef);
+      setTaskTimeoutRef(null);
+      console.log('[DEBUG] Cleared previous task timeout');
+    }
+
     setLogs((prev) => {
       const updated = [...prev];
       const index = updated.length - 1;
@@ -2128,27 +2161,26 @@ export default function FocusFinderPrototype() {
           completedAt: null,
         },
       ]);
-      
+
       // 重置任務開始時間
       setTaskStartTime(Date.now());
-      
-      // 清除之前的超時計時器
-      if (taskTimeoutRef) {
-        clearTimeout(taskTimeoutRef);
-      }
-      
-      // 設置新的超時計時器
-      const timeout = setTimeout(() => {
-        console.log('[DEBUG] Task timeout - skipping task');
-        const audioMgr = getAudioManager();
-        audioMgr.playError();
-        skipCurrentTask();
-      }, TASK_TIMEOUT * 1000);
-      setTaskTimeoutRef(timeout);
+
+      // ✅ 修復：使用 setTimeout 而不是在 setState 回調中創建
+      // 這樣可以避免閉包問題
+      setTimeout(() => {
+        const timeout = setTimeout(() => {
+          console.log('[DEBUG] Task timeout - skipping task');
+          const audioMgr = getAudioManager();
+          audioMgr.playError();
+          skipCurrentTask();
+        }, TASK_TIMEOUT * 1000);
+        setTaskTimeoutRef(timeout);
+        console.log('[DEBUG] Set new task timeout');
+      }, 0);
 
       return nextIndex;
     });
-  }, [taskTimeoutRef]);
+  }, [taskTimeoutRef, randomTaskSequence]);
 
   const completeTask = useCallback(() => {
     const audioManager = getAudioManager();
@@ -2201,29 +2233,32 @@ export default function FocusFinderPrototype() {
           completedAt: null,
         },
       ]);
-      
+
       // 重置任務開始時間
       setTaskStartTime(Date.now());
-      
+
       // 顯示故事
       const storyIndex = Math.floor(nextIndex / 3); // 每 3 個任務顯示一個故事
       if (storyIndex < STORY_CHAPTERS.length && storyIndex !== currentStoryIndex) {
         setCurrentStoryIndex(storyIndex);
         setShowStoryModal(true);
       }
-      
-      // 設置新的超時計時器
-      const timeout = setTimeout(() => {
-        console.log('[DEBUG] Task timeout - skipping task');
-        const audioMgr = getAudioManager();
-        audioMgr.playError();
-        skipCurrentTask();
-      }, TASK_TIMEOUT * 1000);
-      setTaskTimeoutRef(timeout);
+
+      // ✅ 修復：使用 setTimeout 而不是在 setState 回調中創建
+      setTimeout(() => {
+        const timeout = setTimeout(() => {
+          console.log('[DEBUG] Task timeout - skipping task');
+          const audioMgr = getAudioManager();
+          audioMgr.playError();
+          skipCurrentTask();
+        }, TASK_TIMEOUT * 1000);
+        setTaskTimeoutRef(timeout);
+        console.log('[DEBUG] Set new task timeout after task completion');
+      }, 0);
 
       return nextIndex;
     });
-  }, [taskTimeoutRef, skipCurrentTask, randomTaskSequence]);
+  }, [skipCurrentTask, randomTaskSequence, currentStoryIndex]);
 
   const resetSession = useCallback(() => {
     console.log('[DEBUG] Resetting session');

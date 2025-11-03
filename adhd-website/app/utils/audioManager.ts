@@ -1513,6 +1513,7 @@ export class AudioManager implements IAudioManager {
 
   /**
    * 清理過期的音效源（防止計數不準確）
+   * ✅ 修復：增強清理邏輯，檢查音源是否真的在播放
    */
   private cleanupExpiredSources() {
     const now = Date.now();
@@ -1520,22 +1521,43 @@ export class AudioManager implements IAudioManager {
     if (now - this.lastCleanupTime < 2000) return;
 
     this.lastCleanupTime = now;
+    const beforeCount = this.activeSources.length;
 
     // 移除已經結束的音源
     this.activeSources = this.activeSources.filter(source => {
       try {
-        // 檢查音源是否還在播放
-        return source.context.state === 'running';
+        // ✅ 修復：檢查多個條件
+        // 1. AudioContext 是否還在運行
+        if (source.context.state !== 'running') {
+          return false;
+        }
+
+        // 2. 檢查音源的 playbackState（如果存在）
+        if ('playbackState' in source) {
+          const state = (source as any).playbackState;
+          if (state === 'finished' || state === 'unscheduled') {
+            return false;
+          }
+        }
+
+        // 3. 檢查音源是否已經斷開連接
+        if (source.numberOfOutputs === 0) {
+          return false;
+        }
+
+        return true;
       } catch (e) {
+        // 如果檢查時發生錯誤，說明音源已經無效
         return false;
       }
     });
 
     // 更新計數
+    const removedCount = beforeCount - this.activeSources.length;
     this.currentlyPlayingCount = this.activeSources.length;
 
-    if (this.currentlyPlayingCount > 0) {
-      console.log(`[AUDIO] Cleanup: ${this.currentlyPlayingCount} active sources`);
+    if (removedCount > 0) {
+      console.log(`[AUDIO] ✅ Cleanup: removed ${removedCount} expired sources, ${this.currentlyPlayingCount} active sources remaining`);
     }
   }
 

@@ -13,54 +13,71 @@ export interface DetectionResult {
   timestamp: number;
 }
 
-// 遊戲物體映射 - 改善的物體識別映射表
+// ✅ Stage 3: 優化物體映射 - 縮小範圍以提高準確度
 const GAME_OBJECTS: Record<string, string[]> = {
-  'cell phone': ['cell phone', 'phone', 'mobile phone', 'smartphone', 'remote'], // 手機可能被識別為遙控器
-  'cup': ['cup', 'mug', 'wine glass', 'glass', 'bowl'], // 杯子可能被識別為碗
-  'book': ['book', 'books'],
-  'keyboard': ['keyboard', 'computer keyboard'],
-  'bottle': ['bottle', 'water bottle', 'wine bottle', 'cup'], // 瓶子可能被識別為杯子
-  'laptop': ['laptop', 'computer', 'monitor', 'tv'], // 筆電可能被識別為螢幕
-  'mouse': ['mouse', 'computer mouse', 'remote'], // 滑鼠可能被識別為遙控器
-  'monitor': ['monitor', 'tv', 'screen', 'television', 'laptop'],
-  'chair': ['chair', 'bench', 'couch', 'bed'], // 椅子可能被識別為沙發或床
-  'desk': ['dining table', 'table', 'desk', 'bed'], // 桌子主要識別為 dining table
-  'sky': ['sky', 'cloud', 'ceiling'], // 天空可能需要看窗外，或被識別為天花板
-  'door': ['door', 'refrigerator'], // 門可能被識別為冰箱
-  'window': ['window', 'door', 'tv', 'monitor'], // 窗戶可能被識別為門或螢幕
-  'tv': ['tv', 'television', 'monitor', 'laptop'],
-  'bed': ['bed', 'couch', 'chair'], // 床可能被識別為沙發
-  'clock': ['clock', 'cell phone'], // 時鐘可能被識別為手機
-  'scissors': ['scissors', 'knife', 'fork'],
-  'remote': ['remote', 'cell phone', 'mouse'],
-  'microwave': ['microwave', 'oven', 'refrigerator'],
-  'toaster': ['toaster', 'microwave'],
-  'refrigerator': ['refrigerator', 'door', 'microwave'],
-  'sink': ['sink', 'toilet', 'bowl'],
-  'toilet': ['toilet', 'sink'],
-  'backpack': ['backpack', 'handbag', 'suitcase', 'chair'], // 背包可能被識別為椅子上的物品
-  'umbrella': ['umbrella', 'bottle'],
-  'tie': ['tie', 'belt'],
-  'banana': ['banana', 'remote'], // 香蕉可能被識別為遙控器（經典案例）
-  'apple': ['apple', 'orange', 'ball'],
-  'orange': ['orange', 'apple', 'ball'],
-  'sandwich': ['sandwich', 'book'],
-  'pizza': ['pizza', 'cake', 'plate'],
-  'cake': ['cake', 'pizza', 'plate'],
-  'donut': ['donut', 'cup', 'bowl'],
-  'bowl': ['bowl', 'cup', 'sink'],
-  'fork': ['fork', 'knife', 'spoon', 'scissors'],
-  'knife': ['knife', 'fork', 'spoon', 'scissors'],
-  'spoon': ['spoon', 'fork', 'knife'],
-  'vase': ['vase', 'bottle', 'cup'],
-  'potted plant': ['potted plant', 'vase'],
-  'teddy bear': ['teddy bear', 'cat', 'dog'],
-  'hair drier': ['hair drier', 'remote', 'cell phone'],
-  'toothbrush': ['toothbrush', 'fork', 'spoon'],
-  // 新增：缺失的物件映射
-  'keys': ['scissors', 'fork', 'knife', 'remote', 'cell phone'], // 鑰匙可能被識別為小型金屬物品
-  'mirror': ['tv', 'monitor', 'window', 'laptop'], // 鏡子可能被識別為螢幕或窗戶
-  'person': ['person'], // 人物偵測
+  // 電子產品 - 縮小映射範圍
+  'cell phone': ['cell phone', 'phone'], // 移除 'remote'
+  'laptop': ['laptop'], // 移除 'monitor', 'tv'
+  'mouse': ['mouse', 'computer mouse'], // 移除 'remote'
+  'keyboard': ['keyboard'],
+  'monitor': ['monitor', 'tv'], // 保留相似的螢幕設備
+  'tv': ['tv', 'television'],
+  'remote': ['remote'], // 移除 'cell phone'
+
+  // 容器類 - 縮小映射範圍
+  'cup': ['cup', 'mug'], // 移除 'wine glass', 'glass', 'bowl'
+  'bottle': ['bottle'], // 移除 'cup'
+  'bowl': ['bowl'], // 移除 'cup', 'sink'
+  'vase': ['vase'], // 移除 'bottle', 'cup'
+
+  // 家具 - 縮小映射範圍
+  'chair': ['chair'], // 移除 'bench', 'couch', 'bed'
+  'desk': ['dining table', 'table'], // 移除 'bed'
+  'bed': ['bed'], // 移除 'couch', 'chair'
+  'couch': ['couch'], // 新增獨立類別
+
+  // 書籍和文具
+  'book': ['book'],
+  'scissors': ['scissors'], // 移除 'knife', 'fork'
+
+  // 廚房用品 - 縮小映射範圍
+  'microwave': ['microwave'], // 移除 'oven', 'refrigerator'
+  'toaster': ['toaster'], // 移除 'microwave'
+  'refrigerator': ['refrigerator'], // 移除 'door', 'microwave'
+  'sink': ['sink'], // 移除 'toilet', 'bowl'
+  'toilet': ['toilet'], // 移除 'sink'
+
+  // 餐具 - 縮小映射範圍
+  'fork': ['fork'], // 移除 'knife', 'spoon', 'scissors'
+  'knife': ['knife'], // 移除 'fork', 'spoon', 'scissors'
+  'spoon': ['spoon'], // 移除 'fork', 'knife'
+
+  // 食物 - 縮小映射範圍
+  'banana': ['banana'], // 移除 'remote'
+  'apple': ['apple'], // 移除 'orange', 'ball'
+  'orange': ['orange'], // 移除 'apple', 'ball'
+  'sandwich': ['sandwich'], // 移除 'book'
+  'pizza': ['pizza'], // 移除 'cake', 'plate'
+  'cake': ['cake'], // 移除 'pizza', 'plate'
+  'donut': ['donut'], // 移除 'cup', 'bowl'
+
+  // 其他物品
+  'backpack': ['backpack', 'handbag'], // 移除 'suitcase', 'chair'
+  'umbrella': ['umbrella'], // 移除 'bottle'
+  'tie': ['tie'], // 移除 'belt'
+  'clock': ['clock'], // 移除 'cell phone'
+  'potted plant': ['potted plant'],
+  'teddy bear': ['teddy bear'], // 移除 'cat', 'dog'
+  'hair drier': ['hair drier'], // 移除 'remote', 'cell phone'
+  'toothbrush': ['toothbrush'], // 移除 'fork', 'spoon'
+
+  // 建築元素 - 保持較寬鬆（這些較難識別）
+  'door': ['door'],
+  'window': ['window'],
+  'sky': ['sky'],
+
+  // 特殊物件
+  'person': ['person'],
   'rabbit-hole': ['cell phone', 'laptop', 'tv', 'monitor'], // 兔子洞效應：任何螢幕設備
 };
 
@@ -85,10 +102,15 @@ export class ObjectDetector {
   private isReady = false;
   private useMediaPipe = false;
 
-  // 優化偵測參數以平衡準確度和召回率
-  private readonly CONFIDENCE_THRESHOLD = 0.30; // 進一步降低閾值以提高召回率（從 0.35 降到 0.30）
-  private readonly NMS_THRESHOLD = 0.40; // 降低 NMS 閾值以減少重複偵測（從 0.45 降到 0.40）
-  private readonly MAX_DETECTIONS = 25; // 增加最大偵測數量（從 20 增加到 25）
+  // ✅ Stage 1: 提高信心度閾值以減少誤報
+  private readonly CONFIDENCE_THRESHOLD = 0.55; // 從 0.30 提高到 0.55 (55%)
+  private readonly NMS_THRESHOLD = 0.40; // 降低 NMS 閾值以減少重複偵測
+  private readonly MAX_DETECTIONS = 25; // 最大偵測數量
+
+  // ✅ Stage 2: 添加穩定性檢查參數
+  private readonly STABILITY_WINDOW = 2000; // 2 秒時間窗口
+  private readonly STABILITY_COUNT = 3; // 需要連續偵測 3 次
+  private detectionHistory: Map<string, number[]> = new Map(); // 偵測歷史記錄
 
   async initialize() {
     if (this.isReady) return;
@@ -199,7 +221,70 @@ export class ObjectDetector {
   }
 
   /**
-   * 檢查是否偵測到特定遊戲物體 - 改善的匹配邏輯
+   * ✅ Stage 2: 檢查偵測穩定性
+   * 需要在時間窗口內連續偵測多次才確認
+   */
+  private checkStability(objectClass: string): boolean {
+    const now = Date.now();
+    const history = this.detectionHistory.get(objectClass) || [];
+
+    // 添加當前偵測時間
+    history.push(now);
+
+    // 移除超過時間窗口的舊記錄
+    const validHistory = history.filter(
+      time => now - time < this.STABILITY_WINDOW
+    );
+
+    // 更新歷史記錄
+    this.detectionHistory.set(objectClass, validHistory);
+
+    // 檢查是否達到穩定性要求
+    const isStable = validHistory.length >= this.STABILITY_COUNT;
+
+    if (isStable) {
+      console.log(`[STABILITY] ✅ ${objectClass} 穩定偵測 (${validHistory.length}/${this.STABILITY_COUNT})`);
+    } else {
+      console.log(`[STABILITY] ⏳ ${objectClass} 偵測中 (${validHistory.length}/${this.STABILITY_COUNT})`);
+    }
+
+    return isStable;
+  }
+
+  /**
+   * 清除特定物體的偵測歷史
+   */
+  private clearDetectionHistory(objectClass: string): void {
+    this.detectionHistory.delete(objectClass);
+    console.log(`[STABILITY] 🗑️ 清除 ${objectClass} 的偵測歷史`);
+  }
+
+  /**
+   * 清除所有偵測歷史
+   */
+  clearAllDetectionHistory(): void {
+    this.detectionHistory.clear();
+    console.log('[STABILITY] 🗑️ 清除所有偵測歷史');
+  }
+
+  /**
+   * 獲取特定物體的偵測進度 (0-3)
+   */
+  getDetectionProgress(objectClass: string): number {
+    const now = Date.now();
+    const history = this.detectionHistory.get(objectClass) || [];
+
+    // 只計算時間窗口內的有效偵測
+    const validHistory = history.filter(
+      time => now - time < this.STABILITY_WINDOW
+    );
+
+    return Math.min(validHistory.length, this.STABILITY_COUNT);
+  }
+
+  /**
+   * 檢查是否偵測到特定遊戲物體 - 改善的匹配邏輯 + 穩定性檢查
+   * 返回: { matched: boolean, progress: number, detectedClass: string | null }
    */
   checkForGameObject(
     detectionResult: DetectionResult,
@@ -210,7 +295,7 @@ export class ObjectDetector {
       .filter(obj => obj.class !== 'unknown' && obj.score > this.CONFIDENCE_THRESHOLD)
       .sort((a: DetectedObject, b: DetectedObject) => b.score - a.score); // 按信心度排序
 
-    // 精確匹配優先
+    // ✅ Stage 4: 優先匹配完全相同的類別
     for (const target of targetClasses) {
       for (const detected of detectedObjects) {
         const detectedClass = detected.class.toLowerCase();
@@ -219,13 +304,25 @@ export class ObjectDetector {
         // 完全匹配
         if (detectedClass === targetClass) {
           console.log(`[DETECTION] 完全匹配: ${detectedClass} === ${targetClass} (信心度: ${detected.score.toFixed(2)})`);
-          return true;
+
+          // ✅ 檢查穩定性
+          if (this.checkStability(detectedClass)) {
+            return true;
+          } else {
+            return false; // 未達到穩定性要求
+          }
         }
 
-        // 包含匹配
+        // 包含匹配（降低優先級）
         if (detectedClass.includes(targetClass) || targetClass.includes(detectedClass)) {
           console.log(`[DETECTION] 包含匹配: ${detectedClass} <-> ${targetClass} (信心度: ${detected.score.toFixed(2)})`);
-          return true;
+
+          // ✅ 包含匹配也需要穩定性檢查
+          if (this.checkStability(detectedClass)) {
+            return true;
+          } else {
+            return false; // 未達到穩定性要求
+          }
         }
       }
     }
@@ -237,6 +334,40 @@ export class ObjectDetector {
     }
 
     return false;
+  }
+
+  /**
+   * ✅ 新增: 獲取當前偵測狀態（用於 UI 顯示）
+   * 返回: { isDetecting: boolean, progress: number, targetClass: string | null }
+   */
+  getDetectionStatus(
+    detectionResult: DetectionResult,
+    targetObject: string
+  ): { isDetecting: boolean; progress: number; targetClass: string | null } {
+    const targetClasses = GAME_OBJECTS[targetObject] || [targetObject];
+    const detectedObjects = detectionResult.objects
+      .filter(obj => obj.class !== 'unknown' && obj.score > this.CONFIDENCE_THRESHOLD);
+
+    // 檢查是否有匹配的物體
+    for (const target of targetClasses) {
+      for (const detected of detectedObjects) {
+        const detectedClass = detected.class.toLowerCase();
+        const targetClass = target.toLowerCase();
+
+        if (detectedClass === targetClass ||
+            detectedClass.includes(targetClass) ||
+            targetClass.includes(detectedClass)) {
+          const progress = this.getDetectionProgress(detectedClass);
+          return {
+            isDetecting: progress > 0 && progress < this.STABILITY_COUNT,
+            progress,
+            targetClass: detected.class
+          };
+        }
+      }
+    }
+
+    return { isDetecting: false, progress: 0, targetClass: null };
   }
 
   /**

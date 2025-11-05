@@ -1210,6 +1210,10 @@ export default function FocusFinderPrototype() {
   const [detectionDebug, setDetectionDebug] = useState<string[]>([]);
   const [allDetectedObjects, setAllDetectedObjects] = useState<Array<{ name: string; confidence: number }>>([]);
 
+  // ✅ 添加偵測進度狀態
+  const [detectionProgress, setDetectionProgress] = useState<number>(0); // 0-3 的進度
+  const [isDetecting, setIsDetecting] = useState<boolean>(false); // 是否正在偵測中
+
   const [permissionState, setPermissionState] = useState<PermissionState>('idle');
   const [sessionState, setSessionState] = useState<SessionState>('idle');
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
@@ -2702,8 +2706,23 @@ export default function FocusFinderPrototype() {
             }
             // 只有在沒有干擾任務時才檢查主任務
             else if (!isDistractedTaskActiveRef.current && currentTask && result.objects.length > 0) {
+              // ✅ 獲取偵測狀態（用於 UI 顯示）
+              const status = detector.getDetectionStatus(result, currentTask.id);
+
+              if (status.isDetecting) {
+                setIsDetecting(true);
+                setDetectionProgress(status.progress);
+                console.log(`[DETECTION] ⏳ 偵測中: ${status.targetClass} (${status.progress}/3)`);
+              } else {
+                setIsDetecting(false);
+                setDetectionProgress(0);
+              }
+
+              // 檢查是否完成偵測
               if (detector.checkForGameObject(result, currentTask.id)) {
                 setDetectedObject(currentTask.id);
+                setIsDetecting(false);
+                setDetectionProgress(0);
                 console.log(`[DETECTION] ✅ 偵測到任務物體: ${currentTask.id}`, {
                   taskTitle: currentTask.title,
                   confidence: result.objects.find(obj => obj.class === currentTask.id)?.score,
@@ -2714,13 +2733,17 @@ export default function FocusFinderPrototype() {
                 setTimeout(() => completeTask(), 500);
               } else {
                 // ✅ 添加調試：記錄未匹配的物體
-                if (result.objects.length > 0) {
+                if (result.objects.length > 0 && !status.isDetecting) {
                   console.log(`[DETECTION] ⚠️ 偵測到物體但不匹配任務:`, {
                     targetObject: currentTask.id,
                     detectedObjects: result.objects.map(obj => `${obj.class} (${Math.round(obj.score * 100)}%)`).join(', ')
                   });
                 }
               }
+            } else {
+              // 沒有偵測到任何東西，重置進度
+              setIsDetecting(false);
+              setDetectionProgress(0);
             }
           } catch (detectionError) {
             console.error('[DEBUG] 單次偵測失敗:', detectionError);
@@ -3184,6 +3207,33 @@ export default function FocusFinderPrototype() {
                         <h3 className="text-base sm:text-lg font-bold text-white mt-0.5 line-clamp-2">{currentTask.title}</h3>
                       </div>
                     </div>
+
+                    {/* ✅ 偵測進度指示器 */}
+                    {isDetecting && detectionProgress > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-cyan-900/30 border border-cyan-500/50 rounded-lg p-2 flex-shrink-0"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-cyan-300 text-xs font-semibold">
+                            🔍 偵測中... {detectionProgress}/3
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(detectionProgress / 3) * 100}%` }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </div>
+                        <p className="text-xs text-cyan-200 mt-1">
+                          保持物體在鏡頭中...
+                        </p>
+                      </motion.div>
+                    )}
+
                     <div className="border-t border-slate-700/50 pt-2 sm:pt-3 flex-shrink-0">
                       {showHints && (
                         <p className="text-xs text-cyan-200 mb-1 sm:mb-2 font-semibold line-clamp-1">💡 {currentTask.hint}</p>

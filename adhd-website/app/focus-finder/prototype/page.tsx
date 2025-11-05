@@ -1515,6 +1515,46 @@ export default function FocusFinderPrototype() {
     }
   }, [currentTask]);
 
+  // ✅ Bug Fix #4: 干擾任務超時保護 - 防止永久鎖定
+  useEffect(() => {
+    if (!isDistractedTaskActive) return;
+
+    const DISTRACTION_TIMEOUT = 30000; // 30 秒超時
+    console.log('[DISTRACTION] Setting timeout protection for distraction task');
+
+    const timeout = setTimeout(() => {
+      console.warn('[BUG FIX] Distraction task timeout - auto-unlocking after 30s');
+      console.warn('[BUG FIX] Current distraction:', currentDistraction);
+
+      // 強制解除鎖定
+      setIsDistractedTaskActive(false);
+
+      // 清理當前干擾
+      if (currentDistraction) {
+        setDistractions(prev =>
+          prev.map(d =>
+            d.id === currentDistraction.id
+              ? { ...d, dismissedAt: Date.now() }
+              : d
+          )
+        );
+        setCurrentDistraction(null);
+      }
+
+      // 顯示警告訊息
+      setErrorMessage('⚠️ 干擾任務已自動跳過');
+      setTimeout(() => setErrorMessage(''), 3000);
+
+      // 播放錯誤音效
+      const audioManager = getAudioManager();
+      audioManager.playError();
+    }, DISTRACTION_TIMEOUT);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [isDistractedTaskActive, currentDistraction]);
+
   // 根據干擾任務類型播放對應音效
   const playDistractionAudio = useCallback((audioManager: any, task: any) => {
     // 根據任務標題和類型選擇合適的音效
@@ -1781,29 +1821,32 @@ export default function FocusFinderPrototype() {
 
   const handleRequestCamera = useCallback(async () => {
     console.log('[DEBUG] handleRequestCamera called, current state:', permissionState);
-    
+
     if (permissionState === 'requesting') {
       console.log('[DEBUG] Already requesting, returning');
       return;
     }
+
+    // ✅ Bug Fix #1: 使用 isMounted 標記防止組件卸載後更新狀態
+    let isMounted = true;
 
     // 檢查瀏覽器支援
     console.log('[DEBUG] Checking browser support...');
     console.log('[DEBUG] navigator:', typeof navigator);
     console.log('[DEBUG] navigator.mediaDevices:', typeof navigator?.mediaDevices);
     console.log('[DEBUG] getUserMedia:', typeof navigator?.mediaDevices?.getUserMedia);
-    
+
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       const errorMsg = '此裝置或瀏覽器不支援鏡頭串流。建議使用最新版本 Chrome 或 Safari。';
       console.error('[DEBUG] Browser not supported:', errorMsg);
-      setErrorMessage(errorMsg);
-      setPermissionState('denied');
+      if (isMounted) setErrorMessage(errorMsg);
+      if (isMounted) setPermissionState('denied');
       return;
     }
 
     try {
-      setPermissionState('requesting');
-      setErrorMessage(null);
+      if (isMounted) setPermissionState('requesting');
+      if (isMounted) setErrorMessage(null);
       console.log('[DEBUG] Requesting camera access...');
 
       // ✅ 修復：使用更寬鬆的約束條件，避免 OverconstrainedError
@@ -1835,41 +1878,56 @@ export default function FocusFinderPrototype() {
         stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
         console.log('[DEBUG] ✅ Camera stream obtained with fallback camera');
       }
+
+      // ✅ 檢查組件是否仍然掛載
+      if (!isMounted) {
+        console.log('[DEBUG] Component unmounted during camera request, stopping stream');
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+
       console.log('[DEBUG] Camera stream obtained:', stream);
       console.log('[DEBUG] Stream active:', stream.active);
       console.log('[DEBUG] Video tracks:', stream.getVideoTracks().length);
 
       streamRef.current = stream;
 
-      if (videoRef.current) {
+      if (videoRef.current && isMounted) {
         console.log('[DEBUG] Setting video srcObject');
         videoRef.current.srcObject = stream;
         console.log('[DEBUG] Video element updated with stream');
-        
+
         // 確保視頻開始播放
         videoRef.current.onloadedmetadata = () => {
+          if (!isMounted) return;
           console.log('[DEBUG] Video metadata loaded');
           console.log('[DEBUG] Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
           videoRef.current?.play().then(() => {
             console.log('[DEBUG] Video playing successfully');
           }).catch(err => {
+            if (!isMounted) return;
             console.error('[DEBUG] Video play error:', err);
             setErrorMessage('視頻播放失敗：' + err.message);
           });
         };
-        
+
         videoRef.current.onerror = (e) => {
+          if (!isMounted) return;
           console.error('[DEBUG] Video element error:', e);
           setErrorMessage('視頻元素錯誤');
         };
       } else {
-        console.error('[DEBUG] videoRef.current is null!');
-        setErrorMessage('視頻元素未初始化');
+        console.error('[DEBUG] videoRef.current is null or component unmounted!');
+        if (isMounted) setErrorMessage('視頻元素未初始化');
       }
 
-      setPermissionState('granted');
-      console.log('[DEBUG] Camera permission granted, state updated');
+      if (isMounted) {
+        setPermissionState('granted');
+        console.log('[DEBUG] Camera permission granted, state updated');
+      }
     } catch (error) {
+      if (!isMounted) return;
+
       const message = error instanceof Error ? error.message : '授權失敗，請確認裝置已允許使用鏡頭。';
       console.error('[DEBUG] Camera access error:', error);
       console.error('[DEBUG] Error name:', error instanceof Error ? error.name : 'unknown');
@@ -1896,6 +1954,25 @@ export default function FocusFinderPrototype() {
   useEffect(() => {
     isFullscreenRef.current = isFullscreen;
   }, [isFullscreen]);
+
+  // ✅ Bug Fix #5: 遊戲結束時自動退出全螢幕
+  useEffect(() => {
+    if (sessionState === 'completed' || sessionState === 'failed') {
+      console.log('[FULLSCREEN] Game ended, scheduling fullscreen exit');
+
+      // 延遲 5 秒後自動退出全螢幕（讓用戶看到結算畫面）
+      const exitTimeout = setTimeout(() => {
+        if (document.fullscreenElement) {
+          console.log('[FULLSCREEN] Auto-exiting fullscreen after game end');
+          document.exitFullscreen().catch(err => {
+            console.error('[FULLSCREEN] Failed to exit fullscreen:', err);
+          });
+        }
+      }, 5000);
+
+      return () => clearTimeout(exitTimeout);
+    }
+  }, [sessionState]);
 
   // ✅ 增強的全螢幕事件監聽器 - 防止意外退出（包括扣分、錯誤偵測、干擾期間）
   useEffect(() => {
@@ -2440,9 +2517,45 @@ export default function FocusFinderPrototype() {
     setPermissionState('idle');
   }, [stopStream]);
 
+  // ✅ Bug Fix #2: 組件卸載時清理所有計時器和資源
   useEffect(() => {
     return () => {
+      console.log('[CLEANUP] Component unmounting, cleaning up all timers and resources');
+
+      // 清理主遊戲計時器
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+        console.log('[CLEANUP] Main game timer cleared');
+      }
+
+      // 清理任務超時計時器
+      if (taskTimeoutRef.current) {
+        clearTimeout(taskTimeoutRef.current);
+        taskTimeoutRef.current = null;
+        console.log('[CLEANUP] Task timeout timer cleared');
+      }
+
+      // 清理物體偵測計時器
+      if (detectionIntervalRef.current) {
+        window.clearInterval(detectionIntervalRef.current);
+        detectionIntervalRef.current = null;
+        console.log('[CLEANUP] Detection interval cleared');
+      }
+
+      // 清理全螢幕重新進入計時器
+      fullscreenReenterTimeoutsRef.current.forEach(clearTimeout);
+      fullscreenReenterTimeoutsRef.current = [];
+      console.log('[CLEANUP] Fullscreen reenter timeouts cleared');
+
+      // 停止攝影機串流
       stopStream();
+      console.log('[CLEANUP] Camera stream stopped');
+
+      // 停止所有音效
+      const audioManager = getAudioManager();
+      audioManager.stopAll();
+      console.log('[CLEANUP] All audio stopped');
     };
   }, [stopStream]);
 
@@ -2514,11 +2627,37 @@ export default function FocusFinderPrototype() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 物體偵測循環
+  // ✅ Bug Fix #3: 使用 ref 避免物體偵測循環頻繁重新創建
+  const currentTaskIndexRef = useRef(currentTaskIndex);
+  const isDistractedTaskActiveRef = useRef(isDistractedTaskActive);
+  const currentDistractionRef = useRef(currentDistraction);
+  const randomTaskSequenceRef = useRef(randomTaskSequence);
+
+  useEffect(() => {
+    currentTaskIndexRef.current = currentTaskIndex;
+  }, [currentTaskIndex]);
+
+  useEffect(() => {
+    isDistractedTaskActiveRef.current = isDistractedTaskActive;
+  }, [isDistractedTaskActive]);
+
+  useEffect(() => {
+    currentDistractionRef.current = currentDistraction;
+  }, [currentDistraction]);
+
+  useEffect(() => {
+    randomTaskSequenceRef.current = randomTaskSequence;
+  }, [randomTaskSequence]);
+
+  // 物體偵測循環 - 優化版本，減少依賴項
   useEffect(() => {
     if (!isDetectionEnabled || !videoRef.current || sessionState !== 'running') {
+      console.log('[DETECTION] Skipping detection setup:', { isDetectionEnabled, hasVideo: !!videoRef.current, sessionState });
       return;
     }
+
+    console.log('[DETECTION] Setting up detection loop');
+    let isActive = true;
 
     const runDetection = async () => {
       try {
@@ -2527,12 +2666,12 @@ export default function FocusFinderPrototype() {
         console.log('[DEBUG] 物體偵測器已初始化');
 
         const detectionIntervalId = window.setInterval(async () => {
-          if (!videoRef.current) return;
+          if (!videoRef.current || !isActive) return;
 
           try {
             const result = await detector.detectObjects(videoRef.current);
-            const currentTask = randomTaskSequence[currentTaskIndex];
-            const currentDist = currentDistraction;
+            const currentTask = randomTaskSequenceRef.current[currentTaskIndexRef.current];
+            const currentDist = currentDistractionRef.current;
 
             // 更新所有偵測到的物件列表（用於 UI 顯示）
             if (result.objects.length > 0) {
@@ -2548,7 +2687,7 @@ export default function FocusFinderPrototype() {
             }
 
             // ✅ 優先檢查干擾任務（干擾期間只檢查干擾任務，不檢查主任務）
-            if (isDistractedTaskActive && currentDist?.objectToFind) {
+            if (isDistractedTaskActiveRef.current && currentDist?.objectToFind) {
               // 干擾任務進行中，只檢查干擾任務物體
               if (detector.checkForGameObject(result, currentDist.objectToFind)) {
                 setDetectedObject(currentDist.objectToFind);
@@ -2562,7 +2701,7 @@ export default function FocusFinderPrototype() {
               // 不檢查主任務，避免在干擾期間誤觸發主任務完成
             }
             // 只有在沒有干擾任務時才檢查主任務
-            else if (!isDistractedTaskActive && currentTask && result.objects.length > 0) {
+            else if (!isDistractedTaskActiveRef.current && currentTask && result.objects.length > 0) {
               if (detector.checkForGameObject(result, currentTask.id)) {
                 setDetectedObject(currentTask.id);
                 console.log(`[DETECTION] ✅ 偵測到任務物體: ${currentTask.id}`, {
@@ -2598,12 +2737,14 @@ export default function FocusFinderPrototype() {
     runDetection();
 
     return () => {
+      console.log('[DETECTION] Cleaning up detection loop');
+      isActive = false;
       if (detectionIntervalRef.current) {
         window.clearInterval(detectionIntervalRef.current);
         detectionIntervalRef.current = null;
       }
     };
-  }, [isDetectionEnabled, sessionState, currentTaskIndex, isDistractedTaskActive, currentDistraction, completeTask, completeInterruptionTask, randomTaskSequence]);
+  }, [isDetectionEnabled, sessionState, completeTask, completeInterruptionTask]); // ✅ 減少依賴項，避免頻繁重新創建
 
   const totalCompleted = logs.filter((log) => log.completedAt !== null).length;
   const totalDistractionCost = distractions
